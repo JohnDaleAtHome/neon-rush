@@ -1,0 +1,61 @@
+# Visual implementation plan
+
+## Scope and baseline
+
+Approved by Vic on 1 November 2026 at 07:23 SGT: record the visual priorities in game requirements, create an implementation document and work on them in parallel. This is a new bounded implementation phase after the 07:19:49 sprint endpoint. There is no new recurring cadence or invented deadline.
+
+Source baseline: `f9d4537442b68f168bdc400fda25cc24ac8f9c01` (v33). Public review remains v29, source `1612c7fd269d19db4e0685b7d16c7de49ef3b06c`. The v30-33 diff fixes stats/CSV/retry inputs and documentation, not the visual direction. Official legacy and frozen builds stay unchanged.
+
+The concept is the tracked `docs/concept-art/mochi-main-character.webp`, not a newly inferred reference. GAME-REQUIREMENTS.md owns the approved outcomes; STORYLINE.md remains story canon. PORT-STATUS.md retains unfinished gameplay, art and natural/device acceptance gaps.
+
+## Parallel lanes and safe integration
+
+These are integration boundaries, not claims that the work is finished. Workers return focused patches and their evidence. The integration owner applies them serially against a known commit and owns shared `godot/scripts/main.gd` and project settings. Do not replace main.gd from stale copies.
+
+| Lane | Owned new paths | Required outcome |
+| --- | --- | --- |
+| Character | `godot/scripts/visuals/mochi_visual.gd`, `godot/assets/visuals/mochi/` | Recognizable silhouette, eyes, clothing and pendant; soft material response; moving character readable at gameplay scale. |
+| Meadow world | `godot/scripts/visuals/meadow_visual.gd`, `godot/assets/visuals/meadow/` | Calm path, shaped/varied surroundings, coherent horizon/sky/fog/moons and soft grounding shadow, without hiding hazards. |
+| HUD | `godot/scripts/visuals/hud_theme.gd`, `godot/assets/visuals/ui/` | Consistent theme and clearer hierarchy, short instructions, large controls, readable portrait/landscape and keyboard/touch states. |
+| Integration and docs | Shared script/project hooks, requirements, plan, status and tests | Preserve gameplay/save contracts and combine the lanes into one reviewable release build. |
+
+Coordinate proposed API/signature changes before applying them. New modules should be self-contained and document the minimal integration calls. If a worker must touch another lane, return that change as an explicitly separate integration hunk. Existing rabbit remains available until the replacement can run and animate correctly; preserving a fallback is not final-art acceptance.
+
+## Work order
+
+1. Freeze the baseline and record concept/current-game evidence. Update requirements and this plan before implementation integration.
+2. Build character, Meadow/atmosphere and HUD in parallel within their paths. Report missing asset/tool limits early; do not substitute a tint for character work or claim full concept fidelity from a primitive sketch.
+3. Integrate small changes in a clean working copy. Keep physics/collision, level timing, pickups, checkpoint schema, stats and controls unchanged unless a separately demonstrated defect requires a scoped fix.
+4. Render one ordinary-input Meadow session on portrait mobile and desktop, plus pause/menu and a visible hazard/pickup encounter. Inspect actual pixels. Label fixtures and emulation as such.
+5. Correct integration issues, then export a source-exact release Web review artifact with commit, asset provenance and test evidence. Do not overwrite immutable v29 or official legacy.
+6. Obtain visual feedback on the integrated Meadow look before treating it as the style to propagate. Carry approved principles through distinct level environments; assess NPC/guardian/reunion presentation separately.
+
+## Acceptance gates
+
+### Character
+- At gameplay size, the face/ears, cyan eyes, jacket and moon pendant read as Mochi from the tracked concept rather than the old generic rabbit.
+- Soft white material, dark costume and restrained neon accents remain readable against Meadow. Avoid a metallic toy finish or glow that obscures the silhouette.
+- Running/jumping/ducking and lane movement remain clear. Grounding shadow follows the intended contact point and does not become a floating decal.
+
+### World and atmosphere
+- The road is quieter than hazards/pickups; lane boundaries remain clear.
+- Side terrain has shaped silhouettes and variation without the current dark blotches or obvious rows of identical cards.
+- Horizon, fog and sky blend into a coherent scene; moons read within that scene rather than detached stickers.
+- Test the Web Compatibility renderer. Do not rely on unsupported effects or claim physical-device performance from desktop emulation.
+
+### HUD
+- Portrait and landscape keep scene/runner clear, text legible and touch targets usable.
+- Start, pause/resume, settings, control visibility/size and story instructions retain their meanings.
+- The interface has one coherent palette/type/spacing/button language. Reduced-motion and accessibility preferences still work.
+
+### Integration and evidence
+- Existing 26 committed suites are the regression baseline. Run relevant focused tests during each change and the complete set for the integrated release; report failures rather than hiding them behind screenshots.
+- Clean import and release Web export succeed. Release exposes no debug QA state. Check browser errors and actual interaction, not only export exit status.
+- Capture ordinary-input mobile-size and desktop gameplay evidence, and label controlled visual fixtures separately. Natural L5 completion/L6/guardian/reunion remain open until actually played.
+- Human art feedback, audio listening, fun and physical-device performance are separate gates. No automated or screenshot-only pass settles them.
+
+## Delivery and limits
+
+Return source patches/commits, asset licenses/provenance, inspected screenshots and a source-exact review build. Main coordinates commits, review publication and user summaries. No paid work, recurring wake loop, official replacement, gameplay rebalance or full-campaign completion claim is implied by this phase.
+
+Status at plan creation: requirements and plan prepared; parallel lanes being assigned; implementation not yet integrated. Preserve subsequent evidence in a dated progress section rather than retroactively treating this plan as a completion report.

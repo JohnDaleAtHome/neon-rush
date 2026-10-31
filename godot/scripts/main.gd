@@ -1636,11 +1636,23 @@ func shown_average(rows: Array) -> String:
 func display_mode(key: String) -> String:
  return {"easy":"CHILL","normal":"CLASSIC","hard":"RUSH","story":"STORY","mission":"MISSION","chase":"CHASE"}.get(key,key.to_upper())
 
+func csv_cell(value) -> String:
+ var text = str(value)
+ return "\"" + text.replace("\"","\"\"") + "\"" if text.contains(",") or text.contains("\"") or text.contains("\n") or text.contains("\r") else text
+
+func stats_csv() -> String:
+ var text = "mode,score,distance_m,treats,seconds,completed_at,story_level,outcome\n"
+ for row in history:
+  var cells = [row.mode,row.score,row.distance,row.treats,row.seconds,row.get("completed_at",""),row.get("level","") if row.mode == "story" else "",row.get("outcome","")]
+  var escaped: PackedStringArray = []
+  for value in cells: escaped.append(csv_cell(value))
+  text += ",".join(escaped) + "\n"
+ return text
+
 func export_stats(kind: String):
  var text = JSON.stringify({"game":"Mochi and the Moon Bridge","format_version":2,"scope":"This browser only; history last 20 attempts, totals scope labeled separately","records":stats,"history":history,"totals":totals,"totals_scope":totals_scope},"  ")
  if kind == "CSV":
-  text = "mode,score,distance_m,treats,seconds,completed_at\n"
-  for r in history: text += "%s,%d,%d,%d,%d,%s\n" % [r.mode,r.score,r.distance,r.treats,r.seconds,r.get("completed_at","")]
+  text = stats_csv()
  if OS.has_feature("web"): JavaScriptBridge.download_buffer(text.to_utf8_buffer(),"neon-rush-stats."+kind.to_lower(),"text/csv" if kind == "CSV" else "application/json")
  else:
   var f = FileAccess.open("user://neon-rush-stats."+kind.to_lower(),FileAccess.WRITE)

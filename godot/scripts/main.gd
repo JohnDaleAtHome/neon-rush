@@ -19,6 +19,9 @@ var chain_time = 0.0
 var chain_bonus = 0
 var jump_bonus = 0
 var jump_buffer = 0.0
+var risk_bonus = 0
+var pickup_feedback = ""
+var pickup_feedback_time = 0.0
 var shield = false
 var shield_time = 12.0
 var magnet_time = 0.0
@@ -468,6 +471,9 @@ func start_level():
  chain_time = 0
  chain_bonus = 0
  jump_bonus = 0
+ risk_bonus = 0
+ pickup_feedback_time = 0
+ pickup_feedback = ""
  shield = false
  shield_time = 12
  magnet_time = 0
@@ -596,6 +602,7 @@ func _process(dt):
  if (elapsed > 7 or not options.banners) and not unlock: message.text = ""
  fire_time = maxf(0, fire_time - dt)
  guardian_feedback_time = maxf(0, guardian_feedback_time - dt)
+ pickup_feedback_time = maxf(0, pickup_feedback_time - dt)
  player.position.x = lerpf(player.position.x, LANES[lane], minf(1, dt * 12))
  jump_buffer = maxf(0, jump_buffer - dt)
  velocity -= (19 if mode == "story" and level == 1 else 26) * dt
@@ -672,12 +679,24 @@ func _process(dt):
      guardian_feedback_time = 0.9
     entities.erase(item); item.queue_free()
    continue
+  if kind == "tall" and mode in ["easy","normal","hard","chase"]:
+   var dx = absf(item.position.x - player.position.x)
+   if absf(item.position.z) < 2.2 and dx >= 1.0 and dx < 1.8: item.set_meta("near_seen",true)
+   if item.position.z >= 1.1 and not item.get_meta("near_paid",false):
+    item.set_meta("near_paid",true)
+    if item.get_meta("near_seen",false) and dx >= 1.0 and height < 0.65 and guard <= 0:
+     score += 15
+     risk_bonus += 15
+     pickup_feedback = "+15 NEAR MISS"
+     pickup_feedback_time = 0.9
   if kind == "low" and absf(item.position.z) < 1.1 and height > 0.65 and absf(item.position.x - player.position.x) < 1.0:
    item.set_meta("jump_clear",true)
   if item.position.z > 1.1 and kind == "low" and item.get_meta("jump_clear",false) and height > 0.65 and absf(item.position.x - player.position.x) < 1.0 and not jump_scored.has(item.get_instance_id()):
    jump_scored[item.get_instance_id()] = true
    jump_bonus += 20
    score += 20
+   pickup_feedback = "+20 JUMP CLEAR"
+   pickup_feedback_time = 0.9
   if item.position.z > 10: entities.erase(item); jump_scored.erase(item.get_instance_id()); item.queue_free(); continue
   if absf(item.position.z) < (2.2 if magnet_time > 0 and kind == "orb" else 1.1) and absf(item.position.x - player.position.x) < (3.4 if magnet_time > 0 and kind == "orb" else 1.0):
    if kind == "orb" and height < 1.8:
@@ -717,9 +736,11 @@ func update_hud():
   progress_label.text = "DEW %d / 6 TO LIGHT THE LAUNCH PAD" % mini(dew,6) if level == 0 else "PATH TO %s: %d%%" % [PIECES[level].to_upper(),mini(100,int(elapsed/[24,25,26,27,28][level]*100))] if level < 5 else "TWO HITS - WAIT FOR NEXT GREEN" if boss_hits >= 2 and last_open else "SHIELD OPEN - ALIGN AND FIRE" if last_open else "SHIELD CLOSED - ALIGN AND WAIT"
  elif mode == "mission" and running and mission_phase == 2:
   progress_label.text = "TWO HITS - WAIT FOR NEXT GREEN" if boss_hits >= 2 and last_open else "SHIELD OPEN - ALIGN AND FIRE" if last_open else "SHIELD CLOSED - ALIGN AND WAIT"
+ elif running and mode in ["easy","normal","hard","chase"]:
+  progress_label.text = "GOAL COMPLETE" if run_goal else "EARN GOLD: %d / 250m + %d / 10 TREATS" % [mini(250,int(distance)),mini(10,collected)]
  elif unlock: progress_label.text = "BRIDGE CROSSING %d%%" % mini(100,int(unlock_time/5*100))
  else: progress_label.text = ""
- status_label.text = guardian_feedback if guardian_feedback_time > 0 and ((mode == "story" and level == 5) or (mode == "mission" and mission_phase == 2)) else "SHIELD READY" if shield else "MAGNET %.1fs" % magnet_time if magnet_time > 0 else "CHAIN %d / 3" % chain if chain > 0 else ""
+ status_label.text = guardian_feedback if guardian_feedback_time > 0 and ((mode == "story" and level == 5) or (mode == "mission" and mission_phase == 2)) else pickup_feedback if pickup_feedback_time > 0 else "SHIELD READY" if shield else "MAGNET %.1fs" % magnet_time if magnet_time > 0 else "CHAIN %d / 3" % chain if chain > 0 else ""
 
 func save_checkpoint():
  var f = FileAccess.open("user://journey.json", FileAccess.WRITE)
@@ -861,8 +882,12 @@ func finish_run(reason: String):
  history.push_front({"mode":mode,"score":int(score),"distance":int(distance),"treats":collected,"seconds":int(elapsed),"completed_at":Time.get_datetime_string_from_system()})
  history = history.slice(0,20)
  save_stats()
- show_beat("MISSION COMPLETE" if mode == "mission" and boss_hp <= 0 else "RUN COMPLETE", "%s\n%d points / %dm / %d treats / %ds\nBest %d. %d chain points." % [reason, int(score), int(distance), collected, int(elapsed), int(record.best), chain_bonus], "RETRY RUN")
+ show_beat("MISSION COMPLETE" if mode == "mission" and boss_hp <= 0 else "RUN COMPLETE", "%s\n%d points / %dm / %d treats / %ds\nBest %d\n%s" % [reason, int(score), int(distance), collected, int(elapsed), int(record.best),score_breakdown()], "RETRY RUN")
  mode_select.show()
+
+func score_breakdown() -> String:
+ var travel = maxi(0,int(score)-collected*50-chain_bonus-jump_bonus-risk_bonus)
+ return "%d distance + %d treats\n%d chain + %d jump + %d near miss" % [travel,collected*50,chain_bonus,jump_bonus,risk_bonus]
 
 func show_stats():
  open_stats()

@@ -382,6 +382,7 @@ func toggle_pause():
   controls.visible = options.buttons
   message.text = ""
   if options.sound: music_player.play()
+ for moon in moons: moon.visible = options.stars and running and not paused
  pause_button.text = "RESUME" if paused else "PAUSE"
 
 func reset_discard_prompt():
@@ -441,6 +442,7 @@ func return_menu():
 func show_beat(title: String, words: String, label: String):
  dimmer.show()
  running = false
+ for moon in moons: moon.hide()
  stop_audio()
  status_label.text = ""
  progress_label.text = ""
@@ -830,7 +832,7 @@ func apply_world(index: int):
   mm.set_shader_parameter("lunar_height",load("res://assets/moon-height.png"))
   mm.set_shader_parameter("moon_tint",tint)
   moons[i].material_override = mm
-  moons[i].visible = options.stars
+  moons[i].visible = options.stars and running and not paused
   moon_glows[i].modulate = Color(tint.r,tint.g,tint.b,0.18)
  if scenery: scenery.visible = index == 2 and not options.light
  build_level_props(index)
@@ -1337,7 +1339,7 @@ func apply_options():
  else: hud.add_theme_color_override("font_color",Color.WHITE)
  for guide in lane_guides: guide.visible = options.guides
  adapt_layout()
- for moon in moons: moon.visible = options.stars
+ for moon in moons: moon.visible = options.stars and running and not paused
  if sky_stars: sky_stars.visible = options.stars and not options.light
  if scenery: scenery.visible = not options.light and mode == "story" and level == 2
  if animator and reduced_motion(): animator.speed_scale = 0

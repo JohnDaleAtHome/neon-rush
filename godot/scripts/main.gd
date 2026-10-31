@@ -1323,6 +1323,14 @@ func open_settings():
  gold.button_pressed = options.gold and gold_unlocked
  gold.toggled.connect(func(on): options.gold = on; save_options(); apply_options())
  list.add_child(gold)
+ var footer = Button.new()
+ footer.text = "DONE - CLOSE SETTINGS"
+ footer.custom_minimum_size.y = 44
+ footer.pressed.connect(func(): list.get_parent().get_parent().queue_free())
+ list.add_child(footer)
+ var safe_space = Control.new()
+ safe_space.custom_minimum_size.y = 24
+ list.add_child(safe_space)
 
 func open_stats():
  var list = popup_frame("THIS BROWSER STATS")

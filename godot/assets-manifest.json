@@ -1,0 +1,142 @@
+{
+  "ASSET-LICENSES.txt": {
+    "sha256": "561484cbb3da7962749894fe07a94d3940f5e35da1b946cf74b024aadc5f622f",
+    "bytes": 517,
+    "url": "https://neon-moonbridge-godot-wip.surge.sh/source-assets/ASSET-LICENSES.txt"
+  },
+  "bell.wav": {
+    "sha256": "c28afbf0499fe11b2968c14e771672e5d2ba9b6188b4c72bc376b05c28dc2414",
+    "bytes": 35324,
+    "url": "https://neon-moonbridge-godot-wip.surge.sh/source-assets/bell.wav"
+  },
+  "bunny.glb": {
+    "sha256": "4a71eb8a80a573560fd93b39cd3c547c978d54ddd288b63000667df757dd50a2",
+    "bytes": 538360,
+    "url": "https://neon-moonbridge-godot-wip.surge.sh/source-assets/bunny.glb"
+  },
+  "coin.wav": {
+    "sha256": "5be2c56c86788df0190390c96fefc12e2bd283fd137785db6b240848a9d1f9c8",
+    "bytes": 11068,
+    "url": "https://neon-moonbridge-godot-wip.surge.sh/source-assets/coin.wav"
+  },
+  "hurt.wav": {
+    "sha256": "446b4d79d7c4ad4b62c3a5ed6745926a788ecf9ba3c657997552e558349f1ee2",
+    "bytes": 13274,
+    "url": "https://neon-moonbridge-godot-wip.surge.sh/source-assets/hurt.wav"
+  },
+  "jump.wav": {
+    "sha256": "f54768e2fcbf21308aef53315ae3a2eef3578bc8a0927b9213c3d637b12d7a6d",
+    "bytes": 11068,
+    "url": "https://neon-moonbridge-godot-wip.surge.sh/source-assets/jump.wav"
+  },
+  "moon-height.png": {
+    "sha256": "95cd1f911c2c879784423f32d915224df903e84dd061f165894fba6335ec9e0a",
+    "bytes": 1717812,
+    "url": "https://neon-moonbridge-godot-wip.surge.sh/source-assets/moon-height.png"
+  },
+  "moon-normal.png": {
+    "sha256": "2654b77709411f5e5819592d03e72f721af05b9d1b543663b1712c58f99b7082",
+    "bytes": 1878,
+    "url": "https://neon-moonbridge-godot-wip.surge.sh/source-assets/moon-normal.png"
+  },
+  "moon.jpg": {
+    "sha256": "ebe99635c8babc05620fb532eba8459b9168b5b09f9704e320938c231900ed62",
+    "bytes": 328631,
+    "url": "https://neon-moonbridge-godot-wip.surge.sh/source-assets/moon.jpg"
+  },
+  "music.wav": {
+    "sha256": "a48c7e5beb679a4f4914864c78aed88e04022cc4111ce814df8016de64e29ac8",
+    "bytes": 169388,
+    "url": "https://neon-moonbridge-godot-wip.surge.sh/source-assets/music.wav"
+  },
+  "textures/ground_grove.png": {
+    "sha256": "9c1fc5a25fc80242ea55d2181f8a29fec44f2f71e35d78d0191ff51fb51dff9f",
+    "bytes": 1397926,
+    "url": "https://neon-moonbridge-godot-wip.surge.sh/source-assets/textures/ground_grove.png"
+  },
+  "textures/ground_meadow.png": {
+    "sha256": "71edf0a569642db5fcda077eca0424bb78a2ba385bfab76280ce9c478f6599cd",
+    "bytes": 1364444,
+    "url": "https://neon-moonbridge-godot-wip.surge.sh/source-assets/textures/ground_meadow.png"
+  },
+  "textures/ground_sand.png": {
+    "sha256": "d3fb6849030dbe526fbf604976bd7691fcbea89c5b277be7497cea59d29eae1d",
+    "bytes": 615743,
+    "url": "https://neon-moonbridge-godot-wip.surge.sh/source-assets/textures/ground_sand.png"
+  },
+  "textures/ground_sea.png": {
+    "sha256": "2bcd877ea1db13f78651c59bb16cf933613389e6708be7d3208a2fe8a7134a95",
+    "bytes": 614019,
+    "url": "https://neon-moonbridge-godot-wip.surge.sh/source-assets/textures/ground_sea.png"
+  },
+  "textures/side_comet.png": {
+    "sha256": "466eb913eb34678fbeef77edc6ab86d37711d66c069b94f2408784768d20f790",
+    "bytes": 37814,
+    "url": "https://neon-moonbridge-godot-wip.surge.sh/source-assets/textures/side_comet.png"
+  },
+  "textures/side_grove.png": {
+    "sha256": "8f32d9a01104f72acf134993f9283925f4248fd246aa1d088c416db6d4474521",
+    "bytes": 40469,
+    "url": "https://neon-moonbridge-godot-wip.surge.sh/source-assets/textures/side_grove.png"
+  },
+  "textures/side_meadow.png": {
+    "sha256": "8541855c7be6fbff26acd57dac930a376f761e232ed43fa76d55bf5deb42ebf1",
+    "bytes": 40701,
+    "url": "https://neon-moonbridge-godot-wip.surge.sh/source-assets/textures/side_meadow.png"
+  },
+  "textures/side_palace.png": {
+    "sha256": "d4b25c9ddbde8b78c992c23655aaf878098d33e4244c5bd946689655eed9a12b",
+    "bytes": 38733,
+    "url": "https://neon-moonbridge-godot-wip.surge.sh/source-assets/textures/side_palace.png"
+  },
+  "textures/side_sand.png": {
+    "sha256": "7cc8e8c7dccd49c11bf490009f25323400a8131aa0e5346665b5375b13587d7a",
+    "bytes": 41493,
+    "url": "https://neon-moonbridge-godot-wip.surge.sh/source-assets/textures/side_sand.png"
+  },
+  "textures/side_sea.png": {
+    "sha256": "dfb556a5afa73e764a3bfc251a85107cbe83e72bb3e740c143bfacbb7917ff23",
+    "bytes": 39498,
+    "url": "https://neon-moonbridge-godot-wip.surge.sh/source-assets/textures/side_sea.png"
+  },
+  "textures/sky_comet.png": {
+    "sha256": "f8deeb33f4d6f628c652ffc5ff8ab64898c2c89da1a85db25ccd98af427214f2",
+    "bytes": 5296,
+    "url": "https://neon-moonbridge-godot-wip.surge.sh/source-assets/textures/sky_comet.png"
+  },
+  "textures/sky_grove.png": {
+    "sha256": "b7f2ecfb3d1c3030fc8c0ff42eb53b3fe14da32e83339cdfa269909ef9a5194c",
+    "bytes": 5494,
+    "url": "https://neon-moonbridge-godot-wip.surge.sh/source-assets/textures/sky_grove.png"
+  },
+  "textures/sky_meadow.png": {
+    "sha256": "64080bf2e9968a41425df399077416bdb56321f65e6ce963643f34b63038b067",
+    "bytes": 5513,
+    "url": "https://neon-moonbridge-godot-wip.surge.sh/source-assets/textures/sky_meadow.png"
+  },
+  "textures/sky_palace.png": {
+    "sha256": "6f5a4bd7036c67d16b9e6ab5bfd2f1aa3844466bc91946f1db403da866ee6ba5",
+    "bytes": 5374,
+    "url": "https://neon-moonbridge-godot-wip.surge.sh/source-assets/textures/sky_palace.png"
+  },
+  "textures/sky_sand.png": {
+    "sha256": "acc99abea6643611e5518116220ef48968eeb2a8b8f08e75570cac08b8d22d40",
+    "bytes": 5813,
+    "url": "https://neon-moonbridge-godot-wip.surge.sh/source-assets/textures/sky_sand.png"
+  },
+  "textures/sky_sea.png": {
+    "sha256": "88c21e51f08b4d8993841c8296e4e730ab73920d74b0ffc58054ccbc5ace8979",
+    "bytes": 5386,
+    "url": "https://neon-moonbridge-godot-wip.surge.sh/source-assets/textures/sky_sea.png"
+  },
+  "textures/sprite_glow.png": {
+    "sha256": "d5a40422b87905bd0333041c802632351d15c8d82c8763687451d180e9f907b1",
+    "bytes": 4273,
+    "url": "https://neon-moonbridge-godot-wip.surge.sh/source-assets/textures/sprite_glow.png"
+  },
+  "textures/sprite_grass.png": {
+    "sha256": "7a347dc05707ccd7f36053918721c2bf34a1cdf0592951eddeb905612269187c",
+    "bytes": 12775,
+    "url": "https://neon-moonbridge-godot-wip.surge.sh/source-assets/textures/sprite_grass.png"
+  }
+}

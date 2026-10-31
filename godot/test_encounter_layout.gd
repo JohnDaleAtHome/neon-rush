@@ -18,8 +18,18 @@ func run():
   var before = g.story_props[0].position
   g.layout_encounter(size)
   assert(g.story_props[0].position.is_equal_approx(before))
+ g.options.buttons = false
+ g.options.stars = true
  g.on_action()
+ assert(not g.controls.visible)
+ for moon in g.moons: assert(moon.visible)
  assert(g.player.visible and g.story_props.is_empty() and g.unlock)
+ g.options.stars = false
+ g.pending_advance = true
+ g.show_beat("Piece","Cross","CONTINUE")
+ g.begin_unlock()
+ for moon in g.moons: assert(not moon.visible)
+ assert(not g.controls.visible)
  g.start_level()
  g.toggle_pause()
  assert(g.sound_button.visible and g.options_button.visible and g.stats_button.visible)

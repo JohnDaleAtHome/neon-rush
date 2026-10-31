@@ -29,7 +29,7 @@ var stats: Dictionary = {}
 var totals: Dictionary = {"runs":0,"distance":0,"treats":0,"seconds":0}
 var totals_loaded = false
 var totals_scope = "Tracked from this engine update"
-var options: Dictionary = {"sound": false, "light": false, "motion": false, "buttons": true, "large": false, "contrast": false, "tap": true, "swipe": 45, "stars": true, "guides": true, "compact": false, "banners": true, "hand": "center", "color": "pink", "gold": false, "last_mode": "story", "motion_system": true}
+var options: Dictionary = {"sound": false, "light": false, "motion": false, "buttons": true, "large": false, "contrast": false, "tap": true, "swipe": 45, "stars": true, "guides": true, "compact": false, "banners": true, "hand": "center", "color": "pink", "gold": false, "last_mode": "story", "motion_system": true, "shape": "rabbit"}
 var audio_players: Array[AudioStreamPlayer] = []
 var music_player: AudioStreamPlayer
 var status_label: Label
@@ -83,6 +83,7 @@ var level = 0
 var pieces: Array = []
 var entities: Array[Node3D] = []
 var player: Node3D
+var runner_variant: MeshInstance3D
 var bunny: Node3D
 var animator: AnimationPlayer
 var animation_names: Array[StringName] = []
@@ -177,6 +178,9 @@ func _ready():
  bunny.scale = Vector3.ONE * 0.55
  find_animator(bunny)
  hide_carrot(bunny)
+ runner_variant = MeshInstance3D.new()
+ runner_variant.position.y = 0.6
+ player.add_child(runner_variant)
  build_scenery()
  build_stars()
  var layer = CanvasLayer.new()
@@ -291,6 +295,7 @@ func _ready():
  load_options()
  setup_audio()
  apply_system_motion()
+ import_legacy_shape()
  import_legacy_data()
  import_legacy_preferences(had_engine_options)
  import_totals_once()
@@ -1018,8 +1023,7 @@ func load_options():
  if f:
   var data = JSON.parse_string(f.get_as_text())
   if data is Dictionary:
-   for key in options.keys():
-    if data.has(key) and typeof(data[key]) == typeof(options[key]): options[key] = data[key]
+   options.merge(validated_options(data),true)
    if not data.has("motion_system") and data.get("motion") is bool: options.motion_system = false
    gold_unlocked = data.get("gold_unlocked",false) == true
  options.sound = false
@@ -1035,6 +1039,7 @@ func validated_options(data: Dictionary) -> Dictionary:
   if typeof(options[key]) == TYPE_BOOL and value is bool: valid[key] = value
  if data.get("hand") in ["left","center","right"]: valid.hand = data.hand
  if data.get("color") in ["pink","mint","violet"]: valid.color = data.color
+ if data.get("shape") in ["rabbit","sphere","diamond"]: valid.shape = data.shape
  if data.get("last_mode") in mode_names: valid.last_mode = data.last_mode
  if (data.get("swipe") is float or data.get("swipe") is int) and float(data.swipe) in [30.0,45.0,65.0]: valid.swipe = int(data.swipe)
  return valid
@@ -1229,6 +1234,38 @@ func apply_options():
  if animator and reduced_motion(): animator.speed_scale = 0
  elif animator and not paused: animator.speed_scale = 1
  apply_bunny_tint(bunny)
+ apply_runner_shape()
+
+func apply_runner_shape():
+ bunny.visible = options.shape == "rabbit"
+ runner_variant.visible = options.shape != "rabbit"
+ if options.shape == "sphere":
+  var sphere = SphereMesh.new()
+  sphere.radius = 0.55
+  sphere.height = 1.1
+  runner_variant.mesh = sphere
+ elif options.shape == "diamond":
+  var mesh = ArrayMesh.new()
+  var vertices = PackedVector3Array()
+  var top = Vector3(0,0.65,0)
+  var bottom = Vector3(0,-0.65,0)
+  var ring = [Vector3(0.65,0,0),Vector3(0,0,0.65),Vector3(-0.65,0,0),Vector3(0,0,-0.65)]
+  for i in range(4):
+   var next = (i+1)%4
+   vertices.append_array(PackedVector3Array([top,ring[next],ring[i],bottom,ring[i],ring[next]]))
+  var arrays = []
+  arrays.resize(Mesh.ARRAY_MAX)
+  arrays[Mesh.ARRAY_VERTEX] = vertices
+  var normals = PackedVector3Array()
+  for i in range(0,vertices.size(),3):
+   var normal = (vertices[i+2]-vertices[i]).cross(vertices[i+1]-vertices[i]).normalized()
+   normals.append_array(PackedVector3Array([normal,normal,normal]))
+  arrays[Mesh.ARRAY_NORMAL] = normals
+  mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES,arrays)
+  runner_variant.mesh = mesh
+ var color = Color("9ed6af") if options.color == "mint" else Color("ba9cdd") if options.color == "violet" else Color("e7a3ba")
+ if options.gold and gold_unlocked: color = Color("ffdc78")
+ runner_variant.material_override = material(color,true)
 
 func apply_bunny_tint(node: Node):
  if node is MeshInstance3D:
@@ -1317,6 +1354,11 @@ func open_settings():
  colors.selected = ["pink","mint","violet"].find(options.color)
  colors.item_selected.connect(func(i): options.color = ["pink","mint","violet"][i]; save_options(); apply_options())
  list.add_child(colors)
+ var shape_choice = OptionButton.new()
+ for label in ["Runner: Moon Rabbit","Runner: Sphere","Runner: Diamond"]: shape_choice.add_item(label)
+ shape_choice.selected = ["rabbit","sphere","diamond"].find(options.shape)
+ shape_choice.item_selected.connect(func(i): options.shape = ["rabbit","sphere","diamond"][i]; save_options(); apply_options())
+ list.add_child(shape_choice)
  var gold = CheckButton.new()
  gold.text = "Gold accents" if gold_unlocked else "Gold: reach 250m + 10 treats"
  gold.disabled = not gold_unlocked
@@ -1473,8 +1515,20 @@ func mapped_legacy_options(value: Dictionary) -> Dictionary:
  if value.get("mode") in mode_names: result.last_mode = value.mode
  if value.get("hand") in ["left","center","right"]: result.hand = value.hand
  if value.get("swipe") in ["short","standard","long"]: result.swipe = {"short":30,"standard":45,"long":65}[value.swipe]
+ if value.get("runnerShape") in ["cube","sphere","diamond"]: result.shape = "rabbit" if value.runnerShape == "cube" else value.runnerShape
  if value.get("runnerColor") in ["cyan","mint","violet"]: result.color = "pink" if value.runnerColor == "cyan" else value.runnerColor
  return result
+
+func import_legacy_shape():
+ if not OS.has_feature("web") or FileAccess.file_exists("user://legacy-shape-v1"): return
+ var raw = JavaScriptBridge.eval("(()=>{try{let v=JSON.parse(localStorage.getItem('neonrush_godot_options_v2')||'{}');return typeof v.shape==='string' ? null : localStorage.getItem('neonrush_options')}catch(e){return null}})()",true)
+ if raw is String:
+  var old = JSON.parse_string(raw)
+  if old is Dictionary:
+   var mapped = mapped_legacy_options(old)
+   if mapped.has("shape"): options.shape = mapped.shape; save_options()
+ var mark = FileAccess.open("user://legacy-shape-v1",FileAccess.WRITE)
+ if mark: mark.store_string("1")
 
 func import_legacy_preferences(had_engine_options: bool):
  if not OS.has_feature("web") or FileAccess.file_exists("user://legacy-preferences-v2"): return

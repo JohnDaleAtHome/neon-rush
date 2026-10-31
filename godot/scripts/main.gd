@@ -222,7 +222,7 @@ func _ready():
   mode = mode_names[i]
   options.last_mode = mode
   save_options()
-  action.text = "START " + mode.to_upper()
+  action.text = "START " + display_mode(mode)
   fresh_button.show()
  )
  mode_select.custom_minimum_size.y = 48
@@ -408,13 +408,17 @@ func request_discard(destination: String):
   message.text = "Your run is paused. Confirm discard, or KEEP RUN."
   return
  if destination == "restart":
-  if mode == "story" and elapsed > 0: record_story_attempt("discarded for restart")
+  if elapsed > 0:
+   if mode == "story": record_story_attempt("discarded for restart")
+   else: record_endless_attempt()
   start_level()
  else: return_menu()
 
 func return_menu():
  reset_discard_prompt()
- if mode == "story" and elapsed > 0 and not campaign_run_recorded: record_story_attempt("discarded")
+ if elapsed > 0 and not campaign_run_recorded:
+  if mode == "story": record_story_attempt("discarded")
+  else: record_endless_attempt()
  running = false
  paused = false
  for item in entities: item.queue_free()
@@ -426,7 +430,7 @@ func return_menu():
  for foot in footprints: foot.queue_free()
  footprints.clear()
  stop_audio()
- show_beat("Mochi and the Moon Bridge", "Choose a journey. STORY saves each level checkpoint; endless modes save separate local bests.", "START " + mode.to_upper())
+ show_beat("Mochi and the Moon Bridge", "Choose a journey. STORY saves each level checkpoint; endless modes save separate local bests.", "START " + display_mode(mode))
  mode_select.show()
  menu_button.hide()
  pause_button.hide()
@@ -899,7 +903,9 @@ func update_unlock(dt: float):
   save_checkpoint()
   start_level()
 
-func finish_run(reason: String):
+func record_endless_attempt():
+ if campaign_run_recorded: return
+ campaign_run_recorded = true
  var record: Dictionary = stats.get(mode, {"best": 0, "distance": 0, "treats": 0, "seconds": 0, "runs": 0})
  record.best = maxi(int(record.best), int(score))
  record.distance = maxi(int(record.distance), int(distance))
@@ -911,6 +917,10 @@ func finish_run(reason: String):
  history.push_front({"mode":mode,"score":int(score),"distance":int(distance),"treats":collected,"seconds":int(elapsed),"completed_at":Time.get_datetime_string_from_system()})
  history = history.slice(0,20)
  save_stats()
+
+func finish_run(reason: String):
+ record_endless_attempt()
+ var record: Dictionary = stats.get(mode,{"best":0})
  show_beat("MISSION COMPLETE" if mode == "mission" and boss_hp <= 0 else "RUN COMPLETE", "%s\n%d points / %dm / %d treats / %ds\nBest %d\n%s" % [reason, int(score), int(distance), collected, int(elapsed), int(record.best),score_breakdown()], "RETRY RUN")
  mode_select.show()
 

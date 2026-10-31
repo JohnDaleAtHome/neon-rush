@@ -276,10 +276,12 @@ func _ready():
  configure_window()
  get_viewport().size_changed.connect(adapt_layout)
  adapt_layout()
+ var had_engine_options = FileAccess.file_exists("user://options.json")
  load_stats()
  load_options()
  setup_audio()
  import_legacy_data()
+ import_legacy_preferences(had_engine_options)
  load_checkpoint()
  apply_options()
  apply_world(level if mode == "story" else -1)
@@ -1188,15 +1190,63 @@ func import_legacy_data():
     if hist is Array and history.is_empty():
      for r in hist.slice(0,20):
       if r is Dictionary and r.get("mode","") in mode_names and r.get("score") is float:
-       history.append({"mode":r.mode,"score":maxi(0,int(r.score)),"distance":maxi(0,int(r.get("distance",0))),"treats":maxi(0,int(r.get("orbs",0))),"seconds":maxi(0,int(r.get("seconds",0))),"completed_at":str(r.get("completedAt",""))})
+       history.append({"mode":r.mode,"score":maxi(0,int(r.score)),"distance":maxi(0,int(r.get("distance",0))),"treats":maxi(0,int(r.get("orbs",0))),"seconds":maxi(0,int(r.get("seconds",0))),"completed_at":legacy_date(r.get("completedAt",""))})
    var journey = JSON.parse_string(data.journey if data.get("journey") is String else "null")
-   if journey is Dictionary:
+   if valid_legacy_journey(journey) and not FileAccess.file_exists("user://journey.json"):
     var f = FileAccess.open("user://journey.json",FileAccess.WRITE)
     if f: f.store_string(JSON.stringify(journey))
-   gold_unlocked = data.get("gold") == "1"
+   gold_unlocked = gold_unlocked or data.get("gold") == "1"
    save_stats()
    save_options()
  var mark = FileAccess.open("user://legacy-imported",FileAccess.WRITE)
+ if mark: mark.store_string("1")
+
+func legacy_date(value) -> String:
+ var text = str(value)
+ if (value is int or value is float or text.is_valid_float()) and text != "":
+  var stamp = float(value)
+  if stamp > 0 and stamp < 1e14:
+   return Time.get_datetime_string_from_unix_time(int(stamp / 1000.0)) + "Z"
+  return ""
+ return text if text.contains("T") else ""
+
+func valid_legacy_journey(value) -> bool:
+ if not value is Dictionary: return false
+ var n = value.get("level",-1)
+ if not (n is float or n is int) or n != int(n) or n < 0 or n > 5: return false
+ var p = value.get("pieces",null)
+ if not p is Array or p.size() != int(n): return false
+ for i in range(p.size()):
+  if p[i] != PIECES[i]: return false
+ return true
+
+func mapped_legacy_options(value: Dictionary) -> Dictionary:
+ var result = {}
+ for pair in [["quality","light"],["buttons","buttons"],["large","large"],["contrast","contrast"],["tapJump","tap"],["stars","stars"],["laneGuides","guides"],["compactHud","compact"],["banners","banners"],["goldTrim","gold"],["motion","motion"]]:
+  if value.get(pair[0]) is bool: result[pair[1]] = value[pair[0]]
+ if value.get("hand") in ["left","center","right"]: result.hand = value.hand
+ if value.get("swipe") in ["short","standard","long"]: result.swipe = {"short":30,"standard":45,"long":65}[value.swipe]
+ if value.get("runnerColor") in ["cyan","mint","violet"]: result.color = "pink" if value.runnerColor == "cyan" else value.runnerColor
+ return result
+
+func import_legacy_preferences(had_engine_options: bool):
+ if not OS.has_feature("web") or FileAccess.file_exists("user://legacy-preferences-v2"): return
+ # Never replace settings already saved in the engine. Old localStorage stays untouched.
+ var raw = JavaScriptBridge.eval("(()=>{try{return localStorage.getItem('neonrush_options')}catch(e){return null}})()",true)
+ if not had_engine_options and raw is String:
+  var old = JSON.parse_string(raw)
+  if old is Dictionary:
+   options.merge(mapped_legacy_options(old),true)
+   if not gold_unlocked: options.gold = false
+   save_options()
+ var changed = false
+ for row in history:
+  var old = row.get("completed_at","")
+  if str(old).is_valid_float():
+   row.completed_at = legacy_date(old)
+   changed = true
+ if changed: save_stats()
+ var mark = FileAccess.open("user://legacy-preferences-v2",FileAccess.WRITE)
  if mark: mark.store_string("1")
 
 func build_level_props(index: int):

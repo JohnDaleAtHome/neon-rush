@@ -17,6 +17,13 @@ func run():
   for moon in g.moons:
    var screen = g.camera.unproject_position(moon.position)
    assert(screen.y > 235)
+ assert(g.scenery.get_child_count() == 16)
+ for tree in g.scenery.get_children():
+  assert(absf(tree.position.x) >= 6.5)
+  assert(tree.get_child_count() == 4)
+ g.apply_world(5)
+ assert(g.scene_props.size() == 120)
+ for prop in g.scene_props: assert(absf(prop.position.x) >= 5.19)
  g.options.stars = false
  g.apply_options()
  for moon in g.moons: assert(not moon.visible)

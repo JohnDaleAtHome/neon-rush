@@ -16,6 +16,11 @@ func run():
  var closed = g.boss.get_node("EclipseRing").material_override.albedo_color
  g.update_guardian_art(true)
  var opened = g.boss.get_node("EclipseRing").material_override.albedo_color
+ var ring_material = g.boss.get_node("EclipseRing").material_override
+ var core_material = g.boss.material_override
+ for tick in range(120): g.update_guardian_art(true)
+ assert(g.boss.get_node("EclipseRing").material_override == ring_material)
+ assert(g.boss.material_override == core_material)
  assert(closed != opened)
  g.spawn_time = 999
  g.boss_clock = 2.5

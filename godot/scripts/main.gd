@@ -56,6 +56,7 @@ var dimmer: ColorRect
 var scene_props: Array[Node3D] = []
 var sky_stars: MultiMeshInstance3D
 var ground_scroll = 0.0
+var lane_guides: Array[MeshInstance3D] = []
 var running = false
 var paused = false
 var lane = 1
@@ -141,6 +142,9 @@ func _ready():
  ground.mesh = plane_mesh
  ground.position = Vector3(0,-0.05,-62)
  add_child(ground)
+ for lane_x in [-1.1,1.1]:
+  var guide = box(Vector3(0.035,0.02,150),Vector3(lane_x,0.025,-62),Color("acc9d3"))
+  lane_guides.append(guide)
  for side in [-1, 1]:
   box(Vector3(0.08, 0.08, 150), Vector3(side * 3.6, 0.02, -62), Color("ef67b9"))
  for i in range(3):
@@ -318,6 +322,7 @@ func _unhandled_key_input(event):
   KEY_SPACE, KEY_UP, KEY_W: input_action(0)
   KEY_DOWN, KEY_S: input_action(2)
   KEY_F: input_action(3)
+  KEY_M: toggle_sound()
   KEY_P, KEY_ESCAPE: toggle_pause()
 
 func toggle_pause():
@@ -990,6 +995,8 @@ func apply_options():
  if options.contrast:
   hud.add_theme_color_override("font_color",Color("ffffb0"))
  else: hud.add_theme_color_override("font_color",Color.WHITE)
+ for guide in lane_guides: guide.visible = options.guides
+ adapt_layout()
  for moon in moons: moon.visible = options.stars
  if sky_stars: sky_stars.visible = options.stars and not options.light
  if scenery: scenery.visible = not options.light and mode == "story" and level == 2
@@ -1012,7 +1019,7 @@ func popup_frame(title: String) -> VBoxContainer:
  var bg = PanelContainer.new()
  var viewport_size = get_viewport().get_visible_rect().size
  bg.position = Vector2((viewport_size.x-370)/2,20 if viewport_size.y < 650 else 70)
- bg.size = Vector2(370,minf(690,viewport_size.y-40))
+ bg.size = Vector2(370,minf(690,viewport_size.y-(40 if viewport_size.y < 650 else 90)))
  var style = StyleBoxFlat.new()
  style.bg_color = Color("121728")
  style.corner_radius_top_left = 16
@@ -1026,7 +1033,7 @@ func popup_frame(title: String) -> VBoxContainer:
  bg.add_theme_stylebox_override("panel",style)
  overlay_root.add_child(bg)
  var scroll = ScrollContainer.new()
- scroll.custom_minimum_size = Vector2(338,minf(650,viewport_size.y-80))
+ scroll.custom_minimum_size = Vector2(338,minf(650,viewport_size.y-(80 if viewport_size.y < 650 else 130)))
  bg.add_child(scroll)
  var list = VBoxContainer.new()
  list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -1045,7 +1052,7 @@ func popup_frame(title: String) -> VBoxContainer:
 
 func open_settings():
  var list = popup_frame("SETTINGS - THIS BROWSER")
- for entry in [["light","Light quality"],["motion","Reduced motion"],["buttons","On-screen buttons"],["large","Large controls"],["contrast","High contrast HUD"],["tap","Tap to jump"],["stars","Show moons"],["compact","Compact HUD"],["banners","Story guidance"]]:
+ for entry in [["light","Light quality"],["motion","Reduced motion"],["buttons","On-screen buttons"],["large","Large controls"],["contrast","High contrast HUD"],["tap","Tap to jump"],["stars","Show moons"],["guides","Lane guides"],["compact","Compact HUD"],["banners","Story guidance"]]:
   var key: String = entry[0]
   var button = CheckButton.new()
   button.text = entry[1]
@@ -1053,6 +1060,11 @@ func open_settings():
   button.custom_minimum_size.y = 42
   button.toggled.connect(func(on): options[key] = on; save_options(); apply_options())
   list.add_child(button)
+ var hand = OptionButton.new()
+ for title in ["Controls: center","Controls: left","Controls: right"]: hand.add_item(title)
+ hand.selected = ["center","left","right"].find(options.hand)
+ hand.item_selected.connect(func(i): options.hand = ["center","left","right"][i]; save_options(); apply_options())
+ list.add_child(hand)
  var sensitivity = OptionButton.new()
  for label in ["Swipe: sensitive","Swipe: standard","Swipe: deliberate"]: sensitivity.add_item(label)
  sensitivity.selected = [30,45,65].find(int(options.swipe))
@@ -1251,10 +1263,12 @@ func adapt_layout():
  pause_button.position.x = size.x-104
  status_label.position.x = (size.x-350)/2
  progress_label.position.x = (size.x-350)/2
- controls.anchor_left = 0.5
- controls.anchor_right = 0.5
- controls.offset_left = -minf(240,(size.x-16)/2)
- controls.offset_right = minf(240,(size.x-16)/2)
+ var width = minf(480,size.x-16) if options.hand == "center" else minf(360,size.x-16)
+ var center = size.x/2 if options.hand == "center" else width/2+8 if options.hand == "left" else size.x-width/2-8
+ controls.anchor_left = 0
+ controls.anchor_right = 0
+ controls.offset_left = center-width/2
+ controls.offset_right = center+width/2
 
 func configure_window():
  var physical = get_window().size

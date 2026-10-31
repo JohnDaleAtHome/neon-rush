@@ -18,6 +18,7 @@ var chain = 0
 var chain_time = 0.0
 var chain_bonus = 0
 var jump_bonus = 0
+var jump_buffer = 0.0
 var shield = false
 var shield_time = 12.0
 var magnet_time = 0.0
@@ -312,9 +313,12 @@ func play_animation(suffix: String):
 func input_action(code: int):
  if not running or paused or unlock: return
  if code == -1 or code == 1: lane = clampi(lane + code, 0, 2)
- elif code == 0 and height <= 0.01:
-  velocity = 9.0
-  sound("jump")
+ elif code == 0:
+  if height <= 0.01:
+   velocity = 9.0
+   jump_buffer = 0
+   sound("jump")
+  else: jump_buffer = 0.12
  elif code == 2 and height <= 0.01 and mode in ["story", "mission", "chase"]: slide_time = 0.65
  elif code == 3 and ((mode == "story" and level == 5) or (mode == "mission" and mission_phase == 2)) and fire_time <= 0:
   fire_time = 0.3
@@ -475,6 +479,7 @@ func start_level():
  dew = 0
  height = 0
  velocity = 0
+ jump_buffer = 0
  lane = 1
  speed = 16 if mode == "story" and level == 4 else 10 if mode == "easy" else 19 if mode == "hard" else 14 if mode != "story" else 12
  guard = 0
@@ -592,9 +597,12 @@ func _process(dt):
  fire_time = maxf(0, fire_time - dt)
  guardian_feedback_time = maxf(0, guardian_feedback_time - dt)
  player.position.x = lerpf(player.position.x, LANES[lane], minf(1, dt * 12))
+ jump_buffer = maxf(0, jump_buffer - dt)
  velocity -= (19 if mode == "story" and level == 1 else 26) * dt
  height = maxf(0, height + velocity * dt)
- if height == 0: velocity = 0
+ if height == 0:
+  velocity = 0
+  if jump_buffer > 0: input_action(0)
  player.position.y = height
  play_animation("Duck" if slide_time > 0 else "Jump_Idle" if height > 0.05 else "Run")
  if animator and current_action == "Run" and not animator.is_playing(): current_action = ""; play_animation("Run")
@@ -664,7 +672,9 @@ func _process(dt):
      guardian_feedback_time = 0.9
     entities.erase(item); item.queue_free()
    continue
-  if item.position.z > 1.1 and kind == "low" and height > 0.65 and not jump_scored.has(item.get_instance_id()):
+  if kind == "low" and absf(item.position.z) < 1.1 and height > 0.65 and absf(item.position.x - player.position.x) < 1.0:
+   item.set_meta("jump_clear",true)
+  if item.position.z > 1.1 and kind == "low" and item.get_meta("jump_clear",false) and height > 0.65 and absf(item.position.x - player.position.x) < 1.0 and not jump_scored.has(item.get_instance_id()):
    jump_scored[item.get_instance_id()] = true
    jump_bonus += 20
    score += 20

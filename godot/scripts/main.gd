@@ -797,10 +797,11 @@ func load_checkpoint():
 
 func add_cue(hazard: Node3D, kind: String):
  var label = Label3D.new()
- label.text = "DOWN" if kind == "beam" else "UP" if kind == "low" else "X"
- label.font_size = 64
+ label.text = "SLIDE" if kind == "beam" else "JUMP" if kind == "low" else "DODGE"
+ label.font_size = 44
  label.pixel_size = 0.008
- label.position = Vector3(0, 0, 0.62)
+ label.rotation.z = -hazard.rotation.z
+ label.position = hazard.basis.inverse() * Vector3(0, 0.5 if kind == "low" else 0.0, 0.66)
  label.no_depth_test = false
  hazard.add_child(label)
 

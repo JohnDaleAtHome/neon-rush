@@ -24,8 +24,8 @@ Real-time normal-input browser campaign reached reunion on baseline and v2; dete
 Old localStorage stays untouched. First engine use maps valid legacy control/visual preferences; saved engine preferences win on later visits. Unsupported runner shape is not silently mapped. Classic and Chill scores stay distinct. Legacy numeric history timestamps convert from epoch milliseconds to UTC date text. Invalid checkpoint piece order is rejected, and an engine checkpoint is never overwritten by the old one. This migration was tested with synthetic browser storage fixtures, not naturally accumulated user stats. Same-origin access is required; alternate staging domains cannot read the official site's storage.
 
 ## Remaining before replacing the hosted game
-- Full feature-parity work: lifetime totals, near-miss bonus, alternative sphere/diamond runner settings, system reduced-motion default and remembered last mode.
-- Full score breakdown and run-goal progress are less detailed than legacy.
+- Full feature-parity work: lifetime totals, alternative sphere/diamond runner settings, system reduced-motion default and remembered last mode.
+- Near-miss bonus, jump-clear feedback, visible run-goal progress and score breakdown are now ported. Their new browser screenshots use explicit controlled fixtures, not naturally earned scores.
 - Environment/NPC/guardian art remains simplified. Animated Quaternius Bunny is a placeholder, not a finished match to the user's rabbit reference.
 - Browser audio listening and actual-device performance review are still open. Headless/browser checks are not human fun acceptance.
 - Source binaries are recovered through the checksum manifest/bootstrap, with an explicit network dependency on the preserved staging source-assets URLs. The source tree is not a self-contained binary asset archive.

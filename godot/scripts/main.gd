@@ -5,6 +5,7 @@ const LEVEL_NAMES = ["Neon Meadow", "Silver Dunes", "Cinnamon Grove", "Storm Sea
 const PIECES = ["Moon Dew Vial", "Silver Lantern", "Cinnamon Blossom", "Tide Pearl", "Eclipse Key"]
 const COLORS = [Color("194b36"), Color("a49db7"), Color("745032"), Color("184b68"), Color("38253f"), Color("b18c67")]
 var mode = "story"
+var discard_pending = ""
 var fresh_button: Button
 var guardian_feedback = ""
 var guardian_feedback_time = 0.0
@@ -217,7 +218,7 @@ func _ready():
  var fresh = fresh_button
  fresh.text = "NEW JOURNEY"
  fresh.custom_minimum_size.y = 48
- fresh.pressed.connect(func(): mode = "story"; mode_select.select(0); level = 0; pieces = []; pending_advance = false; save_checkpoint(); start_level())
+ fresh.pressed.connect(on_fresh_pressed)
  panel.add_child(fresh)
  sound_button = Button.new()
  sound_button.text = "SOUND OFF"
@@ -237,7 +238,7 @@ func _ready():
  menu_button = Button.new()
  menu_button.text = "DISCARD RUN / MAIN MENU"
  menu_button.custom_minimum_size.y = 44
- menu_button.pressed.connect(return_menu)
+ menu_button.pressed.connect(func(): request_discard("menu"))
  panel.add_child(menu_button)
  menu_button.hide()
  controls = HBoxContainer.new()
@@ -335,6 +336,7 @@ func _unhandled_key_input(event):
 func toggle_pause():
  if not running: return
  paused = not paused
+ reset_discard_prompt()
  if animator: animator.speed_scale = 0.0 if paused else 1.0
  if paused:
   dimmer.show()
@@ -343,6 +345,8 @@ func toggle_pause():
   panel.show()
   action.text = "RESUME RUN"
   mode_select.hide()
+  fresh_button.text = "RESTART RUN"
+  fresh_button.show()
   menu_button.show()
   message.text = "PAUSED - your run is frozen."
  else:
@@ -353,7 +357,39 @@ func toggle_pause():
   if options.sound: music_player.play()
  pause_button.text = "RESUME" if paused else "PAUSE"
 
+func reset_discard_prompt():
+ discard_pending = ""
+ fresh_button.text = "NEW JOURNEY"
+ menu_button.text = "DISCARD RUN / MAIN MENU"
+
+func on_fresh_pressed():
+ if paused:
+  request_discard("restart")
+  return
+ mode = "story"
+ mode_select.select(0)
+ level = 0
+ pieces = []
+ pending_advance = false
+ save_checkpoint()
+ start_level()
+
+func request_discard(destination: String):
+ if not running or not paused: return
+ if discard_pending != destination:
+  discard_pending = destination
+  action.text = "KEEP RUN"
+  fresh_button.text = "DISCARD & RESTART?" if destination == "restart" else "RESTART RUN"
+  menu_button.text = "DISCARD & MENU?" if destination == "menu" else "DISCARD RUN / MAIN MENU"
+  message.text = "Your run is paused. Confirm discard, or KEEP RUN."
+  return
+ if destination == "restart":
+  if mode == "story" and elapsed > 0: record_story_attempt("discarded for restart")
+  start_level()
+ else: return_menu()
+
 func return_menu():
+ reset_discard_prompt()
  if mode == "story" and elapsed > 0 and not campaign_run_recorded: record_story_attempt("discarded")
  running = false
  paused = false
@@ -399,6 +435,7 @@ func on_action():
  start_level()
 
 func start_level():
+ reset_discard_prompt()
  campaign_run_recorded = false
  clear_encounter()
  for item in entities: item.queue_free()

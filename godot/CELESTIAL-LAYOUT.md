@@ -1,0 +1,5 @@
+# Readable objective band and quieter peripheral props
+
+Camera projection now positions the three moons below the objective band for portrait and landscape layouts. Desktop and390px mobile actual pixels show a gap between objective text and every celestial silhouette. Silver Dunes side props are thin crater rings rather than bright solid mounds. Shadow Comet debris is faceted and varied in rotation/height rather than flat squashed ellipses. Props remain outside gameplay lanes; no collision or difficulty changes.
+
+Five targeted headless suites pass: scene art acrosssix themes, full deterministic campaign8911steps/zero retries, systems, runner skins, controls. Actual release1280x720/390x844 moon/text pixels and seeded Dunes/Comet art views inspected. Seeded checkpoints are synthetic art previews, not natural campaign proof. Existing backdrop glow-band transition, slab trees, sparse palace, character/reference fidelity and guardian art remain quality gaps. No finished-art claim; frozenv14 and official legacy unchanged.

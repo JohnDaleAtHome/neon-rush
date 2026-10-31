@@ -1,0 +1,20 @@
+extends SceneTree
+func _init(): call_deferred("run")
+func run():
+ var g = load("res://scenes/main.tscn").instantiate()
+ root.add_child(g)
+ await process_frame
+ g.set_process(false)
+ var mapped = g.mapped_legacy_options({"hand":"left","quality":true,"buttons":false,"large":true,"contrast":true,"tapJump":false,"swipe":"short","runnerColor":"cyan","goldTrim":true,"laneGuides":false,"compactHud":true,"stars":false,"banners":false,"motion":null})
+ assert(mapped.hand == "left" and mapped.light and mapped.large and mapped.contrast)
+ assert(not mapped.buttons and not mapped.tap and mapped.swipe == 30)
+ assert(mapped.color == "pink" and mapped.gold and not mapped.guides)
+ assert(mapped.compact and not mapped.stars and not mapped.banners and not mapped.has("motion"))
+ assert(g.mapped_legacy_options({"hand":"bad","swipe":"bad","buttons":"false","runnerColor":"bad"}).is_empty())
+ assert(g.legacy_date(1793448000000) == "2026-10-31T12:00:00Z")
+ assert(g.legacy_date("1793448000000") == "2026-10-31T12:00:00Z")
+ assert(g.legacy_date(-1) == "" and g.legacy_date("invalid") == "")
+ assert(g.valid_legacy_journey({"level":2,"pieces":g.PIECES.slice(0,2)}))
+ for bad in [{"level":2,"pieces":["fake","fake"]},{"level":2.5,"pieces":[]},{"level":7,"pieces":[]},{"level":0,"pieces":"wrong"}]: assert(not g.valid_legacy_journey(bad))
+ print("PASS safe legacy preference mapping, invalid-value rejection, epoch dates, checkpoint validation")
+ quit()

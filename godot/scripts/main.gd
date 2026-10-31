@@ -47,9 +47,11 @@ var stats_panel: PanelContainer
 var history: Array = []
 var gold_unlocked = false
 var run_goal = false
+var campaign_run_recorded = false
 var storage_warning = ""
 var jump_scored: Dictionary = {}
 var overlay_root: Control
+var progress_label: Label
 var dimmer: ColorRect
 var scene_props: Array[Node3D] = []
 var sky_stars: MultiMeshInstance3D
@@ -256,6 +258,15 @@ func _ready():
  status_label.size = Vector2(350, 28)
  status_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
  root.add_child(status_label)
+ progress_label = Label.new()
+ progress_label.position = Vector2(20,200)
+ progress_label.size = Vector2(350,34)
+ progress_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+ root.add_child(progress_label)
+ get_window().size_changed.connect(configure_window)
+ configure_window()
+ get_viewport().size_changed.connect(adapt_layout)
+ adapt_layout()
  load_stats()
  load_options()
  setup_audio()
@@ -331,6 +342,7 @@ func toggle_pause():
  pause_button.text = "RESUME" if paused else "PAUSE"
 
 func return_menu():
+ if mode == "story" and elapsed > 0 and not campaign_run_recorded: record_story_attempt("discarded")
  running = false
  paused = false
  for item in entities: item.queue_free()
@@ -352,6 +364,7 @@ func show_beat(title: String, words: String, label: String):
  running = false
  stop_audio()
  status_label.text = ""
+ progress_label.text = ""
  menu_button.hide()
  mode_select.visible = not pending_advance
  pause_button.hide()
@@ -360,6 +373,7 @@ func show_beat(title: String, words: String, label: String):
  controls.hide()
  message.text = title + "\n\n" + words
  action.text = label
+ adapt_layout()
  play_animation("Idle")
 
 func on_action():
@@ -372,6 +386,7 @@ func on_action():
  start_level()
 
 func start_level():
+ campaign_run_recorded = false
  clear_encounter()
  for item in entities: item.queue_free()
  entities.clear()
@@ -390,6 +405,7 @@ func start_level():
  panel.hide()
  controls.visible = options.buttons
  apply_options()
+ adapt_layout()
  elapsed = 0
  score = 0
  distance = 0
@@ -473,6 +489,7 @@ func hurt():
  if mode == "chase" or (mode == "story" and level == 4): shadow_gap -= 4.5
  if hearts <= 0:
   if mode == "story":
+   record_story_attempt("checkpoint retry")
    show_beat("The silver bell rings", "Your bridge pieces are safe. Jump low hazards, dodge tall ones, slide under arches.", "RETRY CHECKPOINT")
    sound("bell")
   else: finish_run("Three hits ended this journey. Try a new route.")
@@ -531,7 +548,9 @@ func _process(dt):
  if mode == "chase" or (mode == "story" and level == 4):
   shadow_gap -= dt * 1.1
   if shadow_gap <= 2.5:
-   if mode == "story": show_beat("The silver bell rings", "The shadow caught up. Gather light to push it back.", "RETRY CHECKPOINT")
+   if mode == "story":
+    record_story_attempt("shadow checkpoint retry")
+    show_beat("The silver bell rings", "The shadow caught up. Gather light to push it back.", "RETRY CHECKPOINT")
    else: finish_run("The shadow caught up. Treats push it back.")
    return
  if not ((mode == "story" and level == 5) or (mode == "mission" and mission_phase == 2)):
@@ -545,7 +564,7 @@ func _process(dt):
     apply_world(5)
     boss = box(Vector3(1.7, 1.7, 1.7), Vector3(0, 1.8, -18), Color("b056b1"))
     apply_options()
-  if mode == "story" and elapsed >= [24,25,26,27,28][level] and (level != 0 or dew >= 6):
+  if mode == "story" and ((level == 0 and dew >= 6) or (level > 0 and elapsed >= [24,25,26,27,28][level])):
    pending_advance = true
    var choice = ["TAKE MOON DEW VIAL", "LIFT SILVER LANTERN", "HELP THE FIREFLY", "SPEAK KINDLY TO THE TURTLE", "OFFER A MOCHI"][level]
    var words = ["The vial is full. Moon Dew lights the launch pad. Bell's ringing louder. That way, toward the Moon.", "Chang'e's lantern lies in the dunes. Her footprints. I'm on the right path.", "A firefly is caught in crystal vines. Free it before asking Wu Gang for the blossom.", "A sleepy moon-turtle guards the pearl. Wake a friend with a kind word.", "The shadow corners Mochi. You don't have to be dark alone. Have a mochi."][level]
@@ -625,6 +644,10 @@ func update_hud():
   hud.text = "%s  %d pts\n%d m  %d treats  %ds\nBest %d" % [display_mode(mode), int(score), int(distance), collected, int(elapsed), int(stats.get(mode, {}).get("best", 0))]
  if mode == "chase" or (mode == "story" and level == 4): hud.text += "  Shadow %.1fm" % shadow_gap
  if (mode == "story" and level == 5) or (mode == "mission" and mission_phase == 2): hud.text += "  Guardian %d / 4" % boss_hp
+ if mode == "story" and running and not unlock:
+  progress_label.text = "DEW %d / 6 TO LIGHT THE LAUNCH PAD" % mini(dew,6) if level == 0 else "PATH TO %s: %d%%" % [PIECES[level].to_upper(),mini(100,int(elapsed/[24,25,26,27,28][level]*100))] if level < 5 else "ALIGN WITH THE GUARDIAN - FIRE WHEN GREEN"
+ elif unlock: progress_label.text = "BRIDGE CROSSING %d%%" % mini(100,int(unlock_time/5*100))
+ else: progress_label.text = ""
  status_label.text = "SHIELD READY" if shield else "MAGNET %.1fs" % magnet_time if magnet_time > 0 else "CHAIN %d / 3" % chain if chain > 0 else ""
 
 func save_checkpoint():
@@ -750,6 +773,7 @@ func update_unlock(dt: float):
   if gate: gate.queue_free(); gate = null
   for foot in footprints: foot.queue_free()
   footprints.clear()
+  record_story_attempt("level complete")
   pieces.append(PIECES[level])
   level += 1
   save_checkpoint()
@@ -856,7 +880,7 @@ func _input(event):
    touch_active = true
    touch_moved = false
   elif touch_active:
-   if options.tap and not touch_moved and event.position.y > 250 and event.position.y < 700: input_action(0)
+   if options.tap and not touch_moved and event.position.y > 250 and event.position.y < get_viewport().get_visible_rect().size.y - 140: input_action(0)
    touch_active = false
  elif event is InputEventScreenDrag and touch_active:
   var delta = event.position - touch_origin
@@ -939,10 +963,19 @@ func decorate_hazard(hazard: MeshInstance3D, kind: String):
   hazard.mesh = shape
 
 func record_completion():
- var r: Dictionary = stats.get("story",{"best":0,"distance":0,"treats":0,"seconds":0,"runs":0})
- r.runs = int(r.get("runs",0))+1
- stats.story = r
- history.push_front({"mode":"story","score":int(score),"distance":int(distance),"treats":collected,"seconds":int(elapsed),"completed_at":Time.get_datetime_string_from_system(),"complete":true})
+ record_story_attempt("reunion")
+
+func record_story_attempt(outcome: String):
+ if campaign_run_recorded: return
+ campaign_run_recorded = true
+ var record: Dictionary = stats.get("story",{"best":0,"distance":0,"treats":0,"seconds":0,"runs":0})
+ record.best = maxi(int(record.get("best",0)),int(score))
+ record.distance = maxi(int(record.get("distance",0)),int(distance))
+ record.treats = maxi(int(record.get("treats",0)),collected)
+ record.seconds = maxi(int(record.get("seconds",0)),int(elapsed))
+ record.runs = int(record.get("runs",0))+1
+ stats.story = record
+ history.push_front({"mode":"story","score":int(score),"distance":int(distance),"treats":collected,"seconds":int(elapsed),"completed_at":Time.get_datetime_string_from_system(),"outcome":outcome,"level":level+1})
  history = history.slice(0,20)
  save_stats()
 
@@ -977,8 +1010,9 @@ func apply_bunny_tint(node: Node):
 
 func popup_frame(title: String) -> VBoxContainer:
  var bg = PanelContainer.new()
- bg.position = Vector2(10,70)
- bg.size = Vector2(370,690)
+ var viewport_size = get_viewport().get_visible_rect().size
+ bg.position = Vector2((viewport_size.x-370)/2,20 if viewport_size.y < 650 else 70)
+ bg.size = Vector2(370,minf(690,viewport_size.y-40))
  var style = StyleBoxFlat.new()
  style.bg_color = Color("121728")
  style.corner_radius_top_left = 16
@@ -992,7 +1026,7 @@ func popup_frame(title: String) -> VBoxContainer:
  bg.add_theme_stylebox_override("panel",style)
  overlay_root.add_child(bg)
  var scroll = ScrollContainer.new()
- scroll.custom_minimum_size = Vector2(338,650)
+ scroll.custom_minimum_size = Vector2(338,minf(650,viewport_size.y-80))
  bg.add_child(scroll)
  var list = VBoxContainer.new()
  list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -1203,3 +1237,27 @@ func build_stars():
  m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
  sky_stars.material_override = m
  add_child(sky_stars)
+
+func adapt_layout():
+ var size = get_viewport().get_visible_rect().size
+ if not is_instance_valid(panel): return
+ var compact = size.y < 650
+ panel.position = Vector2((size.x-340)/2,155 if compact else 365)
+ message.position.y = 15 if compact and not running else 100 if compact else 145
+ message.size.y = 120 if compact else 170
+ message.add_theme_font_size_override("font_size",15 if compact else 16)
+ progress_label.position.y = 155 if compact else 200
+ message.position.x = (size.x-354)/2
+ pause_button.position.x = size.x-104
+ status_label.position.x = (size.x-350)/2
+ progress_label.position.x = (size.x-350)/2
+ controls.anchor_left = 0.5
+ controls.anchor_right = 0.5
+ controls.offset_left = -minf(240,(size.x-16)/2)
+ controls.offset_right = minf(240,(size.x-16)/2)
+
+func configure_window():
+ var physical = get_window().size
+ if physical.x > physical.y:
+  get_window().content_scale_size = Vector2i(maxi(700,physical.x),maxi(500,physical.y))
+ else: get_window().content_scale_size = Vector2i(390,844)

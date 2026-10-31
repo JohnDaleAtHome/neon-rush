@@ -923,7 +923,7 @@ func begin_unlock():
  unlock = true
  unlock_time = 0
  panel.hide()
- controls.show()
+ apply_options()
  hud.show()
  pause_button.show()
  for item in entities: item.queue_free()

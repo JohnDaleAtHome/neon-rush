@@ -52,6 +52,7 @@ var scenery: Node3D
 var side_planes: Array[MeshInstance3D] = []
 var env_world: WorldEnvironment
 var moons: Array[MeshInstance3D] = []
+var moon_glows: Array[Sprite3D] = []
 var story_props: Array[Node3D] = []
 var settings_panel: PanelContainer
 var stats_panel: PanelContainer
@@ -171,6 +172,8 @@ func _ready():
   moon.position = Vector3(-12 + i * 12, 10 + i * 5, -50 - i * 15)
   add_child(moon)
   moons.append(moon)
+  var glow = add_glow(moon,Color("c3b3dd"),sphere.radius*0.05)
+  moon_glows.append(glow)
  player = Node3D.new()
  add_child(player)
  bunny = load("res://assets/bunny.glb").instantiate()
@@ -558,6 +561,7 @@ func spawn_wave():
   orb.position = Vector3(LANES[safe],1.0,z)
   orb.material_override = material(Color("b8ffff") if mode == "story" and level == 0 else Color("ffe4b8"), true)
   add_child(orb)
+  add_glow(orb,Color(0.5,0.9,1.0,0.55) if mode == "story" and level == 0 else Color(1.0,0.8,0.4,0.5),0.025)
   orb.set_meta("kind", "orb")
   entities.append(orb)
 
@@ -591,7 +595,7 @@ func _process(dt):
  if not running or paused: return
  elapsed += dt
  ground_scroll = fmod(ground_scroll + speed * dt / 25.0, 1.0)
- ground.material_override.uv1_offset.y = -ground_scroll
+ ground.material_override.set_shader_parameter("scroll",-ground_scroll)
  if not reduced_motion():
   for p in scene_props:
    p.position.z += speed * dt
@@ -807,7 +811,7 @@ func apply_world(index: int):
   env_world.environment.background_color = [Color("102619"),Color("1b112b"),Color("2f1c0d"),Color("0c2237"),Color("211021"),Color("28213d")][index]
  else: env_world.environment.background_color = Color("08091c")
  for side in side_planes:
-  var sm = material(Color("8c8c8c"))
+  var sm = material([Color("86a884"),Color("7d7796"),Color("9a8266"),Color("6f96ad"),Color("5c4d78"),Color("8a6f80")][maxi(index,0)] * 0.72)
   sm.albedo_texture = load("res://assets/textures/side_" + theme + ".png") if index >= 0 else load("res://assets/moon.jpg")
   sm.uv1_scale = Vector3(5, 20, 1)
   side.material_override = sm
@@ -815,35 +819,62 @@ func apply_world(index: int):
   m.albedo_texture = load("res://assets/moon.jpg")
   m.uv1_scale = Vector3(2, 24, 1)
  ground.material_override = m
- var grades = [Color("e8f2de"),Color("e0eaff"),Color("ffd3a2"),Color("aec9ea"),Color("c59fba"),Color("ffe6b0")]
+ var fog_color = [Color("1d5c3a"),Color("341a52"),Color("57351a"),Color("174464"),Color("3d1738"),Color("443e7c")][maxi(index,0)]
+ ground.material_override = terrain_material(m,fog_color)
+ for side in side_planes: side.material_override = terrain_material(side.material_override,fog_color)
+ var moon_palettes = [["f2e9ff","ffd9b8","bdeef2"],["e8f0ff","cfd8ec","d6e4f2"],["ffc98a","e8a05e","d9b08a"],["9fb8d4","7f96b4","8fa8c2"],["b98a8a","9c7070","a88080"],["ffe6b0","ffd490","f2d9b8"]]
  for i in range(moons.size()):
-  var mm = material(grades[maxi(index,0)] if index >= 0 else Color("ddd4ef"))
-  mm.albedo_texture = load("res://assets/moon.jpg")
-  mm.normal_enabled = true
-  mm.normal_texture = load("res://assets/moon-normal.png")
-  mm.normal_scale = 2.0
-  mm.uv1_scale = Vector3(2,1,1)
+  var tint = Color(moon_palettes[maxi(index,0)][i])
+  var mm = ShaderMaterial.new()
+  mm.shader = load("res://scripts/moon.gdshader")
+  mm.set_shader_parameter("lunar_height",load("res://assets/moon-height.png"))
+  mm.set_shader_parameter("moon_tint",tint)
   moons[i].material_override = mm
   moons[i].visible = options.stars
+  moon_glows[i].modulate = Color(tint.r,tint.g,tint.b,0.18)
  if scenery: scenery.visible = index == 2 and not options.light
  build_level_props(index)
  var environment = env_world.environment
  environment.fog_enabled = true
- environment.fog_density = 0.0035
- environment.fog_light_color = environment.background_color
+ environment.fog_mode = Environment.FOG_MODE_DEPTH
+ environment.fog_depth_begin = 28.0
+ environment.fog_depth_end = 108.0
+ environment.fog_depth_curve = 1.4
+ environment.fog_density = 1.0
+ environment.fog_light_color = [Color("1d5c3a"),Color("341a52"),Color("57351a"),Color("174464"),Color("3d1738"),Color("443e7c")][maxi(index,0)] if index >= 0 else Color("11182e")
  environment.fog_light_energy = 1.0
  environment.fog_sky_affect = 0.0
  var sky = Sky.new()
- var sky_material = ProceduralSkyMaterial.new()
- sky_material.sky_top_color = Color("060918")
- sky_material.sky_horizon_color = environment.background_color
- sky_material.ground_horizon_color = environment.background_color
- sky_material.ground_bottom_color = Color("080a14")
- sky_material.sun_angle_max = 1
+ var sky_material = ShaderMaterial.new()
+ sky_material.shader = load("res://scripts/sky.gdshader")
+ sky_material.set_shader_parameter("camera_forward",-camera.global_basis.z)
+ sky_material.set_shader_parameter("camera_up",camera.global_basis.y)
+ sky_material.set_shader_parameter("vertical_tangent",tan(deg_to_rad(camera.fov)/2))
+ sky_material.set_shader_parameter("sky_gradient",load("res://assets/textures/sky_"+theme+".png"))
  sky.sky_material = sky_material
  environment.sky = sky
  environment.background_mode = Environment.BG_SKY
  sky_stars.visible = options.stars and not options.light
+
+func terrain_material(source: StandardMaterial3D, fog_color: Color) -> ShaderMaterial:
+ var result = ShaderMaterial.new()
+ result.shader = load("res://scripts/terrain.gdshader")
+ result.set_shader_parameter("terrain_texture",source.albedo_texture)
+ result.set_shader_parameter("terrain_tint",source.albedo_color)
+ result.set_shader_parameter("uv_scale",Vector2(source.uv1_scale.x,source.uv1_scale.y))
+ result.set_shader_parameter("fog_color",fog_color)
+ return result
+
+func add_glow(parent: Node3D, tint: Color, pixel_scale: float) -> Sprite3D:
+ var glow = Sprite3D.new()
+ glow.texture = load("res://assets/textures/sprite_glow.png")
+ glow.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+ glow.pixel_size = pixel_scale
+ glow.modulate = tint
+ glow.no_depth_test = false
+ glow.shaded = false
+ parent.add_child(glow)
+ return glow
 
 func build_scenery():
  scenery = Node3D.new()

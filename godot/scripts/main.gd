@@ -750,10 +750,16 @@ func update_hud():
  status_label.text = guardian_feedback if guardian_feedback_time > 0 and ((mode == "story" and level == 5) or (mode == "mission" and mission_phase == 2)) else pickup_feedback if pickup_feedback_time > 0 else "SHIELD READY" if shield else "MAGNET %.1fs" % magnet_time if magnet_time > 0 else "CHAIN %d / 3" % chain if chain > 0 else ""
 
 func save_checkpoint():
+ browser_backup("journey",{"level":level,"pieces":pieces})
  var f = FileAccess.open("user://journey.json", FileAccess.WRITE)
  if f: f.store_string(JSON.stringify({"level": level, "pieces": pieces}))
 
 func load_checkpoint():
+ var saved = browser_restore("journey")
+ if valid_legacy_journey(saved):
+  level = int(saved.level)
+  pieces = saved.pieces.duplicate()
+  return
  if not FileAccess.file_exists("user://journey.json"): return
  var f = FileAccess.open("user://journey.json", FileAccess.READ)
  if not f: return
@@ -900,30 +906,63 @@ func show_stats():
  open_stats()
 
 func save_stats():
+ browser_backup("stats",{"records":stats,"history":history})
  var f = FileAccess.open("user://stats.json", FileAccess.WRITE)
  if f: f.store_string(JSON.stringify({"records":stats,"history":history}))
  else: storage_warning = "Saving unavailable. This session only. Export your stats."
 
 func load_stats():
+ var backup = browser_restore("stats")
+ if backup is Dictionary and apply_stats_data(backup): return
  if not FileAccess.file_exists("user://stats.json"): return
  var f = FileAccess.open("user://stats.json", FileAccess.READ)
  if f:
   var data = JSON.parse_string(f.get_as_text())
   if data is Dictionary:
-   var records = data.get("records",{})
-   if records is Dictionary:
-    for key in mode_names:
-     var v = records.get(key,{})
-     if v is Dictionary:
-      var record = {}
-      for metric in ["best","distance","treats","seconds","runs"]:
-       var n = v.get(metric,0)
-       record[metric] = int(n) if (n is float or n is int) and n >= 0 and n < 1e12 else 0
-      stats[key] = record
-   var h = data.get("history",[])
-   if h is Array:
-    for r in h.slice(0,20):
-     if r is Dictionary and r.get("mode","") in mode_names and r.get("score") is float: history.append(r)
+   apply_stats_data(data)
+
+func apply_stats_data(data: Dictionary) -> bool:
+ var records = data.get("records")
+ var rows = data.get("history")
+ if not records is Dictionary or not rows is Array: return false
+ stats.clear()
+ history.clear()
+ for key in mode_names:
+  var v = records.get(key,{})
+  if v is Dictionary:
+   var record = {}
+   for metric in ["best","distance","treats","seconds","runs"]:
+    var n = v.get(metric,0)
+    record[metric] = int(n) if (n is float or n is int) and n >= 0 and n < 1e12 else 0
+   stats[key] = record
+ for row in rows.slice(0,20):
+  if not row is Dictionary or not row.get("mode","") in mode_names: continue
+  var clean = {"mode":row.mode}
+  var good = true
+  for metric in ["score","distance","treats","seconds"]:
+   var n = row.get(metric)
+   if not (n is float or n is int) or n < 0 or n >= 1e12:
+    good = false
+    break
+   clean[metric] = int(n)
+  if not good: continue
+  clean.completed_at = str(row.get("completed_at",""))
+  if row.mode == "story" and (row.get("level") is float or row.get("level") is int) and row.level >= 1 and row.level <= 6:
+   clean.level = int(row.level)
+   clean.outcome = str(row.get("outcome","attempt")).left(80)
+  history.append(clean)
+ return true
+
+func browser_backup(kind: String, data: Dictionary):
+ if not OS.has_feature("web"): return
+ var packed = Marshalls.utf8_to_base64(JSON.stringify(data))
+ var result = JavaScriptBridge.eval("(()=>{try{localStorage.setItem('neonrush_godot_%s_v2',atob('%s'));return 'ok'}catch(e){return 'failed'}})()" % [kind,packed],true)
+ if str(result) != "ok": storage_warning = "Browser save unavailable. Export stats before closing."
+
+func browser_restore(kind: String):
+ if not OS.has_feature("web"): return null
+ var raw = JavaScriptBridge.eval("(()=>{try{return localStorage.getItem('neonrush_godot_%s_v2')}catch(e){return null}})()" % kind,true)
+ return JSON.parse_string(raw) if raw is String else null
 
 func save_options():
  if OS.has_feature("web"):
@@ -1322,7 +1361,7 @@ func export_stats(kind: String):
   if f: f.store_string(text)
 
 func import_legacy_data():
- if not OS.has_feature("web") or FileAccess.file_exists("user://legacy-imported"): return
+ if not OS.has_feature("web") or FileAccess.file_exists("user://legacy-imported") or browser_restore("stats") is Dictionary: return
  # Import only validated saved data from the earlier game on this same origin.
  var raw = JavaScriptBridge.eval("(()=>{try{return JSON.stringify({best:localStorage.getItem('neonrush_best'),easy:localStorage.getItem('neonrush_best_easy'),hard:localStorage.getItem('neonrush_best_hard'),chase:localStorage.getItem('neonrush_best_chase'),mission:localStorage.getItem('neonrush_best_mission'),story:localStorage.getItem('neonrush_best_story'),journey:localStorage.getItem('neonrush_story'),stats:localStorage.getItem('neonrush_stats'),gold:localStorage.getItem('neonrush_gold')})}catch(e){return null}})()",true)
  if raw is String:

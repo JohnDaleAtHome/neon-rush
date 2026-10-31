@@ -26,7 +26,7 @@ var shield = false
 var shield_time = 12.0
 var magnet_time = 0.0
 var stats: Dictionary = {}
-var options: Dictionary = {"sound": false, "light": false, "motion": false, "buttons": true, "large": false, "contrast": false, "tap": true, "swipe": 45, "stars": true, "guides": true, "compact": false, "banners": true, "hand": "center", "color": "pink", "gold": false}
+var options: Dictionary = {"sound": false, "light": false, "motion": false, "buttons": true, "large": false, "contrast": false, "tap": true, "swipe": 45, "stars": true, "guides": true, "compact": false, "banners": true, "hand": "center", "color": "pink", "gold": false, "last_mode": "story"}
 var audio_players: Array[AudioStreamPlayer] = []
 var music_player: AudioStreamPlayer
 var status_label: Label
@@ -213,6 +213,8 @@ func _ready():
   if running: return
   pending_advance = false
   mode = mode_names[i]
+  options.last_mode = mode
+  save_options()
   action.text = "START " + mode.to_upper()
   fresh_button.show()
  )
@@ -287,10 +289,11 @@ func _ready():
  setup_audio()
  import_legacy_data()
  import_legacy_preferences(had_engine_options)
+ restore_selected_mode()
  load_checkpoint()
  apply_options()
  apply_world(level if mode == "story" else -1)
- show_beat("Mochi and the Moon Bridge", "Mochi is Chang'e's rabbit. The eclipse shattered the bridge. Her silver bell still rings. Gather five pieces and find your way home.", "BEGIN / RESUME JOURNEY")
+ show_beat("Mochi and the Moon Bridge", "Mochi is Chang'e's rabbit. The eclipse shattered the bridge. Her silver bell still rings. Gather five pieces and find your way home.", "BEGIN / RESUME JOURNEY" if mode == "story" else "START " + display_mode(mode))
  print("GODOT_READY ", Engine.get_version_info().string, " animations=", animation_names)
 
 func hide_carrot(node: Node):
@@ -442,6 +445,9 @@ func on_action():
  start_level()
 
 func start_level():
+ options.last_mode = mode
+ save_options()
+ mode_select.select(mode_names.find(mode))
  reset_discard_prompt()
  campaign_run_recorded = false
  clear_encounter()
@@ -936,6 +942,12 @@ func load_options():
    gold_unlocked = data.get("gold_unlocked",false) == true
  options.sound = false
 
+func restore_selected_mode():
+ var saved = options.get("last_mode","story")
+ mode = saved if saved in mode_names else "story"
+ options.last_mode = mode
+ mode_select.select(mode_names.find(mode))
+
 func setup_audio():
  music_player = AudioStreamPlayer.new()
  music_player.stream = load("res://assets/music.wav")
@@ -1306,6 +1318,7 @@ func mapped_legacy_options(value: Dictionary) -> Dictionary:
  var result = {}
  for pair in [["quality","light"],["buttons","buttons"],["large","large"],["contrast","contrast"],["tapJump","tap"],["stars","stars"],["laneGuides","guides"],["compactHud","compact"],["banners","banners"],["goldTrim","gold"],["motion","motion"]]:
   if value.get(pair[0]) is bool: result[pair[1]] = value[pair[0]]
+ if value.get("mode") in mode_names: result.last_mode = value.mode
  if value.get("hand") in ["left","center","right"]: result.hand = value.hand
  if value.get("swipe") in ["short","standard","long"]: result.swipe = {"short":30,"standard":45,"long":65}[value.swipe]
  if value.get("runnerColor") in ["cyan","mint","violet"]: result.color = "pink" if value.runnerColor == "cyan" else value.runnerColor

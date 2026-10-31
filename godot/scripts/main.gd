@@ -26,7 +26,7 @@ var shield = false
 var shield_time = 12.0
 var magnet_time = 0.0
 var stats: Dictionary = {}
-var options: Dictionary = {"sound": false, "light": false, "motion": false, "buttons": true, "large": false, "contrast": false, "tap": true, "swipe": 45, "stars": true, "guides": true, "compact": false, "banners": true, "hand": "center", "color": "pink", "gold": false, "last_mode": "story"}
+var options: Dictionary = {"sound": false, "light": false, "motion": false, "buttons": true, "large": false, "contrast": false, "tap": true, "swipe": 45, "stars": true, "guides": true, "compact": false, "banners": true, "hand": "center", "color": "pink", "gold": false, "last_mode": "story", "motion_system": true}
 var audio_players: Array[AudioStreamPlayer] = []
 var music_player: AudioStreamPlayer
 var status_label: Label
@@ -287,6 +287,7 @@ func _ready():
  load_stats()
  load_options()
  setup_audio()
+ apply_system_motion()
  import_legacy_data()
  import_legacy_preferences(had_engine_options)
  restore_selected_mode()
@@ -572,7 +573,7 @@ func _process(dt):
  elapsed += dt
  ground_scroll = fmod(ground_scroll + speed * dt / 25.0, 1.0)
  ground.material_override.uv1_offset.y = -ground_scroll
- if not options.motion:
+ if not reduced_motion():
   for p in scene_props:
    p.position.z += speed * dt
    if p.position.z > 10: p.position.z -= 145
@@ -658,7 +659,7 @@ func _process(dt):
  for item in entities.duplicate():
   if not running: break
   var kind: String = item.get_meta("kind")
-  if kind == "orb" and not options.motion: item.rotation.y += dt * 2
+  if kind == "orb" and not reduced_motion(): item.rotation.y += dt * 2
   if item.has_meta("sway"):
    item.position.x = LANES[int(item.get_meta("lane"))] + sin(elapsed * 2 + float(item.get_instance_id() % 9)) * 0.8
   item.position.z += (-65 if kind == "shot" else speed) * dt
@@ -939,8 +940,22 @@ func load_options():
   if data is Dictionary:
    for key in options.keys():
     if data.has(key) and typeof(data[key]) == typeof(options[key]): options[key] = data[key]
+   if not data.has("motion_system") and data.get("motion") is bool: options.motion_system = false
    gold_unlocked = data.get("gold_unlocked",false) == true
  options.sound = false
+
+func reduced_motion() -> bool:
+ return bool(options.motion)
+
+func apply_system_motion():
+ if not is_instance_valid(controls): return
+ if OS.has_feature("web"):
+  var stored = JavaScriptBridge.eval("(()=>{try{return localStorage.getItem('neonrush_godot_motion')}catch(e){return null}})()",true)
+  if stored in ["system","full","reduced"]:
+   options.motion_system = stored == "system"
+   if stored != "system": options.motion = stored == "reduced"
+ if options.get("motion_system",true) and OS.has_feature("web"):
+  options.motion = str(JavaScriptBridge.eval("window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'reduce' : 'full'",true)) == "reduce"
 
 func restore_selected_mode():
  var saved = options.get("last_mode","story")
@@ -1002,6 +1017,7 @@ func _input(event):
    input_action(2); touch_origin = event.position; touch_moved = true
 
 func _notification(what):
+ if what == NOTIFICATION_APPLICATION_FOCUS_IN: apply_options()
  if what == NOTIFICATION_APPLICATION_FOCUS_OUT and running and not paused: toggle_pause()
 
 func clear_encounter():
@@ -1088,6 +1104,7 @@ func record_story_attempt(outcome: String):
  save_stats()
 
 func apply_options():
+ apply_system_motion()
  if not is_instance_valid(controls): return
  controls.visible = running and not paused and options.buttons
  controls.get_child(2).visible = mode in ["story","mission","chase"]
@@ -1103,7 +1120,7 @@ func apply_options():
  for moon in moons: moon.visible = options.stars
  if sky_stars: sky_stars.visible = options.stars and not options.light
  if scenery: scenery.visible = not options.light and mode == "story" and level == 2
- if animator and options.motion: animator.speed_scale = 0
+ if animator and reduced_motion(): animator.speed_scale = 0
  elif animator and not paused: animator.speed_scale = 1
  apply_bunny_tint(bunny)
 
@@ -1155,7 +1172,7 @@ func popup_frame(title: String) -> VBoxContainer:
 
 func open_settings():
  var list = popup_frame("SETTINGS - THIS BROWSER")
- for entry in [["light","Light quality"],["motion","Reduced motion"],["buttons","On-screen buttons"],["large","Large controls"],["contrast","High contrast HUD"],["tap","Tap to jump"],["stars","Show moons"],["guides","Lane guides"],["compact","Compact HUD"],["banners","Story guidance"]]:
+ for entry in [["light","Light quality"],["buttons","On-screen buttons"],["large","Large controls"],["contrast","High contrast HUD"],["tap","Tap to jump"],["stars","Show moons"],["guides","Lane guides"],["compact","Compact HUD"],["banners","Story guidance"]]:
   var key: String = entry[0]
   var button = CheckButton.new()
   button.text = entry[1]
@@ -1163,6 +1180,17 @@ func open_settings():
   button.custom_minimum_size.y = 42
   button.toggled.connect(func(on): options[key] = on; save_options(); apply_options())
   list.add_child(button)
+ var motion_choice = OptionButton.new()
+ for label in ["Motion: system preference","Motion: full","Motion: reduced"]: motion_choice.add_item(label)
+ motion_choice.selected = 0 if options.motion_system else 2 if options.motion else 1
+ motion_choice.item_selected.connect(func(i):
+  options.motion_system = i == 0
+  options.motion = i == 2
+  if OS.has_feature("web"): JavaScriptBridge.eval("try{localStorage.setItem('neonrush_godot_motion','%s')}catch(e){}" % ["system","full","reduced"][i],true)
+  save_options()
+  apply_options()
+ )
+ list.add_child(motion_choice)
  var hand = OptionButton.new()
  for title in ["Controls: center","Controls: left","Controls: right"]: hand.add_item(title)
  hand.selected = ["center","left","right"].find(options.hand)
@@ -1318,6 +1346,7 @@ func mapped_legacy_options(value: Dictionary) -> Dictionary:
  var result = {}
  for pair in [["quality","light"],["buttons","buttons"],["large","large"],["contrast","contrast"],["tapJump","tap"],["stars","stars"],["laneGuides","guides"],["compactHud","compact"],["banners","banners"],["goldTrim","gold"],["motion","motion"]]:
   if value.get(pair[0]) is bool: result[pair[1]] = value[pair[0]]
+ if value.get("motion") is bool: result.motion_system = false
  if value.get("mode") in mode_names: result.last_mode = value.mode
  if value.get("hand") in ["left","center","right"]: result.hand = value.hand
  if value.get("swipe") in ["short","standard","long"]: result.swipe = {"short":30,"standard":45,"long":65}[value.swipe]

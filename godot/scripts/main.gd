@@ -598,10 +598,10 @@ func _process(dt):
        finish_run("Mission complete! Mochi gathered, frost crossed, guardian calmed.")
        entities.erase(item); item.queue_free()
        return
+      record_completion()
       level = 0
       pieces = []
       save_checkpoint()
-      record_completion()
       show_beat("The Mooncake of Reunion", "Chang'e: You came all this way. Sit. Share this mooncake with me. Wu Gang joins them beneath the cinnamon tree.", "NEW JOURNEY")
     entities.erase(item); item.queue_free()
    continue

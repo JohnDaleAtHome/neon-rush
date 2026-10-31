@@ -5,6 +5,9 @@ const LEVEL_NAMES = ["Neon Meadow", "Silver Dunes", "Cinnamon Grove", "Storm Sea
 const PIECES = ["Moon Dew Vial", "Silver Lantern", "Cinnamon Blossom", "Tide Pearl", "Eclipse Key"]
 const COLORS = [Color("194b36"), Color("a49db7"), Color("745032"), Color("184b68"), Color("38253f"), Color("b18c67")]
 var mode = "story"
+var fresh_button: Button
+var guardian_feedback = ""
+var guardian_feedback_time = 0.0
 var mode_select: OptionButton
 var mode_names = ["story", "easy", "normal", "hard", "chase", "mission"]
 var score = 0.0
@@ -206,10 +209,12 @@ func _ready():
   pending_advance = false
   mode = mode_names[i]
   action.text = "START " + mode.to_upper()
+  fresh_button.show()
  )
  mode_select.custom_minimum_size.y = 48
  panel.add_child(mode_select)
- var fresh = Button.new()
+ fresh_button = Button.new()
+ var fresh = fresh_button
  fresh.text = "NEW JOURNEY"
  fresh.custom_minimum_size.y = 48
  fresh.pressed.connect(func(): mode = "story"; mode_select.select(0); level = 0; pieces = []; pending_advance = false; save_checkpoint(); start_level())
@@ -378,6 +383,7 @@ func show_beat(title: String, words: String, label: String):
  controls.hide()
  message.text = title + "\n\n" + words
  action.text = label
+ fresh_button.visible = label != "NEW JOURNEY"
  adapt_layout()
  play_animation("Idle")
 
@@ -437,6 +443,8 @@ func start_level():
  boss_hp = 4
  boss_clock = 0
  boss_hits = 0
+ guardian_feedback = ""
+ guardian_feedback_time = 0
  last_open = false
  apply_world(level if mode == "story" else 0 if mode == "mission" else -1)
  message.text = ["Gather six glowing dew drops. Jump bales, dodge bees.", "Silver Moon: long hops over crater lips.", "Cinnamon Moon: slide under branches; help a firefly.", "Storm Moon: jump waves, slide under lightning arches.", "Gather light: +1.4m. Hits cost4.5m. Keep the shadow away.", "Five lights open the palace. Align and FIRE when shield falls."][level]
@@ -543,6 +551,7 @@ func _process(dt):
  slide_time = maxf(0, slide_time - dt)
  if (elapsed > 7 or not options.banners) and not unlock: message.text = ""
  fire_time = maxf(0, fire_time - dt)
+ guardian_feedback_time = maxf(0, guardian_feedback_time - dt)
  player.position.x = lerpf(player.position.x, LANES[lane], minf(1, dt * 12))
  velocity -= (19 if mode == "story" and level == 1 else 26) * dt
  height = maxf(0, height + velocity * dt)
@@ -583,7 +592,7 @@ func _process(dt):
   if not opened:
    boss_lane = int(boss_clock / 2.4) % 3
   boss.position.x = lerpf(boss.position.x, LANES[boss_lane], minf(1, dt * 4))
-  boss.material_override = material(Color("6fcfae") if opened else Color("a862b5"))
+  boss.material_override = material(Color("e3b45e") if opened and boss_hits >= 2 else Color("6fcfae") if opened else Color("a862b5"))
   spawn_time -= dt
   if spawn_time <= 0 and not opened: spawn_wave(); spawn_time = 2.3
  for item in entities.duplicate():
@@ -598,6 +607,9 @@ func _process(dt):
     if ((mode == "story" and level == 5) or (mode == "mission" and mission_phase == 2)) and last_open and boss_hits < 2 and absf(item.position.x - boss.position.x) < 1.2:
      boss_hp -= 1
      boss_hits += 1
+     guardian_feedback = "HIT! Guardian %d / 4" % boss_hp
+     guardian_feedback_time = 0.9
+     sound("coin")
      if boss_hp <= 0:
       if mode == "mission":
        finish_run("Mission complete! Mochi gathered, frost crossed, guardian calmed.")
@@ -608,6 +620,9 @@ func _process(dt):
       pieces = []
       save_checkpoint()
       show_beat("The Mooncake of Reunion", "Chang'e: You came all this way. Sit. Share this mooncake with me. Wu Gang joins them beneath the cinnamon tree.", "NEW JOURNEY")
+    else:
+     guardian_feedback = "Shield closed - wait for green" if not last_open else "Two hits landed - wait for green" if boss_hits >= 2 else "Missed - align with guardian"
+     guardian_feedback_time = 0.9
     entities.erase(item); item.queue_free()
    continue
   if item.position.z > 1.1 and kind == "low" and height > 0.65 and not jump_scored.has(item.get_instance_id()):
@@ -650,10 +665,12 @@ func update_hud():
  if mode == "chase" or (mode == "story" and level == 4): hud.text += "  Shadow %.1fm" % shadow_gap
  if (mode == "story" and level == 5) or (mode == "mission" and mission_phase == 2): hud.text += "  Guardian %d / 4" % boss_hp
  if mode == "story" and running and not unlock:
-  progress_label.text = "DEW %d / 6 TO LIGHT THE LAUNCH PAD" % mini(dew,6) if level == 0 else "PATH TO %s: %d%%" % [PIECES[level].to_upper(),mini(100,int(elapsed/[24,25,26,27,28][level]*100))] if level < 5 else "ALIGN WITH THE GUARDIAN - FIRE WHEN GREEN"
+  progress_label.text = "DEW %d / 6 TO LIGHT THE LAUNCH PAD" % mini(dew,6) if level == 0 else "PATH TO %s: %d%%" % [PIECES[level].to_upper(),mini(100,int(elapsed/[24,25,26,27,28][level]*100))] if level < 5 else "TWO HITS - WAIT FOR NEXT GREEN" if boss_hits >= 2 and last_open else "SHIELD OPEN - ALIGN AND FIRE" if last_open else "SHIELD CLOSED - ALIGN AND WAIT"
+ elif mode == "mission" and running and mission_phase == 2:
+  progress_label.text = "TWO HITS - WAIT FOR NEXT GREEN" if boss_hits >= 2 and last_open else "SHIELD OPEN - ALIGN AND FIRE" if last_open else "SHIELD CLOSED - ALIGN AND WAIT"
  elif unlock: progress_label.text = "BRIDGE CROSSING %d%%" % mini(100,int(unlock_time/5*100))
  else: progress_label.text = ""
- status_label.text = "SHIELD READY" if shield else "MAGNET %.1fs" % magnet_time if magnet_time > 0 else "CHAIN %d / 3" % chain if chain > 0 else ""
+ status_label.text = guardian_feedback if guardian_feedback_time > 0 and ((mode == "story" and level == 5) or (mode == "mission" and mission_phase == 2)) else "SHIELD READY" if shield else "MAGNET %.1fs" % magnet_time if magnet_time > 0 else "CHAIN %d / 3" % chain if chain > 0 else ""
 
 func save_checkpoint():
  var f = FileAccess.open("user://journey.json", FileAccess.WRITE)

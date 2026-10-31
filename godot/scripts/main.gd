@@ -708,11 +708,8 @@ func _process(dt):
        finish_run("Mission complete! Mochi gathered, frost crossed, guardian calmed.")
        entities.erase(item); item.queue_free()
        return
-      record_completion()
-      level = 0
-      pieces = []
-      save_checkpoint()
-      show_beat("The Mooncake of Reunion", "Chang'e: You came all this way. Sit. Share this mooncake with me. Wu Gang joins them beneath the cinnamon tree.", "NEW JOURNEY")
+      finish_story()
+      return
     else:
      guardian_feedback = "Shield closed - wait for green" if not last_open else "Two hits landed - wait for green" if boss_hits >= 2 else "Missed - align with guardian"
      guardian_feedback_time = 0.9
@@ -1374,6 +1371,23 @@ func decorate_hazard(hazard: MeshInstance3D, kind: String):
   var shape = PrismMesh.new()
   shape.size = Vector3(1.4,2.5,1.2)
   hazard.mesh = shape
+
+func finish_story():
+ record_completion()
+ clear_encounter()
+ for item in entities: item.queue_free()
+ entities.clear()
+ jump_scored.clear()
+ if boss: boss.queue_free(); boss = null
+ if gate: gate.queue_free(); gate = null
+ for foot in footprints: foot.queue_free()
+ footprints.clear()
+ unlock = false
+ pending_advance = false
+ level = 0
+ pieces = []
+ save_checkpoint()
+ show_beat("The Mooncake of Reunion", "Chang'e: You came all this way. Sit. Share this mooncake with me. Wu Gang joins them beneath the cinnamon tree.", "NEW JOURNEY")
 
 func record_completion():
  record_story_attempt("reunion")

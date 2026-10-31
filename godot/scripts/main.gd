@@ -530,7 +530,7 @@ func start_level():
  if boss: boss.queue_free(); boss = null
  if mode == "story" and level == 5:
   assert(pieces.size() == 5)
-  boss = box(Vector3(1.7, 1.7, 1.7), Vector3(0, 1.8, -18), Color("b056b1"))
+  boss = create_guardian()
  if mode != "story": message.text = "CHASE: collect light and avoid hits. SLIDE under blue arches." if mode == "chase" else "MISSION: gather six mochi, cross the frost moon, face the guardian." if mode == "mission" else "Jump low blocks, dodge tall blocks. Three treats build a chain and a short magnet."
  apply_options()
  if options.sound: music_player.play()
@@ -660,7 +660,7 @@ func _process(dt):
    elif mission_phase == 1 and mission_time >= 18:
     mission_phase = 2
     apply_world(5)
-    boss = box(Vector3(1.7, 1.7, 1.7), Vector3(0, 1.8, -18), Color("b056b1"))
+    boss = create_guardian()
     apply_options()
   if mode == "story" and ((level == 0 and dew >= 6) or (level > 0 and elapsed >= [24,25,26,27,28][level])):
    pending_advance = true
@@ -676,7 +676,7 @@ func _process(dt):
   if not opened:
    boss_lane = int(boss_clock / 2.4) % 3
   boss.position.x = lerpf(boss.position.x, LANES[boss_lane], minf(1, dt * 4))
-  boss.material_override = material(Color("e3b45e") if opened and boss_hits >= 2 else Color("6fcfae") if opened else Color("a862b5"))
+  update_guardian_art(opened)
   spawn_time -= dt
   if spawn_time <= 0 and not opened: spawn_wave(); spawn_time = 2.3
  for item in entities.duplicate():
@@ -1189,6 +1189,52 @@ func _input(event):
 func _notification(what):
  if what == NOTIFICATION_APPLICATION_FOCUS_IN: apply_options()
  if what == NOTIFICATION_APPLICATION_FOCUS_OUT and running and not paused: toggle_pause()
+
+func create_guardian() -> MeshInstance3D:
+ var guardian = MeshInstance3D.new()
+ var core = SphereMesh.new()
+ core.radius = 0.90
+ core.height = 1.8
+ core.radial_segments = 12
+ core.rings = 8
+ guardian.mesh = core
+ guardian.position = Vector3(0,1.8,-18)
+ guardian.material_override = material(Color("30203f"))
+ add_child(guardian)
+ var halo = MeshInstance3D.new()
+ halo.name = "EclipseRing"
+ var ring = TorusMesh.new()
+ ring.inner_radius = 1.00
+ ring.outer_radius = 1.16
+ ring.rings = 24
+ ring.ring_segments = 6
+ halo.mesh = ring
+ halo.rotation_degrees.x = 90
+ halo.material_override = material(Color("a862b5"),true)
+ guardian.add_child(halo)
+ for side in [-1,1]:
+  var horn = MeshInstance3D.new()
+  var crescent = PrismMesh.new()
+  crescent.size = Vector3(0.5,1.35,0.5)
+  horn.mesh = crescent
+  horn.position = Vector3(side*0.68,0.9,0)
+  horn.rotation_degrees.z = side*-22
+  horn.material_override = material(Color("4e2e64"))
+  guardian.add_child(horn)
+  var eye = MeshInstance3D.new()
+  var eye_mesh = SphereMesh.new()
+  eye_mesh.radius = 0.13
+  eye_mesh.height = 0.13
+  eye.mesh = eye_mesh
+  eye.position = Vector3(side*0.30,0.12,0.82)
+  eye.material_override = material(Color("ffbd68"),true)
+  guardian.add_child(eye)
+ return guardian
+
+func update_guardian_art(opened: bool):
+ var tint = Color("e3b45e") if opened and boss_hits >= 2 else Color("6fcfae") if opened else Color("a862b5")
+ boss.get_node("EclipseRing").material_override = material(tint,true)
+ boss.material_override = material(Color("30203f") if not opened else Color("526463") if boss_hits < 2 else Color("69533c"))
 
 func clear_encounter():
  for item in story_props: item.queue_free()

@@ -1264,32 +1264,75 @@ func story_label(text: String, at: Vector3):
  add_child(label)
  story_props.append(label)
 
+func encounter_sphere(parent: Node3D, at: Vector3, size: Vector3, tint: Color) -> MeshInstance3D:
+ var part = MeshInstance3D.new()
+ var mesh = SphereMesh.new()
+ mesh.radius = 0.5
+ mesh.height = 1.0
+ mesh.radial_segments = 12
+ mesh.rings = 6
+ part.mesh = mesh
+ part.position = at
+ part.scale = size
+ part.material_override = material(tint)
+ parent.add_child(part)
+ return part
+
 func show_story_encounter(which: int):
  if which not in [2,3,4]: return
  player.hide()
  dimmer.color.a = 0.35
+ var actor = Node3D.new()
+ actor.name = "KindnessActor"
+ actor.position = Vector3(0,0,-2)
+ add_child(actor)
+ story_props.append(actor)
  if which == 2:
-  var firefly = box(Vector3(0.16,0.16,0.16),Vector3(0,1.3,-2),Color("ffde7e"))
-  story_props.append(firefly)
+  encounter_sphere(actor,Vector3(0,1.3,0),Vector3(0.20,0.34,0.20),Color("694b41"))
+  var light = encounter_sphere(actor,Vector3(0,1.18,0),Vector3(0.23,0.23,0.23),Color("ffde7e"))
+  light.material_override = material(Color("ffde7e"),true)
+  add_glow(light,Color(1.0,0.83,0.35,0.4),0.012)
   for side in [-1,1]:
-   var vine = box(Vector3(0.08,1.6,0.08),Vector3(side*0.4,1,-2),Color("7d5380"))
-   story_props.append(vine)
+   var wing = encounter_sphere(actor,Vector3(side*0.19,1.38,0),Vector3(0.36,0.13,0.10),Color("b6e5db"))
+   wing.rotation_degrees.z = side*25
+   var vine = MeshInstance3D.new()
+   var stem = CylinderMesh.new()
+   stem.top_radius = 0.025
+   stem.bottom_radius = 0.045
+   stem.height = 1.6
+   vine.mesh = stem
+   vine.position = Vector3(side*0.4,1,0)
+   vine.rotation_degrees.z = side*12
+   vine.material_override = material(Color("7d5380"))
+   actor.add_child(vine)
   story_label("TRAPPED FIREFLY",Vector3(0,2.2,-2))
  elif which == 3:
-  var turtle = MeshInstance3D.new()
-  var shell = SphereMesh.new()
-  shell.radius = 0.7
-  shell.height = 0.8
-  turtle.mesh = shell
-  turtle.material_override = material(Color("77a891"))
-  turtle.position = Vector3(0,0.5,-2)
-  add_child(turtle)
-  story_props.append(turtle)
+  encounter_sphere(actor,Vector3(0,0.50,0),Vector3(1.35,0.75,1.25),Color("537e6e"))
+  encounter_sphere(actor,Vector3(0,0.37,0.72),Vector3(0.55,0.40,0.50),Color("9ec6a5"))
+  for side in [-1,1]:
+   for depth in [-1,1]: encounter_sphere(actor,Vector3(side*0.57,0.20,depth*0.43),Vector3(0.40,0.22,0.40),Color("9ec6a5"))
+   encounter_sphere(actor,Vector3(side*0.14,0.43,0.94),Vector3(0.065,0.035,0.035),Color("263b3c"))
+  var ridge = MeshInstance3D.new()
+  var ring = TorusMesh.new()
+  ring.inner_radius = 0.48
+  ring.outer_radius = 0.54
+  ridge.mesh = ring
+  ridge.position.y = 0.67
+  ridge.scale = Vector3(1,0.4,1)
+  ridge.material_override = material(Color("a1b67f"))
+  actor.add_child(ridge)
   story_label("SLEEPY MOON-TURTLE",Vector3(0,1.7,-2))
  elif which == 4:
-  var shadow = box(Vector3(1.4,2.2,0.8),Vector3(0,1.1,-3),Color("443149"))
-  story_props.append(shadow)
-  story_label("A SHADOW, ALONE",Vector3(0,2.6,-3))
+  actor.position.z = -3
+  encounter_sphere(actor,Vector3(0,0.85,0),Vector3(1.15,1.6,0.7),Color("443149"))
+  encounter_sphere(actor,Vector3(0,1.75,0),Vector3(0.95,0.9,0.75),Color("443149"))
+  for side in [-1,1]:
+   var ear = encounter_sphere(actor,Vector3(side*0.29,2.28,0),Vector3(0.25,0.85,0.22),Color("443149"))
+   ear.rotation_degrees.z = side*-18
+   encounter_sphere(actor,Vector3(side*0.19,1.80,0.35),Vector3(0.11,0.15,0.06),Color("d5b0e8"))
+   var hand = encounter_sphere(actor,Vector3(side*0.60,1.05,0.05),Vector3(0.27,0.8,0.27),Color("443149"))
+   hand.rotation_degrees.z = side*30
+  story_label("A SHADOW, ALONE",Vector3(0,3.0,-3))
 
  layout_encounter(get_viewport().get_visible_rect().size)
 

@@ -12,6 +12,11 @@ func run():
   assert(g.moons[0].material_override is ShaderMaterial)
   assert(g.moon_glows.size() == 3)
   assert(g.moons[0].material_override.get_shader_parameter("lunar_height") != null)
+ for size in [Vector2(1280,720),Vector2(390,844),Vector2(844,500)]:
+  g.layout_moons(size)
+  for moon in g.moons:
+   var screen = g.camera.unproject_position(moon.position)
+   assert(screen.y > 235)
  g.options.stars = false
  g.apply_options()
  for moon in g.moons: assert(not moon.visible)

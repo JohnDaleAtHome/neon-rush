@@ -1188,13 +1188,23 @@ func open_stats():
   if order.selected > 0:
    var key = ["","score","distance","treats","seconds"][order.selected]
    rows.sort_custom(func(a,b): return a.get(key,0) > b.get(key,0))
-  history_label.text = "RECENT RUNS\n"
-  for r in rows.slice(0,20 if limit.button_pressed else 5): history_label.text += "%s %d pts / %dm\n%d treats / %ds\n%s\n\n" % [display_mode(r.mode),r.score,r.distance,r.treats,r.seconds,r.get("completed_at","")]
+  var shown = rows.slice(0,20 if limit.button_pressed else 5)
+  history_label.text = "SHOWN RUNS / LAST 20 SAVED\n" + shown_average(shown)
+  for r in shown:
+   var details = "Level %d - %s\n" % [int(r.get("level",1)),str(r.get("outcome","attempt"))] if r.mode == "story" and r.has("level") else ""
+   history_label.text += "%s %d pts / %dm\n%d treats / %ds\n%s%s\n\n" % [display_mode(r.mode),r.score,r.distance,r.treats,r.seconds,details,r.get("completed_at","")]
   if rows.is_empty(): history_label.text += "No saved runs yet."
  filter.item_selected.connect(func(_i): refresh.call())
  order.item_selected.connect(func(_i): refresh.call())
  limit.toggled.connect(func(_on): refresh.call())
  refresh.call()
+
+func shown_average(rows: Array) -> String:
+ if rows.is_empty(): return ""
+ var sums = {"score":0.0,"distance":0.0,"treats":0.0,"seconds":0.0}
+ for row in rows:
+  for metric in sums: sums[metric] += float(row.get(metric,0))
+ return "Shown average (%d runs):\n%d pts / %dm / %.1f treats / %ds\n\n" % [rows.size(),roundi(sums.score/rows.size()),roundi(sums.distance/rows.size()),sums.treats/rows.size(),roundi(sums.seconds/rows.size())]
 
 func display_mode(key: String) -> String:
  return {"easy":"CHILL","normal":"CLASSIC","hard":"RUSH","story":"STORY","mission":"MISSION","chase":"CHASE"}.get(key,key.to_upper())

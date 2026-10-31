@@ -1567,6 +1567,9 @@ func open_settings():
  safe_space.custom_minimum_size.y = 24
  list.add_child(safe_space)
 
+func mode_records_text(key: String, record: Dictionary) -> String:
+ return "%s\nBest score: %d pts\nLongest distance: %dm\nMost treats: %d\nLongest time: %ds\nRecorded %s: %d" % [display_mode(key),int(record.get("best",0)),int(record.get("distance",0)),int(record.get("treats",0)),int(record.get("seconds",0)),"level attempts" if key == "story" else "attempts",int(record.get("runs",0))]
+
 func open_stats():
  var list = popup_frame("THIS BROWSER STATS")
  if storage_warning != "":
@@ -1576,12 +1579,13 @@ func open_stats():
   list.add_child(warning)
  var totals_label = Label.new()
  totals_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
- totals_label.text = "%s\n%d runs / %dm / %d treats\n%d seconds tracked by engine" % [totals_scope,totals.runs,totals.distance,totals.treats,totals.seconds]
+ totals_label.text = "%s\n%d recorded attempts / %dm / %d treats\n%d seconds tracked by engine" % [totals_scope,totals.runs,totals.distance,totals.treats,totals.seconds]
  list.add_child(totals_label)
  var records = Label.new()
+ records.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+ records.text = "Independent records, not one attempt.\nStory counts level attempts, not full journeys.\n\n"
  for key in mode_names:
-  var r: Dictionary = stats.get(key,{})
-  records.text += "%s: %d pts / %dm\n%d treats / %ds / %d runs\n\n" % [display_mode(key),int(r.get("best",0)),int(r.get("distance",0)),int(r.get("treats",0)),int(r.get("seconds",0)),int(r.get("runs",0))]
+  records.text += mode_records_text(key, stats.get(key,{})) + "\n\n"
  records.add_theme_font_size_override("font_size",15)
  list.add_child(records)
  var exports = HBoxContainer.new()

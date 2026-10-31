@@ -283,7 +283,7 @@ func _ready():
  configure_window()
  get_viewport().size_changed.connect(adapt_layout)
  adapt_layout()
- var had_engine_options = FileAccess.file_exists("user://options.json")
+ var had_engine_options = FileAccess.file_exists("user://options.json") or browser_options_exist()
  load_stats()
  load_options()
  setup_audio()
@@ -926,6 +926,12 @@ func load_stats():
      if r is Dictionary and r.get("mode","") in mode_names and r.get("score") is float: history.append(r)
 
 func save_options():
+ if OS.has_feature("web"):
+  var out = options.duplicate()
+  out.gold_unlocked = gold_unlocked
+  var packed = Marshalls.utf8_to_base64(JSON.stringify(out))
+  var result = JavaScriptBridge.eval("(()=>{try{localStorage.setItem('neonrush_godot_options_v2',atob('%s'));return 'ok'}catch(e){return 'failed'}})()" % packed,true)
+  if str(result) != "ok": storage_warning = "Settings backup unavailable. Export stats; preferences may reset."
  var f = FileAccess.open("user://options.json", FileAccess.WRITE)
  if f:
   var out = options.duplicate()
@@ -933,7 +939,8 @@ func save_options():
   f.store_string(JSON.stringify(out))
 
 func load_options():
- if not FileAccess.file_exists("user://options.json"): return
+ load_browser_options()
+ if browser_options_exist() or not FileAccess.file_exists("user://options.json"): return
  var f = FileAccess.open("user://options.json", FileAccess.READ)
  if f:
   var data = JSON.parse_string(f.get_as_text())
@@ -941,6 +948,31 @@ func load_options():
    for key in options.keys():
     if data.has(key) and typeof(data[key]) == typeof(options[key]): options[key] = data[key]
    if not data.has("motion_system") and data.get("motion") is bool: options.motion_system = false
+   gold_unlocked = data.get("gold_unlocked",false) == true
+ options.sound = false
+
+func browser_options_exist() -> bool:
+ if not OS.has_feature("web"): return false
+ return str(JavaScriptBridge.eval("(()=>{try{return (()=>{let v=JSON.parse(localStorage.getItem('neonrush_godot_options_v2')||'null');return v && typeof v==='object' && !Array.isArray(v) ? 'yes' : 'no'})()}catch(e){return 'no'}})()",true)) == "yes"
+
+func validated_options(data: Dictionary) -> Dictionary:
+ var valid = {}
+ for key in options:
+  var value = data.get(key)
+  if typeof(options[key]) == TYPE_BOOL and value is bool: valid[key] = value
+ if data.get("hand") in ["left","center","right"]: valid.hand = data.hand
+ if data.get("color") in ["pink","mint","violet"]: valid.color = data.color
+ if data.get("last_mode") in mode_names: valid.last_mode = data.last_mode
+ if (data.get("swipe") is float or data.get("swipe") is int) and float(data.swipe) in [30.0,45.0,65.0]: valid.swipe = int(data.swipe)
+ return valid
+
+func load_browser_options():
+ if not OS.has_feature("web"): return
+ var raw = JavaScriptBridge.eval("(()=>{try{return localStorage.getItem('neonrush_godot_options_v2')}catch(e){return null}})()",true)
+ if raw is String:
+  var data = JSON.parse_string(raw)
+  if data is Dictionary:
+   options.merge(validated_options(data),true)
    gold_unlocked = data.get("gold_unlocked",false) == true
  options.sound = false
 
@@ -1172,6 +1204,11 @@ func popup_frame(title: String) -> VBoxContainer:
 
 func open_settings():
  var list = popup_frame("SETTINGS - THIS BROWSER")
+ if storage_warning != "":
+  var warning = Label.new()
+  warning.text = storage_warning
+  warning.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+  list.add_child(warning)
  for entry in [["light","Light quality"],["buttons","On-screen buttons"],["large","Large controls"],["contrast","High contrast HUD"],["tap","Tap to jump"],["stars","Show moons"],["guides","Lane guides"],["compact","Compact HUD"],["banners","Story guidance"]]:
   var key: String = entry[0]
   var button = CheckButton.new()

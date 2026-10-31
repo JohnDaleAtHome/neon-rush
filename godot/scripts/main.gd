@@ -419,6 +419,7 @@ func request_discard(destination: String):
  else: return_menu()
 
 func return_menu():
+ clear_encounter()
  reset_discard_prompt()
  if elapsed > 0 and not campaign_run_recorded:
   if mode == "story": record_story_attempt("discarded")
@@ -454,7 +455,10 @@ func show_beat(title: String, words: String, label: String):
  controls.hide()
  message.text = title + "\n\n" + words
  action.text = label
- fresh_button.visible = label != "NEW JOURNEY"
+ fresh_button.visible = label != "NEW JOURNEY" and not pending_advance
+ sound_button.visible = not pending_advance
+ options_button.visible = not pending_advance
+ stats_button.visible = not pending_advance
  adapt_layout()
  play_animation("Idle")
 
@@ -468,6 +472,9 @@ func on_action():
  start_level()
 
 func start_level():
+ sound_button.show()
+ options_button.show()
+ stats_button.show()
  progress_label.show()
  status_label.show()
  options.last_mode = mode
@@ -1243,6 +1250,8 @@ func update_guardian_art(opened: bool):
  boss.material_override = material(Color("30203f") if not opened else Color("526463") if boss_hits < 2 else Color("69533c"))
 
 func clear_encounter():
+ player.show()
+ dimmer.color.a = 0.78
  for item in story_props: item.queue_free()
  story_props.clear()
 
@@ -1256,6 +1265,9 @@ func story_label(text: String, at: Vector3):
  story_props.append(label)
 
 func show_story_encounter(which: int):
+ if which not in [2,3,4]: return
+ player.hide()
+ dimmer.color.a = 0.35
  if which == 2:
   var firefly = box(Vector3(0.16,0.16,0.16),Vector3(0,1.3,-2),Color("ffde7e"))
   story_props.append(firefly)
@@ -1278,6 +1290,18 @@ func show_story_encounter(which: int):
   var shadow = box(Vector3(1.4,2.2,0.8),Vector3(0,1.1,-3),Color("443149"))
   story_props.append(shadow)
   story_label("A SHADOW, ALONE",Vector3(0,2.6,-3))
+
+ layout_encounter(get_viewport().get_visible_rect().size)
+
+func layout_encounter(size: Vector2):
+ if story_props.is_empty(): return
+ var center = camera.project_position(Vector2(size.x/2,size.y*0.50),8.0)
+ var origin = Vector3(0,1,-3 if level == 4 else -2)
+ var offset = center-origin
+ # Store original positions so resize never accumulates translation.
+ for prop in story_props:
+  if not prop.has_meta("encounter_origin"): prop.set_meta("encounter_origin",prop.position)
+  prop.position = prop.get_meta("encounter_origin") + offset
 
 func decorate_hazard(hazard: MeshInstance3D, kind: String):
  if kind == "low":
@@ -1777,7 +1801,8 @@ func adapt_layout():
  if not is_instance_valid(panel): return
  var compact = size.y < 650
  layout_moons(size)
- panel.position = Vector2((size.x-340)/2,155 if compact else 365)
+ panel.position = Vector2((size.x-340)/2,size.y-90 if pending_advance else 155 if compact else 365)
+ layout_encounter(size)
  message.position.y = 15 if compact and not running else 100 if compact else 145
  message.size.y = 120 if compact else 170
  message.add_theme_font_size_override("font_size",15 if compact else 16)

@@ -26,6 +26,9 @@ var shield = false
 var shield_time = 12.0
 var magnet_time = 0.0
 var stats: Dictionary = {}
+var totals: Dictionary = {"runs":0,"distance":0,"treats":0,"seconds":0}
+var totals_loaded = false
+var totals_scope = "Tracked from this engine update"
 var options: Dictionary = {"sound": false, "light": false, "motion": false, "buttons": true, "large": false, "contrast": false, "tap": true, "swipe": 45, "stars": true, "guides": true, "compact": false, "banners": true, "hand": "center", "color": "pink", "gold": false, "last_mode": "story", "motion_system": true}
 var audio_players: Array[AudioStreamPlayer] = []
 var music_player: AudioStreamPlayer
@@ -290,6 +293,7 @@ func _ready():
  apply_system_motion()
  import_legacy_data()
  import_legacy_preferences(had_engine_options)
+ import_totals_once()
  restore_selected_mode()
  load_checkpoint()
  apply_options()
@@ -892,11 +896,26 @@ func finish_run(reason: String):
  record.seconds = maxi(int(record.seconds), int(elapsed))
  record.runs = int(record.runs) + 1
  stats[mode] = record
+ add_run_totals()
  history.push_front({"mode":mode,"score":int(score),"distance":int(distance),"treats":collected,"seconds":int(elapsed),"completed_at":Time.get_datetime_string_from_system()})
  history = history.slice(0,20)
  save_stats()
  show_beat("MISSION COMPLETE" if mode == "mission" and boss_hp <= 0 else "RUN COMPLETE", "%s\n%d points / %dm / %d treats / %ds\nBest %d\n%s" % [reason, int(score), int(distance), collected, int(elapsed), int(record.best),score_breakdown()], "RETRY RUN")
  mode_select.show()
+
+func add_run_totals():
+ totals.runs += 1
+ totals.distance += int(distance)
+ totals.treats += collected
+ totals.seconds += int(elapsed)
+
+func import_legacy_totals(data: Dictionary):
+ var previous = data.get("totals")
+ if not previous is Dictionary: return
+ for pair in [["runs","runs"],["distance","distance"],["orbs","treats"]]:
+  var n = previous.get(pair[0])
+  if (n is float or n is int) and n >= 0 and n < 1e14: totals[pair[1]] = int(n)
+ totals_scope = "Legacy totals + new engine attempts"
 
 func score_breakdown() -> String:
  var travel = maxi(0,int(score)-collected*50-chain_bonus-jump_bonus-risk_bonus)
@@ -906,9 +925,9 @@ func show_stats():
  open_stats()
 
 func save_stats():
- browser_backup("stats",{"records":stats,"history":history})
+ browser_backup("stats",{"records":stats,"history":history,"totals":totals,"totals_scope":totals_scope})
  var f = FileAccess.open("user://stats.json", FileAccess.WRITE)
- if f: f.store_string(JSON.stringify({"records":stats,"history":history}))
+ if f: f.store_string(JSON.stringify({"records":stats,"history":history,"totals":totals,"totals_scope":totals_scope}))
  else: storage_warning = "Saving unavailable. This session only. Export your stats."
 
 func load_stats():
@@ -927,6 +946,15 @@ func apply_stats_data(data: Dictionary) -> bool:
  if not records is Dictionary or not rows is Array: return false
  stats.clear()
  history.clear()
+ if data.get("totals") is Dictionary:
+  totals_loaded = true
+  for metric in totals:
+   var n = data.totals.get(metric,0)
+   totals[metric] = int(n) if (n is float or n is int) and n >= 0 and n < 1e14 else 0
+  totals_scope = str(data.get("totals_scope","Tracked from this engine update"))
+ else:
+  totals = {"runs":0,"distance":0,"treats":0,"seconds":0}
+  totals_scope = "Tracked from this engine update"
  for key in mode_names:
   var v = records.get(key,{})
   if v is Dictionary:
@@ -1170,6 +1198,7 @@ func record_story_attempt(outcome: String):
  record.seconds = maxi(int(record.get("seconds",0)),int(elapsed))
  record.runs = int(record.get("runs",0))+1
  stats.story = record
+ add_run_totals()
  history.push_front({"mode":"story","score":int(score),"distance":int(distance),"treats":collected,"seconds":int(elapsed),"completed_at":Time.get_datetime_string_from_system(),"outcome":outcome,"level":level+1})
  history = history.slice(0,20)
  save_stats()
@@ -1296,6 +1325,10 @@ func open_stats():
   warning.text = storage_warning
   warning.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
   list.add_child(warning)
+ var totals_label = Label.new()
+ totals_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+ totals_label.text = "%s\n%d runs / %dm / %d treats\n%d seconds tracked by engine" % [totals_scope,totals.runs,totals.distance,totals.treats,totals.seconds]
+ list.add_child(totals_label)
  var records = Label.new()
  for key in mode_names:
   var r: Dictionary = stats.get(key,{})
@@ -1351,7 +1384,7 @@ func display_mode(key: String) -> String:
  return {"easy":"CHILL","normal":"CLASSIC","hard":"RUSH","story":"STORY","mission":"MISSION","chase":"CHASE"}.get(key,key.to_upper())
 
 func export_stats(kind: String):
- var text = JSON.stringify({"game":"Mochi and the Moon Bridge","format_version":2,"scope":"This browser only, last 20 completed runs","records":stats,"history":history},"  ")
+ var text = JSON.stringify({"game":"Mochi and the Moon Bridge","format_version":2,"scope":"This browser only; history last 20 attempts, totals scope labeled separately","records":stats,"history":history,"totals":totals,"totals_scope":totals_scope},"  ")
  if kind == "CSV":
   text = "mode,score,distance_m,treats,seconds,completed_at\n"
   for r in history: text += "%s,%d,%d,%d,%d,%s\n" % [r.mode,r.score,r.distance,r.treats,r.seconds,r.get("completed_at","")]
@@ -1448,6 +1481,16 @@ func import_legacy_preferences(had_engine_options: bool):
  if changed: save_stats()
  var mark = FileAccess.open("user://legacy-preferences-v2",FileAccess.WRITE)
  if mark: mark.store_string("1")
+
+func import_totals_once():
+ if not OS.has_feature("web"): return
+ if totals_loaded: return
+ var raw = JavaScriptBridge.eval("(()=>{try{return localStorage.getItem('neonrush_stats')}catch(e){return null}})()",true)
+ if raw is String:
+  var old = JSON.parse_string(raw)
+  if old is Dictionary: import_legacy_totals(old)
+ totals_loaded = true
+ save_stats()
 
 func build_level_props(index: int):
  for p in scene_props: p.queue_free()

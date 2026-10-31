@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Neon Rush 3D</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 100%; height: 100%; overflow: hidden; background: #05010f; touch-action: none; }
+  #game { display: block; width: 100%; height: 100%; }
+  #hud {
+    position: fixed; top: 0; left: 0; right: 0; padding: 14px 18px;
+    display: flex; justify-content: space-between; align-items: flex-start;
+    font-family: 'Courier New', monospace; color: #0ff; pointer-events: none;
+    text-shadow: 0 0 8px #0ff; z-index: 5;
+  }
+  #touchcontrols { position:fixed; bottom:max(18px,env(safe-area-inset-bottom)); left:0; right:0; z-index:6; display:flex; justify-content:center; gap:18px; pointer-events:none; }
+  #touchcontrols[hidden] {display:none;}
+  #touchcontrols button { pointer-events:auto; min-width:64px; height:58px; background:rgba(8,24,45,.8); color:#bfffff; border:1px solid #159cad; border-radius:12px; font:bold 16px monospace; touch-action:none; }
+  #touchcontrols button:active { background:#176376; }
+  @media (hover:hover) and (pointer:fine) { #touchcontrols {opacity:.45;} #touchcontrols:hover {opacity:1;} }
+  body:has(#overlay:not(.hidden)) #shieldstatus {display:none;}
+  #runstats {font-size:12px; margin-top:5px; color:#bdcff4; text-shadow:none;}
+  #pickup {height:24px; color:#ffff44; font-size:18px; margin-top:6px; transition:opacity .2s;}
+  #modebadge {font:11px monospace; letter-spacing:2px; color:#a7beda; margin-bottom:3px; text-shadow:none;}
+  #score { font-size: 28px; font-weight: bold; }
+  #best { font-size: 14px; opacity: 0.8; text-align: right; }
+  #overlay {
+    position: fixed; inset: 0; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; z-index: 10;
+    font-family: 'Courier New', monospace; color: #fff; text-align: center;
+    background: rgba(5,1,15,0.55); transition: opacity 0.3s;
+  }
+  #overlay.hidden { opacity: 0; pointer-events: none; }
+  #title {
+    font-size: clamp(34px, 9vw, 72px); font-weight: bold; letter-spacing: 4px;
+    color: #f0f; text-shadow: 0 0 20px #f0f, 0 0 40px #90f; margin-bottom: 10px;
+  }
+  #subtitle { font-size: clamp(14px, 4vw, 20px); color: #0ff; text-shadow: 0 0 10px #0ff; margin-bottom: 26px; }
+  #instructions { max-width: min(92vw, 700px); padding: 0 8px; font-size: clamp(12px, 3.5vw, 16px); line-height: 1.9; color: #ccf; }
+  #instructions kbd {
+    background: #222; border: 1px solid #555; border-radius: 4px;
+    padding: 1px 7px; font-family: inherit; color: #0ff;
+  }
+  #final { display: none; font-size: clamp(18px, 5vw, 26px); color: #ff0; text-shadow: 0 0 12px #ff0; margin-bottom: 12px; }
+  #sound {position:fixed;left:18px;bottom:14px;min-height:44px;padding:8px 12px;z-index:12;background:#10172a;border:1px solid #456078;border-radius:7px;color:#c6dcf2;font:12px monospace;cursor:pointer;}
+  #panels {display:contents;}
+  @media (max-height:500px) {#panels {display:flex;gap:20px;} #panels:has(details[open]) {display:block;}}
+  #history {font:12px/1.7 monospace;color:#c6dcf2;max-width:92vw;margin:4px 0;}
+  #history summary {cursor:pointer;min-height:44px;padding:12px;}
+  #historyfilter, #historylength, #historysort, #exportstats, #exportcsv, #historymode, #historymetric {min-height:44px;padding:8px 12px;margin:4px;background:#10172a;border:1px solid #456078;border-radius:6px;color:#c6dcf2;font:12px monospace;}
+  #historyfilter:focus-visible, #historylength:focus-visible, #historysort:focus-visible, #exportstats:focus-visible, #exportcsv:focus-visible, #historymode:focus-visible, #historymetric:focus-visible {outline:3px solid white;outline-offset:3px;}
+  #historybody {max-width:350px;padding:8px 12px;background:#080e22;border-radius:6px;text-align:left;}
+  #chase {font:11px monospace;color:#d9c3ff;margin-top:4px;text-shadow:none;}
+  #overlay:has(#history[open]) {overflow-y:auto;justify-content:flex-start;padding-top:80px;padding-bottom:80px;}
+  #settings {margin:4px 0;max-width:92vw;color:#c6dcf2;font:12px monospace;}
+  #settings summary {cursor:pointer;min-height:44px;padding:14px;}
+  #settingbuttons {display:flex;flex-wrap:wrap;justify-content:center;gap:6px;}
+  #settingbuttons button {min-height:44px;padding:8px;background:#10172a;border:1px solid #456078;color:#c6dcf2;border-radius:6px;font:12px monospace;}
+  #settingbuttons button:focus-visible {outline:3px solid white;outline-offset:2px;}
+  #touchcontrols.southpaw #jump {order:-1;}
+  #touchcontrols.rightjump #jump {order:1;}
+  #touchcontrols.userhidden {display:none;}
+  #touchcontrols.large {gap:8px;}
+  #touchcontrols.large button {min-width:88px;height:76px;font-size:19px;border-width:2px;}
+  #hud.compact #runtime, #hud.compact #runnerstatus, #hud.compact #pace, #hud.compact #chase {display:none;}
+  #hud.contrast {text-shadow:none;}
+  #hud.contrast > div {background:#05010f;border:1px solid #93b4dc;border-radius:6px;padding:6px;}
+  #chainstatus {position:fixed;bottom:88px;left:0;right:0;text-align:center;color:#ffff88;font:bold 12px monospace;pointer-events:none;z-index:4;}
+  body:has(#overlay:not(.hidden)) #chainstatus {display:none;}
+  @media(max-height:500px){#chainstatus{bottom:62px;}}
+  #milestone {position:fixed;top:160px;left:8px;right:8px;z-index:4;text-align:center;color:#aaffd5;font:bold 18px monospace;pointer-events:none;text-shadow:0 2px 5px #05010f;}
+  #pausesummary {font:12px/1.6 monospace;max-width:90vw;color:#bce8ff;margin:0 0 10px;}
+  #comparison {font:12px/1.5 monospace;max-width:90vw;color:#bce8ff;margin:0 0 6px;}
+  #crashhint {font:12px/1.5 monospace;max-width:90vw;color:#bce8ff;margin:0 0 6px;}
+  #runnerstatus {font:11px/1.5 monospace;color:#bfdaff;margin-top:4px;text-shadow:none;}
+  #pace {font:11px/1.5 monospace;color:#bfdaff;margin-top:4px;text-shadow:none;}
+  body:has(#overlay:not(.hidden) #history[open]) #hud, body:has(#overlay:not(.hidden) #settings[open]) #hud, body:has(#overlay:not(.hidden) #scorebreakdown:not([hidden])) #hud {visibility:hidden;}
+  #recordhighlights {font:12px/1.5 monospace;max-width:90vw;color:#aaffd5;margin:0 0 8px;}
+  #scorebreakdown {font:12px/1.5 monospace;max-width:90vw;color:#d9c3ff;margin:0 0 6px;}
+  #runtime {font:12px monospace;color:#e1e8ff;margin-top:5px;text-shadow:none;}
+  #overlay:has(#settings[open]) {overflow-y:auto;justify-content:flex-start;padding-top:80px;padding-bottom:80px;}
+  #overlay:has(details[open]) #sound, #overlay:has(#restartcontrols:not([hidden])) #sound, #overlay:has(#scorebreakdown:not([hidden])) #sound {position:relative;left:auto;bottom:auto;order:20;flex-shrink:0;margin-top:16px;}
+  #restartcontrols {display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin:6px 0;}
+  #restartcontrols[hidden],#cancelrestart[hidden] {display:none;}
+  #restartcontrols button {min-height:44px;padding:8px 14px;background:#17172c;border:1px solid #7285a0;border-radius:6px;color:#dce8ff;font:12px monospace;}
+  #start {min-height:48px; min-width:160px; margin:14px 0 4px; padding:10px 24px; border:2px solid #0ff; border-radius:8px; background:#073b45; color:#dfffff; font:bold 18px monospace; cursor:pointer;}
+  #tomenu:focus-visible, #restart:focus-visible, #cancelrestart:focus-visible, #start:focus-visible, #sound:focus-visible, #modes button:focus-visible, #touchcontrols button:focus-visible {outline:3px solid #fff; outline-offset:3px;}
+  #modes { display:flex; gap:8px; margin-bottom:18px; }
+  #modes button { min-height:44px; padding:8px 13px; font: bold 13px monospace; color:#b8c9f0; background:#14182d; border:1px solid #475077; border-radius:6px; cursor:pointer; }
+  #modes button[aria-pressed="true"] { color:#0ff; border-color:#0ff; background:#053c44; }
+  #pause { pointer-events:auto; margin-top:12px; padding:10px 14px; border:1px solid #0ff; border-radius:8px; color:#0ff; background:#11132c; font: bold 14px monospace; cursor:pointer; }
+  #pause:focus-visible { outline:3px solid #fff; outline-offset:3px; }
+  @media (max-height:500px) { #overlay { padding:50px 10px 70px; } #title {font-size:28px; margin-bottom:4px;} #subtitle {font-size:12px; margin-bottom:8px;} #modes {margin-bottom:6px;} #modes button {min-height:44px;padding:4px 10px;} #instructions {font-size:12px;line-height:1.5;} #instructions .blink {margin-top:4px!important;} #touchcontrols {bottom:8px;gap:30px;} #touchcontrols button {height:46px;} }
+  @media (min-height:501px) and (max-height:650px) { #overlay {justify-content:flex-start;overflow-y:auto;padding:80px 8px 80px;} #title {font-size:28px;margin-bottom:4px;} #subtitle {font-size:12px;margin-bottom:8px;} #modes {margin-bottom:6px;} #instructions {font-size:12px;line-height:1.5;} #instructions .blink {margin-top:4px!important;} }
+  @media (max-height:650px) {#overlay:has(#restartcontrols:not([hidden])),#overlay:has(#scorebreakdown:not([hidden])) {justify-content:flex-start;overflow-y:auto;padding-top:165px;padding-bottom:80px;}}
+  @media (prefers-reduced-motion:reduce) { .blink {animation:none!important;} #overlay {transition:none;} }
+  .blink { animation: blink 1.1s steps(2) infinite; }
+  @keyframes blink { 50% { opacity: 0.25; } }
+#hunterhud{position:fixed;top:86px;right:18px;width:106px;text-align:right;color:#ffb4c9;font:11px monospace;z-index:3;pointer-events:none}#hunterhud[hidden]{display:none}#hunterbar{height:6px;background:#29142b;border:1px solid #8b3853;margin-top:5px}#hunterfill{height:100%;background:#ff487a;width:30%}#huntericon{font-size:24px;color:#ff487a;text-shadow:0 0 12px #ff487a}#huntervignette{position:fixed;inset:0;pointer-events:none;z-index:1}body:has(#overlay:not(.hidden)) #hunterhud{display:none}#chaseguide{display:none;color:#ffb4c9;font-size:12px;line-height:1.4}body.chasemode #chaseguide{display:block}#slide{display:none}body.chasemode #slide{display:block}body.chasemode #touchcontrols{gap:7px}body.chasemode #touchcontrols button{min-width:54px;width:54px}@media(max-height:500px){#hunterhud{top:66px}}
+body:has(#overlay:not(.hidden)) #rungoal{display:none}@media(max-height:500px){#rungoal{bottom:80px!important}}
+#missionhud{position:fixed;top:170px;left:12px;right:12px;z-index:4;text-align:center;pointer-events:none;font:12px monospace;color:#aaffee;text-shadow:0 2px 5px #000}#missionhud[hidden]{display:none}#missiontitle{font-weight:bold;font-size:17px;letter-spacing:1px}#missiontip{margin-top:5px;color:#ffe7a0}#fire{display:none}body.missionmode.bossphase #fire{display:block}body.missionmode #slide{display:block}body.missionmode #touchcontrols{gap:6px}body.missionmode #touchcontrols button{min-width:48px;width:48px;font-size:12px}body.missionmode #rungoal,body.missionmode #chainstatus{display:none}body:has(#overlay:not(.hidden)) #missionhud{display:none}#modes{flex-wrap:wrap;max-width:96vw}@media(max-height:500px){#missionhud{top:12px;left:180px;right:160px;font-size:11px}#missiontitle{font-size:14px}}
+</style>
+</head>
+<body>
+<canvas id="game" aria-label="Neon Rush 3D runner"></canvas>
+<div id="touchcontrols" hidden><button type="button" id="left" aria-label="Move left">&#9664;</button><button type="button" id="jump" aria-label="Jump">JUMP</button><button type="button" id="fire" aria-label="Fire at drone in Mission">FIRE</button><button type="button" id="slide" aria-label="Slide under Chase beams">SLIDE</button><button type="button" id="right" aria-label="Move right">&#9654;</button></div>
+<div id="hud">
+  <div><div id="modebadge">CLASSIC</div><div id="score">0</div><div id="runstats">0 orbs · 0 m</div><div id="chase"></div><div id="runtime">TIME 0:00</div><div id="runnerstatus">CENTER / JUMP READY</div><div id="pace">PACE 14.0 / 32 m/s</div><div id="shieldstatus" style="font:12px monospace;color:#aaffd5" aria-live="polite"></div><div id="pickup" aria-live="polite"></div></div>
+  <div><div id="best">BEST 0</div><button id="pause" type="button" aria-label="Pause game" hidden>PAUSE</button></div>
+</div>
+<div id="milestone" aria-live="polite"></div>
+<div id="missionhud" hidden><div id="missiontitle"></div><div id="missioninfo"></div><div id="missiontip"></div></div><div id="huntervignette"></div><div id="hunterhud" hidden><div id="huntericon">◈</div><div id="huntertext">HUNTER 26 m</div><div id="hunterbar"><div id="hunterfill"></div></div><div id="hunteralert"></div></div>
+<div id="rungoal" style="position:fixed;bottom:110px;left:0;right:0;text-align:center;font:11px monospace;color:#ffdd88;pointer-events:none;z-index:4"></div><div id="chainstatus" aria-live="off"></div>
+<div id="overlay">
+  <div id="title">NEON RUSH</div>
+  <div id="subtitle">CLASSIC / balanced pace</div>
+  <div id="pausesummary" hidden></div><div id="final"></div><div id="scorebreakdown" hidden></div><div id="recordhighlights" hidden></div><div id="comparison" hidden></div><div id="crashhint" hidden></div>
+  <button type="button" id="sound" aria-pressed="false">SOUND OFF</button>
+  <div id="modes" role="group" aria-label="Difficulty"><button type="button" data-mode="easy">CHILL</button><button type="button" data-mode="normal" aria-pressed="true">CLASSIC</button><button type="button" data-mode="hard">RUSH</button><button type="button" data-mode="chase">CHASE</button><button type="button" data-mode="mission">MISSION</button></div>
+  <div id="panels"><details id="settings"><summary>OPTIONS</summary><div id="settingswarning" role="status" hidden style="max-width:350px;color:#ffff88">Settings cannot be saved. Changes work on this page but may reset when it closes.</div><div id="settingbuttons"><button type="button" id="motion" aria-pressed="false">MOTION: SYSTEM</button><button type="button" id="quality" aria-pressed="false">QUALITY: FULL</button><button type="button" id="hand" aria-pressed="false">JUMP: CENTER</button><button type="button" id="buttons" aria-pressed="true">BUTTONS: ON</button><button type="button" id="controlsize" aria-pressed="false">SIZE: STANDARD</button><button type="button" id="contrast" aria-pressed="false">HUD: CLEAR</button><button type="button" id="swipesize">SWIPE: STANDARD</button><button type="button" id="tapjump" aria-pressed="true">TAP JUMP: ON</button><button type="button" id="runnercolor">COLOR: CYAN</button><button type="button" id="earnedtrim">GOLD TRIM: LOCKED</button><button type="button" id="runnershape">RUNNER: CUBE</button><button type="button" id="laneguides" aria-pressed="false">LANE GUIDES: OFF</button><button type="button" id="stars" aria-pressed="true">STARS: ON</button><button type="button" id="banners" aria-pressed="true">BANNERS: ON</button><button type="button" id="huddetail" aria-pressed="false">DETAIL: FULL HUD</button></div></details>
+  <details id="history"><summary>MY STATS</summary><button type="button" id="historyfilter" aria-pressed="false">RECENT: ALL MODES</button><select id="historymode" aria-label="History difficulty" hidden><option value="current">CURRENT DIFFICULTY</option><option value="easy">CHILL HISTORY</option><option value="normal">CLASSIC HISTORY</option><option value="hard">RUSH HISTORY</option><option value="chase">CHASE HISTORY</option><option value="mission">MISSION HISTORY</option></select><button type="button" id="historylength" aria-pressed="false">SHOW: 5 RUNS</button><button type="button" id="historysort" aria-pressed="false">ORDER: NEWEST</button><select id="historymetric" aria-label="History ranking metric" hidden><option value="score">RANK: SCORE</option><option value="distance">RANK: DISTANCE</option><option value="orbs">RANK: ORBS</option><option value="seconds">RANK: SURVIVAL</option></select><button type="button" id="exportstats">EXPORT STATS</button><button type="button" id="exportcsv">RUNS CSV</button><div id="exportstatus" role="status" style="max-width:350px"></div><div id="storagewarning" role="status" hidden style="max-width:350px;color:#ffff88">Saving is unavailable. Stats may last only until this page closes. Export stats to keep a copy.</div><div id="historybody"></div></details></div>
+  <button type="button" id="start">START RUN</button><div id="restartcontrols" hidden><button type="button" id="restart">RESTART RUN</button><button type="button" id="tomenu">MAIN MENU</button><button type="button" id="cancelrestart" hidden>KEEP RUN</button></div>
+  <div id="instructions">
+    <div><kbd>&#9664;</kbd> <kbd>&#9654;</kbd> or <kbd>A</kbd> <kbd>D</kbd> switch lane &nbsp;&middot;&nbsp; <kbd>SPACE</kbd> / <kbd>&#9650;</kbd> jump</div>
+    <div style="font-size:12px;color:#aaffee">MOCHI the moon rabbit: gather treats for the Mooncake Festival.<br>MISSION: cross three moons, then reclaim the festival lantern.</div><div id="chaseguide">CHASE: hits slow you; orbs push hunter back.<br>Blue ↓ beam: Down / swipe down / SLIDE.</div><div id="phoneguide">phone: swipe left / right to switch lane &middot; tap or swipe up to jump</div><div style="color:#ffff88">mochi treats +50; 3-chain +25 &amp; 3s magnet (4s)<br>green diamond: 1-hit shield &middot; X: dodge &middot; arrow: jump +20 or dodge</div>
+    <div style="margin-top:14px" class="blink">press space or tap to start</div><div style="margin-top:10px;font-size:12px">P / Escape: pause &middot; M: sound &middot; v1.79</div>
+  </div>
+</div>
+
+<script type="importmap">
+{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js" } }
+</script>
+<script type="module">
+import * as THREE from 'three';
+
+const canvas = document.getElementById('game');
+let renderer, graphicsLost=false;
+try { renderer = new THREE.WebGLRenderer({ canvas, antialias: true }); }
+catch (error) {
+  for(const id of ['modes','start','sound','settings','history','restartcontrols'])document.getElementById(id).style.display='none';
+  document.getElementById('overlay').setAttribute('role','alert');
+  document.getElementById('title').textContent = '3D UNAVAILABLE';
+  document.getElementById('subtitle').textContent = 'Your browser could not start WebGL';
+  document.getElementById('instructions').textContent = 'Try a current browser with hardware acceleration enabled.';
+  throw error;
+}
+canvas.addEventListener('webglcontextlost', (event) => {
+  event.preventDefault();
+  if (state === 'playing') togglePause();
+  graphicsLost=true;
+  canvas.style.visibility='hidden';
+  overlay.style.background='#05010f';
+  titleEl.textContent='3D PAUSED';
+  subtitleEl.textContent = 'Reload this page to recover';
+  instrEl.textContent='Your browser interrupted the 3D display. Reload to start a new run.';
+  for(const el of [startEl,modesEl,soundEl,pauseEl,settingsEl,historyEl])el.style.display='none';
+  document.getElementById('pausesummary').hidden=true;document.getElementById('restartcontrols').hidden=true;controlsEl.hidden=true;document.getElementById('recordhighlights').hidden=true;document.getElementById('scorebreakdown').hidden=true; finalEl.style.display='none';document.getElementById('crashhint').hidden=true;document.getElementById('milestone').hidden=true;document.getElementById('comparison').hidden=true;
+  overlay.setAttribute('role','alert');
+  overlay.inert=false; overlay.classList.remove('hidden');
+});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setSize(window.innerWidth, window.innerHeight);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x05010f);
+scene.fog = new THREE.Fog(0x05010f, 30, 120);
+
+const camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 300);
+camera.position.set(0, 4.2, 7.5);
+camera.lookAt(0, 1, -10);
+
+// Lights
+scene.add(new THREE.AmbientLight(0x334, 2));
+const dirLight = new THREE.DirectionalLight(0x88aaff, 1.5);
+dirLight.position.set(3, 10, 5);
+scene.add(dirLight);
+const neonPink = new THREE.PointLight(0xff00ff, 40, 40);
+neonPink.position.set(-4, 4, -10);
+scene.add(neonPink);
+const neonCyan = new THREE.PointLight(0x00ffff, 40, 40);
+neonCyan.position.set(4, 4, -20);
+scene.add(neonCyan);
+
+// Original procedural art. Canvas-generated locally; no external artwork or downloads.
+function artTexture(kind){
+ const c=document.createElement('canvas');c.width=c.height=256;const x=c.getContext('2d');
+ if(kind==='road'){x.fillStyle='#10182c';x.fillRect(0,0,256,256);for(let i=0;i<800;i++){const n=(i*73)%256,m=(i*137)%256;x.fillStyle=i%2?'#182338':'#0c1426';x.fillRect(n,m,2,2)}x.strokeStyle='#34425e';x.lineWidth=3;x.strokeRect(6,6,244,244);x.strokeStyle='#25334b';x.beginPath();x.moveTo(128,8);x.lineTo(128,248);x.stroke();for(const a of[16,240])for(const b of[16,240]){x.fillStyle='#60768a';x.fillRect(a-2,b-2,4,4)}}
+ else if(kind==='windows'){x.fillStyle='#070e21';x.fillRect(0,0,256,256);for(let a=12;a<256;a+=32)for(let b=8;b<256;b+=24){x.fillStyle=((a*7+b*11)%9)<3?'#10243d':((a+b)%3?'#285777':'#754477');x.fillRect(a,b,10,12)}}
+ else {x.fillStyle=kind==='runner'?'#238e9a':'#9c8295';x.fillRect(0,0,256,256);x.strokeStyle=kind==='runner'?'#b4ffff':'#e4c9d4';x.lineWidth=5;x.strokeRect(10,10,236,236);x.strokeRect(28,28,200,200);for(let i=0;i<5;i++){x.fillStyle=kind==='runner'?'#174552':'#443641';x.fillRect(44,46+i*31,168,13)}x.fillStyle='#ffffff';for(const a of[17,239])for(const b of[17,239])x.fillRect(a-4,b-4,8,8);}
+ const t=new THREE.CanvasTexture(c);t.anisotropy=Math.min(4,renderer.capabilities.getMaxAnisotropy());return t;
+}
+const roadArt=artTexture('road');roadArt.wrapS=roadArt.wrapT=THREE.RepeatWrapping;roadArt.repeat.set(3,8);
+const panelArt=artTexture('panel'),runnerArt=artTexture('runner');
+// Track: moving grid floor segments
+const LANES = [-2.2, 0, 2.2];
+const TRACK_W = 7.4, SEG_LEN = 20, SEG_COUNT = 8;
+const floorMat = new THREE.MeshStandardMaterial({ color: 0x8899bb, map:roadArt, roughness: 0.65, metalness:0.3 });
+const gridHelperMat = new THREE.LineBasicMaterial({ color: 0x2211aa, transparent: true, opacity: 0.7 });
+const segments = [];
+for (let i = 0; i < SEG_COUNT; i++) {
+  const g = new THREE.Group();
+  const floor = new THREE.Mesh(new THREE.PlaneGeometry(TRACK_W, SEG_LEN), floorMat);
+  floor.rotation.x = -Math.PI / 2;
+  g.add(floor);
+  const grid = new THREE.GridHelper(SEG_LEN, 10, 0x4422ff, 0x2211aa);
+  grid.scale.x = TRACK_W / SEG_LEN;
+  grid.position.y = 0.02;
+  g.add(grid);
+  g.position.z = -i * SEG_LEN;
+  scene.add(g);
+  segments.push(g);
+}
+
+// Side rails (glowing edges)
+function makeRail(x) {
+  const geo = new THREE.BoxGeometry(0.15, 0.15, SEG_LEN * SEG_COUNT);
+  const mat = new THREE.MeshBasicMaterial({ color: 0xff00ff });
+  const m = new THREE.Mesh(geo, mat);
+  m.position.set(x, 0.1, -SEG_LEN * SEG_COUNT / 2 + 10);
+  scene.add(m);
+}
+makeRail(-TRACK_W / 2); makeRail(TRACK_W / 2);
+
+// Optional static lane-center guides make depth and alignment easier to read.
+const laneGuides = new THREE.Group();
+const guideMat = new THREE.MeshBasicMaterial({color:0x8b9dcc,transparent:true,opacity:0.45,depthWrite:false});
+for(const x of LANES){const guide=new THREE.Mesh(new THREE.PlaneGeometry(.035,SEG_LEN*SEG_COUNT),guideMat);guide.rotation.x=-Math.PI/2;guide.position.set(x,.045,-SEG_LEN*SEG_COUNT/2+10);laneGuides.add(guide);}
+scene.add(laneGuides);
+// Player
+const player = new THREE.Group();
+const bodyMat = new THREE.MeshStandardMaterial({ color: 0x00ffee, emissive: 0x00aaaa, emissiveIntensity: 0.9, roughness: 0.3, metalness: 0.6, emissiveMap:runnerArt, map:runnerArt });
+const body = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.9, 0.9), bodyMat);
+body.position.y = 0.55;
+player.add(body);
+const glow = new THREE.PointLight(0x00ffee, 12, 8);
+glow.position.y = 1;
+player.add(glow);
+scene.add(player);
+
+// Small armor details retain the exact original collision envelope.
+const runnerTrim=new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(.94,.94,.94)),new THREE.LineBasicMaterial({color:0xccffff,transparent:true,opacity:.75}));runnerTrim.position.y=.55;player.add(runnerTrim);
+// Original MOCHI moon rabbit model. No third-party character assets.
+const courier=new THREE.Group(),rabbitFur=new THREE.MeshStandardMaterial({color:0xfff4e6,emissive:0x776655,emissiveIntensity:.55,roughness:.95}),rabbitPink=new THREE.MeshStandardMaterial({color:0xf6a8c3,roughness:.9}),courierEye=new THREE.MeshBasicMaterial({color:0x25233b});
+function rabbitPart(w,h,d,x,y,z,mat=rabbitFur){const m=new THREE.Mesh(new THREE.SphereGeometry(1,16,12),mat);m.scale.set(w,h,d);m.position.set(x,y,z);courier.add(m);return m;}
+rabbitPart(.4,.46,.32,0,.58,0);rabbitPart(.39,.32,.32,0,1.05,0);for(const side of[-1,1]){rabbitPart(.105,.38,.10,side*.19,1.47,0);rabbitPart(.055,.27,.035,side*.19,1.49,.08,rabbitPink);rabbitPart(.045,.055,.03,side*.15,1.09,.31,courierEye);rabbitPart(.08,.045,.02,side*.24,.99,.29,rabbitPink)}rabbitPart(.055,.04,.035,0,1.01,.34,rabbitPink);rabbitPart(.16,.16,.16,0,.58,-.36);const robotLegs=[-.22,.22].map(x=>rabbitPart(.17,.13,.27,x,.13,.13)),robotArms=[-.37,.37].map(x=>rabbitPart(.13,.24,.13,x,.6,.04));player.add(courier);
+const lunarTexture=new THREE.TextureLoader().load('https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/moon_01/moon_01_diff_1k.jpg');lunarTexture.colorSpace=THREE.SRGBColorSpace;lunarTexture.wrapS=lunarTexture.wrapT=THREE.RepeatWrapping;lunarTexture.repeat.set(3,10);floorMat.map=lunarTexture;floorMat.color.setHex(0xaaa0bf);floorMat.roughness=1;floorMat.metalness=0;floorMat.needsUpdate=true;const moonBump=new THREE.TextureLoader().load('https://dl.polyhaven.org/file/ph-assets/Textures/png/1k/moon_01/moon_01_disp_1k.png');moonBump.wrapS=moonBump.wrapT=THREE.RepeatWrapping;moonBump.repeat.set(3,10);floorMat.bumpMap=moonBump;floorMat.bumpScale=.55;
+const moonWorld=new THREE.Group();for(let i=0;i<3;i++){const m=new THREE.Mesh(new THREE.SphereGeometry(7-i*1.4,32,20),new THREE.MeshStandardMaterial({map:lunarTexture,color:[0xe6d9ff,0xeab595,0x9cdde4][i],emissive:[0x554466,0x664433,0x335566][i],emissiveIntensity:.7,bumpMap:moonBump,bumpScale:.8,roughness:1}));m.position.set([-15,18,-4][i],[13,20,27][i],[-60,-75,-90][i]);moonWorld.add(m)}scene.add(moonWorld);segments.forEach(g=>g.children[1].visible=false);for(const side of[-1,1]){const terrain=new THREE.Mesh(new THREE.PlaneGeometry(28,160),new THREE.MeshStandardMaterial({map:lunarTexture,bumpMap:moonBump,bumpScale:.7,color:0x887799,roughness:1}));terrain.rotation.x=-Math.PI/2;terrain.position.set(side*18,-.2,-65);scene.add(terrain)}
+
+// Ground marker stays under the runner to make jump height readable.
+const shadow = new THREE.Mesh(new THREE.CircleGeometry(0.65,32),new THREE.MeshBasicMaterial({color:0x00d9df,transparent:true,opacity:0.32,depthWrite:false}));
+shadow.rotation.x=-Math.PI/2; shadow.position.y=0.035; scene.add(shadow);
+// Obstacles and orbs pools
+const obstacles = [];
+const obstacleMats = [
+  new THREE.MeshStandardMaterial({ color: 0xff2255, emissive: 0xaa0022, emissiveIntensity: 0.65, map:panelArt, emissiveMap:panelArt, metalness:.5, roughness:.45 }),
+  new THREE.MeshStandardMaterial({ color: 0xff8800, emissive: 0xaa4400, emissiveIntensity: 0.65, map:panelArt, emissiveMap:panelArt, metalness:.5, roughness:.45 })
+];
+// Front-face symbols distinguish dodge-only and jumpable blocks without color.
+const beamMat=new THREE.MeshStandardMaterial({color:0x6677ff,emissive:0x2233aa,emissiveIntensity:.8,map:panelArt,emissiveMap:panelArt});
+const beamCanvas=document.createElement('canvas');beamCanvas.width=128;beamCanvas.height=96;const bx=beamCanvas.getContext('2d');bx.fillStyle='#101020';bx.fillRect(0,0,128,96);bx.strokeStyle='white';bx.lineWidth=12;bx.beginPath();bx.moveTo(32,42);bx.lineTo(64,72);bx.lineTo(96,42);bx.moveTo(64,20);bx.lineTo(64,70);bx.stroke();const beamCue=new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(beamCanvas)});
+const obstacleCueGeometry=new THREE.PlaneGeometry(.9,.6);
+const obstacleCueMaterials=[false,true].map(low=>{const c=document.createElement('canvas');c.width=128;c.height=96;const ctx=c.getContext('2d');ctx.fillStyle='#101020';ctx.fillRect(0,0,128,96);ctx.strokeStyle='#ffffff';ctx.lineWidth=12;ctx.lineCap='square';ctx.beginPath();if(low){ctx.moveTo(34,49);ctx.lineTo(64,20);ctx.lineTo(94,49);ctx.moveTo(64,22);ctx.lineTo(64,78)}else{ctx.moveTo(37,22);ctx.lineTo(91,76);ctx.moveTo(91,22);ctx.lineTo(37,76)}ctx.stroke();return new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(c),toneMapped:false})});
+function addObstacleCue(o,low){const cue=new THREE.Mesh(obstacleCueGeometry,obstacleCueMaterials[low?1:0]);cue.position.z=.611;o.add(cue);}
+const orbs = [];
+const orbMat = new THREE.MeshStandardMaterial({ color: 0xffe7d1, emissive: 0xcc8866, emissiveIntensity: .65 });
+const orbGeo = new THREE.SphereGeometry(0.35, 16, 16);orbGeo.scale(1,.65,1);
+
+// Stars backdrop
+let starField;
+{
+  const starGeo = new THREE.BufferGeometry();
+  const pos = [];
+  for (let i = 0; i < 600; i++) {
+    pos.push((Math.random() - 0.5) * 300, Math.random() * 120, -Math.random() * 280);
+  }
+  starGeo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  starField=new THREE.Points(starGeo, new THREE.PointsMaterial({ color: 0xffffff, size: 0.35 }));scene.add(starField);
+}
+
+// Neon city silhouette stays outside the road and behind obstacle silhouettes.
+const cityMat=new THREE.MeshBasicMaterial({map:artTexture('windows'),color:0x334966});
+const cityGeo=new THREE.BoxGeometry(1,1,1),city=new THREE.InstancedMesh(cityGeo,cityMat,36),cityDummy=new THREE.Object3D();
+for(let i=0;i<36;i++){const side=i%2?-1:1,h=5+(i*7%19),w=2+(i%4);cityDummy.scale.set(w,h,3+i%3);cityDummy.position.set(side*(10+(i%5)*4),h/2,-18-Math.floor(i/2)*7);cityDummy.updateMatrix();city.setMatrixAt(i,cityDummy.matrix)}scene.add(city);
+// One fixed-size particle pool and one draw call. Never adds lights or collision objects.
+const sparkCount=96,sparkPositions=new Float32Array(sparkCount*3),sparkColors=new Float32Array(sparkCount*3),sparkLife=new Float32Array(sparkCount),sparkVelocity=new Float32Array(sparkCount*3);let sparkCursor=0;
+for(let i=0;i<sparkCount;i++)sparkPositions[i*3+1]=-100;
+const sparkGeo=new THREE.BufferGeometry();sparkGeo.setAttribute('position',new THREE.BufferAttribute(sparkPositions,3));sparkGeo.setAttribute('color',new THREE.BufferAttribute(sparkColors,3));
+const sparkCanvas=document.createElement('canvas');sparkCanvas.width=sparkCanvas.height=32;const sx=sparkCanvas.getContext('2d'),sg=sx.createRadialGradient(16,16,0,16,16,16);sg.addColorStop(0,'rgba(255,255,255,1)');sg.addColorStop(.25,'rgba(255,255,255,.8)');sg.addColorStop(1,'rgba(255,255,255,0)');sx.fillStyle=sg;sx.fillRect(0,0,32,32);
+const sparks=new THREE.Points(sparkGeo,new THREE.PointsMaterial({map:new THREE.CanvasTexture(sparkCanvas),size:.24,vertexColors:true,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending}));sparks.frustumCulled=false;scene.add(sparks);
+function emitSparks(x,y,z,color){if(reduceMotion||lowQuality)return;const c=new THREE.Color(color);for(let n=0;n<16;n++){const i=sparkCursor++%sparkCount,j=i*3,a=n*Math.PI/8;sparkPositions.set([x,y,z],j);sparkColors.set([c.r,c.g,c.b],j);sparkVelocity.set([Math.cos(a)*2.2,1+(n%4)*.5,Math.sin(a)*2.2],j);sparkLife[i]=.55;}sparkGeo.attributes.position.needsUpdate=true;sparkGeo.attributes.color.needsUpdate=true;}
+function clearSparks(){sparkLife.fill(0);for(let i=0;i<sparkCount;i++)sparkPositions[i*3+1]=-100;sparkGeo.attributes.position.needsUpdate=true;}
+function updateSparks(dt){sparks.visible=!reduceMotion&&!lowQuality;if(!sparks.visible){clearSparks();return;}for(let i=0;i<sparkCount;i++){if(sparkLife[i]<=0)continue;const j=i*3;sparkLife[i]-=dt;if(sparkLife[i]<=0){sparkPositions[j+1]=-100;continue;}sparkPositions[j]+=sparkVelocity[j]*dt;sparkPositions[j+1]+=sparkVelocity[j+1]*dt;sparkPositions[j+2]+=sparkVelocity[j+2]*dt;sparkVelocity[j+1]-=5*dt;}sparkGeo.attributes.position.needsUpdate=true;}
+// Peripheral speed streaks: one line draw, never inside the playable road.
+const streakPositions=new Float32Array(24*6);for(let i=0;i<24;i++){const side=i%2?-1:1,x=side*(4.8+(i%4)*.6),y=.5+(i%6)*.5,z=-4-Math.floor(i/2)*6;streakPositions.set([x,y,z,x,y,z-3],i*6)}
+const streakGeo=new THREE.BufferGeometry();streakGeo.setAttribute('position',new THREE.BufferAttribute(streakPositions,3));const streakMat=new THREE.LineBasicMaterial({color:0x66bbee,transparent:true,opacity:0});const speedStreaks=new THREE.LineSegments(streakGeo,streakMat);scene.add(speedStreaks);
+const districtPortals=new THREE.Group(),portalMat=new THREE.MeshBasicMaterial({color:0xaa66ff});
+for(let i=0;i<4;i++){const arch=new THREE.Group();for(const side of[-1,1]){const post=new THREE.Mesh(new THREE.BoxGeometry(.12,7,.12),portalMat);post.position.set(side*4.3,3.5,0);arch.add(post)}const cross=new THREE.Mesh(new THREE.BoxGeometry(8.7,.12,.12),portalMat);cross.position.y=7;arch.add(cross);arch.position.z=-22-i*24;districtPortals.add(arch)}scene.add(districtPortals);
+city.visible=false;let districtIndex=-1;function updateDistrict(dt=0){const i=Math.floor(distance/500)%3;if(i!==districtIndex){districtIndex=i;cityMat.color.setHex([0x334966,0x51406b,0x28625d][i]);portalMat.color.setHex([0x6688ee,0xbb66ee,0x55ddbb][i]);}districtPortals.visible=i!==0;for(const arch of districtPortals.children){arch.position.z+=speed*dt;if(arch.position.z>8)arch.position.z-=96;}}
+function updateSpeedFeel(dt){const intensity=Math.max(0,Math.min(1,(speed-14)/24)),enabled=!reduceMotion&&!lowQuality&&state==='playing';speedStreaks.visible=enabled;streakMat.opacity=enabled?intensity*.32:0;const fov=70+(enabled?intensity*5:0);if(Math.abs(camera.fov-fov)>.01){camera.fov=fov;camera.updateProjectionMatrix();}if(enabled){for(let i=0;i<24;i++){const j=i*6;streakPositions[j+2]+=speed*dt;streakPositions[j+5]+=speed*dt;if(streakPositions[j+2]>4){streakPositions[j+2]-=76;streakPositions[j+5]-=76}}streakGeo.attributes.position.needsUpdate=true;}}
+// Game state
+let state = 'menu'; // menu | playing | paused | dead
+let savedOptions={};try{const v=JSON.parse(localStorage.getItem('neonrush_options')||'{}');if(v&&typeof v==='object')savedOptions=v}catch{}
+let handPosition=['center','left','right'].includes(savedOptions.hand)?savedOptions.hand:'center',showButtons=savedOptions.buttons!==false;
+let largeControls=savedOptions.large===true,contrastHud=savedOptions.contrast===true;
+let runnerColor=['cyan','mint','violet'].includes(savedOptions.runnerColor)?savedOptions.runnerColor:'cyan',runnerShape=['cube','sphere','diamond'].includes(savedOptions.runnerShape)?savedOptions.runnerShape:'cube';
+let goldUnlocked=false;try{goldUnlocked=localStorage.getItem('neonrush_gold')==='1'}catch{}
+let goldEquipped=savedOptions.goldTrim===true&&goldUnlocked,goalDone=false;
+function applyGold(){runnerTrim.material.color.setHex(goldEquipped?0xffdd66:0xccffff);courierEye.color.setHex(goldEquipped?0xd7a429:0x25233b);document.getElementById('earnedtrim').textContent=goldUnlocked?'GOLD ACCENTS: '+(goldEquipped?'ON':'OFF'):'GOLD ACCENTS: 250m + 10 ORBS';document.getElementById('earnedtrim').setAttribute('aria-pressed',String(goldEquipped));}
+document.getElementById('earnedtrim').addEventListener('click',()=>{if(!goldUnlocked)return;goldEquipped=!goldEquipped;applyGold();saveOptions();});applyGold();
+const runnerColors={cyan:0x00ffee,mint:0x88ffbb,violet:0xbb88ff};
+function applyRunnerColor(){const c=runnerColors[runnerColor];bodyMat.color.setHex(c);bodyMat.emissive.setHex(c).multiplyScalar(.65);glow.color.setHex(c);shadow.material.color.setHex(c);document.getElementById('runnercolor').textContent='COLOR: '+runnerColor.toUpperCase();}
+function applyRunnerShape(){courier.visible=runnerShape==='cube';body.visible=runnerShape!=='cube';runnerTrim.visible=false;body.geometry.dispose();body.geometry=runnerShape==='sphere'?new THREE.SphereGeometry(.55,20,16):runnerShape==='diamond'?new THREE.OctahedronGeometry(.65):new THREE.BoxGeometry(.9,.9,.9);document.getElementById('runnershape').textContent='RUNNER: '+(runnerShape==='cube'?'MOON RABBIT':runnerShape.toUpperCase());}
+document.getElementById('runnercolor').addEventListener('click',()=>{runnerColor=runnerColor==='cyan'?'mint':runnerColor==='mint'?'violet':'cyan';applyRunnerColor();saveOptions();});
+document.getElementById('runnershape').addEventListener('click',()=>{runnerShape=runnerShape==='cube'?'sphere':runnerShape==='sphere'?'diamond':'cube';applyRunnerShape();saveOptions();});
+applyRunnerColor();applyRunnerShape();
+let showBanners=savedOptions.banners!==false;
+function applyBanners(){const b=document.getElementById('banners');b.textContent='BANNERS: '+(showBanners?'ON':'OFF');b.setAttribute('aria-pressed',String(showBanners));if(!showBanners)document.getElementById('milestone').hidden=true;}
+document.getElementById('banners').addEventListener('click',()=>{showBanners=!showBanners;applyBanners();saveOptions();});applyBanners();
+let compactHud=savedOptions.compactHud===true;
+function applyHudDetail(){document.getElementById('hud').classList.toggle('compact',compactHud);const b=document.getElementById('huddetail');b.textContent='DETAIL: '+(compactHud?'COMPACT HUD':'FULL HUD');b.setAttribute('aria-pressed',String(compactHud));}
+document.getElementById('huddetail').addEventListener('click',()=>{compactHud=!compactHud;applyHudDetail();saveOptions();});applyHudDetail();
+let showStars=savedOptions.stars!==false;
+function applyStars(){starField.visible=showStars;const b=document.getElementById('stars');b.textContent='STARS: '+(showStars?'ON':'OFF');b.setAttribute('aria-pressed',String(showStars));}
+document.getElementById('stars').addEventListener('click',()=>{showStars=!showStars;applyStars();saveOptions();});applyStars();
+let showLaneGuides=savedOptions.laneGuides===true;
+function applyLaneGuides(){laneGuides.visible=showLaneGuides;const b=document.getElementById('laneguides');b.textContent='LANE GUIDES: '+(showLaneGuides?'ON':'OFF');b.setAttribute('aria-pressed',String(showLaneGuides));}
+document.getElementById('laneguides').addEventListener('click',()=>{showLaneGuides=!showLaneGuides;applyLaneGuides();saveOptions();});applyLaneGuides();
+let swipeSize=['short','standard','long'].includes(savedOptions.swipe)?savedOptions.swipe:'standard',tapJump=savedOptions.tapJump!==false;
+function swipeThreshold(){return swipeSize==='short'?24:swipeSize==='long'?64:40;}
+function applyGestures(){document.getElementById('swipesize').textContent='SWIPE: '+swipeSize.toUpperCase();document.getElementById('tapjump').textContent='TAP JUMP: '+(tapJump?'ON':'OFF');document.getElementById('tapjump').setAttribute('aria-pressed',String(tapJump));const guide=document.getElementById('phoneguide');if(guide)guide.textContent='phone: swipe left / right to switch lane · '+(tapJump?'tap or swipe up to jump':'swipe up to jump; tap jump off');}
+document.getElementById('swipesize').addEventListener('click',()=>{swipeSize=swipeSize==='standard'?'short':swipeSize==='short'?'long':'standard';applyGestures();saveOptions();});
+document.getElementById('tapjump').addEventListener('click',()=>{tapJump=!tapJump;applyGestures();saveOptions();});
+applyGestures();
+function saveOptions(){try{localStorage.setItem('neonrush_options',JSON.stringify({goldTrim:goldEquipped,motion:motionOverride,quality:lowQuality,hand:handPosition,buttons:showButtons,large:largeControls,contrast:contrastHud,swipe:swipeSize,tapJump,runnerColor,runnerShape,laneGuides:showLaneGuides,stars:showStars,compactHud,banners:showBanners,mode}))}catch{document.getElementById('settingswarning').hidden=false;}}
+const motionQuery=window.matchMedia('(prefers-reduced-motion: reduce)');
+let motionOverride=typeof savedOptions.motion==='boolean'?savedOptions.motion:null, reduceMotion=motionQuery.matches;
+function applyMotion(){reduceMotion=motionOverride??motionQuery.matches;camera.position.z=reduceMotion?11:7.5;if(reduceMotion){body.rotation.set(0,0,0);camera.position.x=0;}document.getElementById('motion').textContent='MOTION: '+(motionOverride===null?'SYSTEM':motionOverride?'REDUCED':'FULL');document.getElementById('motion').setAttribute('aria-pressed',String(reduceMotion));}
+motionQuery.addEventListener('change',applyMotion);
+const settingsEl=document.getElementById('settings');
+for(const event of ['touchstart','touchend','mousedown','click'])settingsEl.addEventListener(event,e=>e.stopPropagation(),{passive:true});
+document.getElementById('motion').addEventListener('click',()=>{motionOverride=motionOverride===null?true:motionOverride===true?false:null;applyMotion();saveOptions();});
+let lowQuality=false;
+document.getElementById('quality').addEventListener('click',e=>{lowQuality=!lowQuality;renderer.setPixelRatio(lowQuality?1:Math.min(window.devicePixelRatio,2));renderer.setSize(innerWidth,innerHeight);neonPink.visible=neonCyan.visible=glow.visible=!lowQuality;e.currentTarget.textContent='QUALITY: '+(lowQuality?'LIGHT':'FULL');e.currentTarget.setAttribute('aria-pressed',String(lowQuality));saveOptions();});
+function applyHand(){const c=document.getElementById('touchcontrols');c.classList.toggle('southpaw',handPosition==='left');c.classList.toggle('rightjump',handPosition==='right');document.getElementById('hand').textContent='JUMP: '+handPosition.toUpperCase();document.getElementById('hand').setAttribute('aria-pressed',String(handPosition!=='center'));}
+document.getElementById('hand').addEventListener('click',()=>{handPosition=handPosition==='center'?'left':handPosition==='left'?'right':'center';applyHand();saveOptions();});
+function applyButtons(){document.getElementById('touchcontrols').classList.toggle('userhidden',!showButtons);const b=document.getElementById('buttons');b.textContent='BUTTONS: '+(showButtons?'ON':'OFF');b.setAttribute('aria-pressed',String(showButtons));}
+document.getElementById('buttons').addEventListener('click',()=>{showButtons=!showButtons;applyButtons();saveOptions();});
+function applyControlSize(){document.getElementById('touchcontrols').classList.toggle('large',largeControls);document.getElementById('controlsize').textContent='SIZE: '+(largeControls?'LARGE':'STANDARD');document.getElementById('controlsize').setAttribute('aria-pressed',String(largeControls));}
+function applyContrast(){document.getElementById('hud').classList.toggle('contrast',contrastHud);document.getElementById('contrast').textContent='HUD: '+(contrastHud?'SOLID':'CLEAR');document.getElementById('contrast').setAttribute('aria-pressed',String(contrastHud));}
+document.getElementById('controlsize').addEventListener('click',()=>{largeControls=!largeControls;applyControlSize();saveOptions();});
+document.getElementById('contrast').addEventListener('click',()=>{contrastHud=!contrastHud;applyContrast();saveOptions();});
+applyControlSize();applyContrast();applyHand();applyButtons();if(savedOptions.quality===true){lowQuality=true;renderer.setPixelRatio(1);renderer.setSize(innerWidth,innerHeight);neonPink.visible=neonCyan.visible=glow.visible=false;document.getElementById('quality').textContent='QUALITY: LIGHT';document.getElementById('quality').setAttribute('aria-pressed','true');}
+applyMotion();
+let audioEnabled=false, audioContext=null,musicNext=0,musicStep=0;const activeAudio=new Set();
+const soundEl=document.getElementById('sound');
+function playTone(frequency,duration=0.09) {
+  if(!audioEnabled || !audioContext || audioContext.state!=='running')return;
+  const oscillator=audioContext.createOscillator(),gain=audioContext.createGain();
+  oscillator.type='triangle';oscillator.frequency.value=frequency;
+  gain.gain.setValueAtTime(0.045,audioContext.currentTime);gain.gain.exponentialRampToValueAtTime(0.001,audioContext.currentTime+duration);
+  oscillator.connect(gain);gain.connect(audioContext.destination);oscillator.start();oscillator.stop(audioContext.currentTime+duration);activeAudio.add(oscillator);oscillator.onended=()=>activeAudio.delete(oscillator);
+}
+function stopAudio(){for(const o of activeAudio){try{o.stop()}catch{}}activeAudio.clear();musicNext=0;}
+function musicTick(){if(!audioEnabled||!audioContext||state!=='playing'||audioContext.state!=='running')return;if(audioContext.currentTime<musicNext)return;musicNext=audioContext.currentTime+.23;const bass=[110,110,146.83,130.81,110,164.81,146.83,98],melody=[440,0,523.25,659.25,0,587.33,523.25,0,440,0,392,523.25,0,329.63,392,0];const n=musicStep++;if(n%2===0)musicNote(bass[Math.floor(n/2)%8],.18,.026,'sine');if(melody[n%16])musicNote(melody[n%16],.1,.014,'triangle');if(n%4===2)musicNote(180,.04,.012,'triangle');}
+function musicNote(hz,duration,volume,type){const o=audioContext.createOscillator(),g=audioContext.createGain();o.type=type;o.frequency.value=hz;g.gain.setValueAtTime(volume,audioContext.currentTime);g.gain.exponentialRampToValueAtTime(.001,audioContext.currentTime+duration);o.connect(g);g.connect(audioContext.destination);o.start();o.stop(audioContext.currentTime+duration);activeAudio.add(o);o.onended=()=>activeAudio.delete(o);}
+function playCue(kind){if(!audioEnabled||!audioContext||audioContext.state!=='running')return;if(kind==='coin'){musicNote(1046.5,.09,.04,'sine');musicNote(1568,.13,.02,'sine');}else if(kind==='jump'){musicNote(330,.08,.035,'triangle');const o=audioContext.createOscillator(),g=audioContext.createGain();o.frequency.setValueAtTime(330,audioContext.currentTime);o.frequency.exponentialRampToValueAtTime(660,audioContext.currentTime+.12);g.gain.setValueAtTime(.025,audioContext.currentTime);g.gain.exponentialRampToValueAtTime(.001,audioContext.currentTime+.14);o.connect(g);g.connect(audioContext.destination);o.start();o.stop(audioContext.currentTime+.14);activeAudio.add(o);o.onended=()=>activeAudio.delete(o);}}
+for(const event of ['touchstart','touchend','mousedown'])soundEl.addEventListener(event,e=>e.stopPropagation(),{passive:true});
+soundEl.addEventListener('click',async e=>{e.stopPropagation();audioEnabled=!audioEnabled;
+  if(audioEnabled){try{audioContext??=new (window.AudioContext||window.webkitAudioContext)();await audioContext.resume();}catch{audioEnabled=false;}}
+  if(!audioEnabled)stopAudio();soundEl.textContent=audioEnabled?'SOUND ON':'SOUND OFF';soundEl.setAttribute('aria-pressed',String(audioEnabled));if(audioEnabled)playTone(660);
+});
+const startEl=document.getElementById('start');
+for(const event of ['touchstart','touchend','mousedown'])startEl.addEventListener(event,e=>e.stopPropagation(),{passive:true});
+startEl.addEventListener('click', e=>{e.stopPropagation();if(state==='paused')togglePause();else if(state!=='playing'){restoreMenuText();startGame();}});
+const controlsEl = document.getElementById('touchcontrols');
+const pauseEl = document.getElementById('pause');
+function storedBest(key) {const n=Number(safeStore.get(key));return Number.isFinite(n)?Math.max(0,Math.floor(n)):0;}
+const sessionStore=new Map();
+function warnStorage(){document.getElementById('storagewarning').hidden=false;}
+const safeStore = { get(key) { if(sessionStore.has(key))return sessionStore.get(key); try { return localStorage.getItem(key); } catch { warnStorage();return sessionStore.get(key) ?? null; } }, set(key, value) { sessionStore.set(key,String(value)); try { localStorage.setItem(key, value); } catch {warnStorage();} } };
+const historyEl=document.getElementById('history');
+for(const event of ['touchstart','touchend','mousedown','click'])historyEl.addEventListener(event,e=>e.stopPropagation(),{passive:true});
+let totals={runs:0,orbs:0,distance:0},runHistory=[],records={};
+try{const v=JSON.parse(safeStore.get('neonrush_stats')||'null');if(v&&typeof v==='object'){for(const k of Object.keys(totals))if(Number.isFinite(v.totals?.[k])&&v.totals[k]>=0)totals[k]=Math.floor(v.totals[k]);runHistory=Array.isArray(v.history)?v.history.filter(r=>['easy','normal','hard','chase','mission'].includes(r.mode)&&['score','distance','orbs','seconds'].every(k=>Number.isFinite(r[k])&&r[k]>=0)).slice(0,20):[];for(const m of ['easy','normal','hard','chase','mission']){const r=v.records?.[m];if(r&&Number.isFinite(r.distance)&&Number.isFinite(r.orbs))records[m]={distance:Math.max(0,r.distance),orbs:Math.max(0,r.orbs),seconds:Number.isFinite(r.seconds)?Math.max(0,Math.floor(r.seconds)):0};}}}catch{}
+document.getElementById('exportstats').addEventListener('click',()=>{const status=document.getElementById('exportstatus');let url;try{const data={game:'Neon Rush',formatVersion:1,exportedAt:new Date().toISOString(),scope:'This browser only; up to 20 completed runs. No settings or account data.',totals:{...totals},records:JSON.parse(JSON.stringify(records)),bestScores:Object.fromEntries(['easy','normal','hard','chase','mission'].map(m=>[m,storedBest(m==='normal'?'neonrush_best':'neonrush_best_'+m)])),history:runHistory.map(r=>({...r}))};url=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'}));const link=document.createElement('a');link.href=url;link.download='neon-rush-stats.json';document.body.append(link);link.click();link.remove();status.textContent='Download requested: neon-rush-stats.json. This browser only.';setTimeout(()=>URL.revokeObjectURL(url),1000);}catch{if(url)URL.revokeObjectURL(url);status.textContent='Export unavailable in this browser. Your stats are unchanged.';}});
+document.getElementById('exportcsv').addEventListener('click',()=>{const status=document.getElementById('exportstatus');let url;try{const rows=[['difficulty','score_points','distance_m','orbs','active_seconds','completed_at_utc'],...runHistory.map(r=>[DIFFICULTIES[r.mode].label,r.score,r.distance,r.orbs,r.seconds,Number.isFinite(r.completedAt)&&r.completedAt>0&&Number.isFinite(new Date(r.completedAt).getTime())?new Date(r.completedAt).toISOString():''])];const csv=rows.map(row=>row.map(value=>'"'+String(value).replaceAll('"','""')+'"').join(',')).join('\r\n')+'\r\n';url=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));const link=document.createElement('a');link.href=url;link.download='neon-rush-runs.csv';document.body.append(link);link.click();link.remove();status.textContent='Download requested: neon-rush-runs.csv. Up to 20 saved runs, newest first; blank dates were not recorded.';setTimeout(()=>URL.revokeObjectURL(url),1000);}catch{if(url)URL.revokeObjectURL(url);status.textContent='CSV export unavailable in this browser. Your stats are unchanged.';}});
+let historyModeOnly=false;
+const historyModeSelect=document.getElementById("historymode");
+historyModeSelect.addEventListener("change",showStats);
+let historyByScore=false;
+const historyMetric=document.getElementById("historymetric");
+historyMetric.addEventListener("change",showStats);
+document.getElementById('historysort').addEventListener('click',()=>{historyByScore=!historyByScore;showStats();});
+document.getElementById('historyfilter').addEventListener('click',()=>{historyModeOnly=!historyModeOnly;showStats();});
+let extendedHistory=false;
+document.getElementById('historylength').addEventListener('click',()=>{extendedHistory=!extendedHistory;showStats();});
+function runDateLabel(value){if(!Number.isFinite(value)||value<=0)return 'Date not recorded';const date=new Date(value);if(!Number.isFinite(date.getTime()))return 'Date not recorded';return date.toLocaleString(undefined,{year:'numeric',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})+' (local)';}
+function showStats(){const browsedMode=['easy','normal','hard','chase','mission'].includes(historyModeSelect.value)?historyModeSelect.value:mode;historyModeSelect.hidden=!historyModeOnly;historyMetric.hidden=!historyByScore;const rankKey=['score','distance','orbs','seconds'].includes(historyMetric.value)?historyMetric.value:'score';const rankLabel={score:'TOP SCORES',distance:'LONGEST DISTANCE',orbs:'MOST ORBS',seconds:'LONGEST SURVIVAL'}[rankKey];const sortButton=document.getElementById('historysort');sortButton.textContent='ORDER: '+(historyByScore?rankLabel:'NEWEST');sortButton.setAttribute('aria-pressed',String(historyByScore));const lengthButton=document.getElementById('historylength');lengthButton.textContent='SHOW: '+(extendedHistory?20:5)+' RUNS';lengthButton.setAttribute('aria-pressed',String(extendedHistory));const filter=document.getElementById('historyfilter');filter.textContent='RECENT: '+(historyModeOnly?DIFFICULTIES[browsedMode].label:'ALL MODES');filter.setAttribute('aria-pressed',String(historyModeOnly));const matching=runHistory.filter(r=>!historyModeOnly||r.mode===browsedMode);if(historyByScore)matching.sort((a,b)=>b[rankKey]-a[rankKey]);const recent=matching.slice(0,extendedHistory?20:5);const recordMode=historyModeOnly?browsedMode:mode;const r=records[recordMode]||{distance:0,orbs:0};const rows=['THIS DEVICE / '+DIFFICULTIES[recordMode].label,'Distance best: '+Math.floor(r.distance)+' m / Orb best: '+Math.floor(r.orbs),'Survival best: '+(r.seconds||0)+'s','All modes: '+totals.runs+' runs / '+totals.orbs+' orbs / '+totals.distance+' m','PERSONAL BESTS / ALL MODES',...['easy','normal','hard','chase','mission'].map(m=>{const r=records[m]||{};return DIFFICULTIES[m].label+': '+storedBest(m==='normal'?'neonrush_best':'neonrush_best_'+m)+' pts / '+Math.floor(r.distance||0)+' m / '+Math.floor(r.orbs||0)+' orbs / '+(r.seconds||0)+'s'}),(historyByScore?rankLabel+' / LAST 20 SAVED (up to ':'RECENT RUNS (up to ')+(extendedHistory?20:5)+')',...(recent.length?[(historyByScore?'Shown avg (':'Recent avg (')+recent.length+(recent.length===1?' run): ':' runs): ')+Math.round(recent.reduce((sum,r)=>sum+r.score,0)/recent.length)+' pts / '+Math.round(recent.reduce((sum,r)=>sum+r.distance,0)/recent.length)+' m / '+(recent.reduce((sum,r)=>sum+r.orbs,0)/recent.length).toFixed(1)+' orbs / '+Math.round(recent.reduce((sum,r)=>sum+r.seconds,0)/recent.length)+'s active']:[]),...(recent.length?recent.map(r=>DIFFICULTIES[r.mode].label+' '+r.score+' pts / '+r.distance+' m / '+r.orbs+' orbs / '+r.seconds+'s / '+runDateLabel(r.completedAt)):[historyModeOnly?'No recent '+DIFFICULTIES[browsedMode].label+' runs yet.':'No recent runs yet.'])];document.getElementById('historybody').replaceChildren(...rows.map(t=>{const d=document.createElement('div');d.textContent=t;return d}));}
+function saveRunStats(){const d=Math.floor(distance),n=Math.floor(score);totals.runs++;totals.orbs+=collected;totals.distance+=d;const prev=records[mode]||{distance:0,orbs:0};records[mode]={distance:Math.max(prev.distance,d),orbs:Math.max(prev.orbs,collected),seconds:Math.max(prev.seconds||0,Math.floor(runSeconds))};runHistory.unshift({mode,score:n,distance:d,orbs:collected,seconds:Math.floor(runSeconds),completedAt:Date.now()});runHistory=runHistory.slice(0,20);safeStore.set('neonrush_stats',JSON.stringify({totals,records,history:runHistory}));showStats();}
+function updatePace(){document.getElementById('pace').textContent='PACE '+speed.toFixed(1)+' / '+DIFFICULTIES[mode].max+' m/s';}
+function updateRuntime(){const seconds=Math.floor(runSeconds);document.getElementById('runtime').textContent='TIME '+Math.floor(seconds/60)+':'+String(seconds%60).padStart(2,'0');}
+function updateChase(){document.getElementById('chase').textContent=best>0?(Math.floor(score)>best?'BEST BEATEN!':(best-Math.floor(score)+1)+' to beat best'):'';}
+let collected = 0, pickupUntil = 0, runSeconds=0;
+let chainCount=0,chainUntil=0,chainBonus=0,jumpBonus=0,riskBonus=0,magnetUntil=0;
+function updateChain(){if(chainCount&&runSeconds>=chainUntil){chainCount=0;chainUntil=0;}document.getElementById("chainstatus").textContent=runSeconds<magnetUntil?"ORB MAGNET "+(magnetUntil-runSeconds).toFixed(1)+"s":chainCount?"ORB CHAIN "+chainCount+"/3 / "+Math.max(0,chainUntil-runSeconds).toFixed(1)+"s":"";}
+function collectChain(){if(mode==='mission')return 0;if(runSeconds>=chainUntil)chainCount=0;chainCount++;chainUntil=runSeconds+4;if(chainCount===3){chainCount=0;chainUntil=0;chainBonus+=25;score+=25;if(runSeconds>=magnetUntil)magnetUntil=runSeconds+3;updateChain();return 25;}updateChain();return 0;}
+const statsEl = document.getElementById('runstats');
+const pickupEl = document.getElementById('pickup');
+let score = 0, best = storedBest('neonrush_best');
+const DIFFICULTIES = {easy:{start:10,max:23,ramp:0.2,label:'CHILL',hint:'relaxed pace'},normal:{start:14,max:32,ramp:0.35,label:'CLASSIC',hint:'balanced pace'},hard:{start:19,max:38,ramp:0.42,label:'RUSH',hint:'fast from the start'},chase:{start:14,max:32,ramp:.35,label:'CHASE',hint:'escape the hunter'},mission:{start:16,max:20,ramp:.1,label:'MISSION',hint:'gather mochi, cross the ice moon, reclaim the lantern'}};
+let mode = ['easy','normal','hard','chase','mission'].includes(savedOptions.mode)?savedOptions.mode:'normal';
+const modesEl = document.getElementById('modes');
+document.getElementById('modebadge').textContent=DIFFICULTIES[mode].label;best=storedBest(mode==='normal'?'neonrush_best':'neonrush_best_'+mode);for(const b of modesEl.children)b.setAttribute('aria-pressed',String(b.dataset.mode===mode));document.getElementById('subtitle').textContent=DIFFICULTIES[mode].label+' / '+DIFFICULTIES[mode].hint;
+for (const button of modesEl.children) {
+  button.addEventListener('mousedown', e => e.stopPropagation());
+  button.addEventListener('touchstart', e => e.stopPropagation(),{passive:true});
+  button.addEventListener('touchend', e => e.stopPropagation(),{passive:true});
+  button.addEventListener('click', e => { e.stopPropagation(); mode=button.dataset.mode;updateHunter(); saveOptions(); document.getElementById('modebadge').textContent=DIFFICULTIES[mode].label; best=storedBest(mode==='normal'?'neonrush_best':'neonrush_best_'+mode); bestEl.textContent='BEST '+best; for(const b of modesEl.children)b.setAttribute('aria-pressed',String(b===button)); showStats();if(state==='menu'){speed=DIFFICULTIES[mode].start;updatePace();} if(state==='menu')subtitleEl.textContent=DIFFICULTIES[mode].label+' / '+DIFFICULTIES[mode].hint; });
+}
+let speed = 14, distance = 0, spawnTimer = 0, orbTimer = 0;
+let lane = 1, targetX = 0, vy = 0, y = 0, jumping = false;
+let jumpBuffer = 0;
+let hunterGap=26,slowUntil=0,hitUntil=0,slideUntil=0;
+function slide(){if((mode==='chase'||mode==='mission')&&state==='playing'&&!jumping){slideUntil=runSeconds+.6;updateRunnerStatus();}}
+function updateHunter(){const on=mode==='chase';document.body.classList.toggle('chasemode',on);document.body.classList.toggle('missionmode',mode==='mission');if(mode!=='mission')document.body.classList.remove('bossphase');document.getElementById('missionhud').hidden=mode!=='mission';document.getElementById('hunterhud').hidden=!on;const close=Math.max(0,Math.min(1,1-hunterGap/34));document.getElementById('huntertext').textContent='HUNTER '+Math.max(0,hunterGap).toFixed(0)+' m';document.getElementById('hunterfill').style.width=(close*100)+'%';document.getElementById('hunteralert').textContent=on?(runSeconds<slowUntil?'HIT! SLOWED':hunterGap<10?'DANGER!':hunterGap<18?'CLOSING IN':'KEEP RUNNING'):'';document.getElementById('huntervignette').style.boxShadow=on&&state==='playing'?'inset 0 0 '+(40+close*65)+'px rgba(255,30,80,'+(close*.32).toFixed(2)+')':'none';}
+
+let orbSpawnCount=0,obstacleSpawnCount=0;
+let shieldHeld=false,shieldGuardUntil=0,shieldTimer=12;
+const shieldPickups=[];
+const shieldMat=new THREE.MeshBasicMaterial({color:0x77ffbb,wireframe:true});
+const shieldGeo=new THREE.OctahedronGeometry(.65);
+function updateShield(){document.getElementById("shieldstatus").textContent=shieldHeld?"SHIELD READY / 1 HIT":runSeconds<shieldGuardUntil?"SHIELD GUARD":"";}
+function spawnShield(){if(shieldHeld||shieldPickups.length)return;const z=player.position.z-80;const lanes=[0,1,2].filter(l=>!obstacles.some(o=>o.userData.lane===l&&Math.abs(o.position.z-z)<8));if(!lanes.length)return;const pickup=new THREE.Mesh(shieldGeo,shieldMat);pickup.position.set(LANES[lanes[Math.floor(Math.random()*lanes.length)]],1.1,z);shieldPickups.push(pickup);scene.add(pickup);}
+const scoreEl = document.getElementById('score');
+const bestEl = document.getElementById('best');
+const overlay = document.getElementById('overlay');
+const titleEl = document.getElementById('title');
+const subtitleEl = document.getElementById('subtitle');
+const finalEl = document.getElementById('final');
+const instrEl = document.getElementById('instructions');
+const menuInstructions=instrEl.innerHTML;
+bestEl.textContent = 'BEST ' + best;
+showStats();speed=DIFFICULTIES[mode].start;updatePace();updateHunter();
+
+function spawnObstacle() {
+  const mixed=++obstacleSpawnCount%5===0;
+  const l = Math.floor(Math.random() * 3);
+  const h = 2.1 + Math.random() * 1.7; // tall: must dodge, some low: can be jumped? keep all dodge-only except low ones
+  const low = mixed?false:Math.random() < 0.35;
+  const overhead=mode==='chase'&&obstacleSpawnCount%3===0;
+  const hh = overhead?.45:low ? 0.8 : h;
+  const geo = new THREE.BoxGeometry(1.4, hh, 1.2);
+  const m = new THREE.Mesh(geo, obstacleMats[low ? 1 : 0]);
+  m.position.set(LANES[l],overhead?1.65:hh / 2, player.position.z - 90);
+  m.userData = { lane: l, low:overhead?false:low,overhead };
+  addObstacleCue(m,low);if(overhead){m.material=beamMat;m.children[0].material=beamCue;m.children[0].scale.y=.6;}scene.add(m);
+  obstacles.push(m);
+  // occasionally spawn a second obstacle in another lane
+  if (mixed || Math.random() < 0.3) {
+    const l2 = (l + 1 + Math.floor(Math.random() * 2)) % 3;
+    const low2=mixed?true:low;
+    const height2=low2?0.8:hh;
+    const m2 = new THREE.Mesh(new THREE.BoxGeometry(1.4,height2,1.2), obstacleMats[low2 ? 1 : 0]);
+    m2.position.set(LANES[l2], height2 / 2, player.position.z - 90);
+    m2.userData = { lane: l2, low:low2 };
+    addObstacleCue(m2,low2);scene.add(m2);
+    obstacles.push(m2);
+  }
+}
+function spawnOrb(trail=false,zigzag=false) {
+  if(zigzag){const z=player.position.z-80;const patterns=[];for(let a=0;a<3;a++)for(const b of[a-1,a+1])if(b>=0&&b<3){const path=[{lane:a,z:z+32},{lane:b,z:z+16},{lane:a,z}];if(path.every(p=>!obstacles.some(o=>o.userData.lane===p.lane&&Math.abs(o.position.z-p.z)<8)))patterns.push(path);}if(!patterns.length)return;for(const p of patterns[Math.floor(Math.random()*patterns.length)]){const o=new THREE.Mesh(orbGeo,orbMat);o.position.set(LANES[p.lane],1.1,p.z);o.userData={spin:Math.random()*6};scene.add(o);orbs.push(o);}return;
+  }
+  const spawnZ=player.position.z-80;
+  const positions=trail?[spawnZ,spawnZ+6,spawnZ+12]:[spawnZ];
+  const openLanes=[0,1,2].filter(l=>positions.every(z=>!obstacles.some(o=>o.userData.lane===l && Math.abs(o.position.z-z)<8))); 
+  if(!openLanes.length)return;
+  const l = openLanes[Math.floor(Math.random() * openLanes.length)];
+  for(const z of positions){
+  const m = new THREE.Mesh(orbGeo, orbMat);
+  m.position.set(LANES[l], 1.1, z);
+  m.userData = { spin: Math.random() * 6 };
+  scene.add(m);
+  orbs.push(m);
+  }
+}
+
+let nextMilestone=100,milestoneUntil=0;
+function updateRunGoal(){if(mode==='mission')return;if(!goalDone&&distance>=250&&collected>=10){goalDone=true;if(!goldUnlocked){goldUnlocked=true;goldEquipped=true;applyGold();try{localStorage.setItem('neonrush_gold','1');saveOptions()}catch{document.getElementById('settingswarning').hidden=false;}document.getElementById('milestone').textContent='GOLD TRIM UNLOCKED!';}else document.getElementById('milestone').textContent='RUN GOAL COMPLETE!';milestoneUntil=runSeconds+3;}}
+function updateMilestone(){if(mode==='mission'){document.getElementById('milestone').hidden=true;return;}if(distance>=nextMilestone){document.getElementById('milestone').textContent=nextMilestone+' m REACHED';milestoneUntil=runSeconds+2;nextMilestone=nextMilestone===100?250:nextMilestone===250?500:nextMilestone===500?1000:nextMilestone+1000;}document.getElementById('milestone').hidden=!showBanners||state!=='playing'||runSeconds>=milestoneUntil;}
+function reset() {
+  resetMission();
+  goalDone=false;
+  hunterGap=26;slowUntil=hitUntil=slideUntil=0;body.scale.y=1;updateHunter();clearSparks();camera.fov=70;camera.updateProjectionMatrix();speedStreaks.visible=false;
+  for(const p of shieldPickups)scene.remove(p);shieldPickups.length=0;shieldHeld=false;shieldGuardUntil=0;shieldTimer=12;updateShield();
+  for (const o of obstacles) { scene.remove(o); o.geometry.dispose(); }
+  for (const o of orbs) scene.remove(o);
+  obstacles.length = 0; orbs.length = 0;
+  document.getElementById('recordhighlights').hidden=true;document.getElementById('scorebreakdown').hidden=true;nextMilestone=100;milestoneUntil=0;document.getElementById('milestone').hidden=true;document.getElementById('crashhint').hidden=true;document.getElementById('comparison').hidden=true;
+  runSeconds=0;chainCount=0;chainUntil=0;chainBonus=0;jumpBonus=0;riskBonus=0;magnetUntil=0;floorMat.color.setHex(0xaaa0bf);districtIndex=-1;districtPortals.children.forEach((a,i)=>a.position.z=-22-i*24);updateDistrict();updateChain(); updateRuntime(); collected=0; pickupUntil=0; pickupEl.textContent=''; statsEl.textContent='0 orbs · 0 m';
+  score = 0; speed = DIFFICULTIES[mode].start; distance = 0; spawnTimer = 0.6; orbTimer = 1.2; orbSpawnCount=0; obstacleSpawnCount=0;
+  updatePace();lane = 1; targetX = 0; y = 0; vy = 0; jumping = false; jumpBuffer=0; shadow.position.x=0;
+  player.position.set(0, 0, 0);updateRunnerStatus();
+  body.rotation.set(0,0,0); camera.position.x=0; camera.lookAt(0,1,-10);
+  segments.forEach((segment,i)=>segment.position.z=-i*SEG_LEN);
+  scoreEl.textContent = '0'; updateChase();
+}
+
+function startGame() {
+  document.getElementById('hud').style.visibility='';
+  document.getElementById('pausesummary').hidden=true;
+  if(graphicsLost)return;
+  resetRestartPrompt();document.getElementById('restartcontrols').hidden=true;
+  reset();
+  settingsEl.open=false; historyEl.open=false;
+  state = 'playing';
+  modesEl.style.display = 'none'; controlsEl.hidden=false; soundEl.hidden=true;
+  pauseEl.hidden = false; pauseEl.textContent = 'PAUSE'; pauseEl.setAttribute('aria-label','Pause game');
+  overlay.inert=true; if(overlay.contains(document.activeElement))document.activeElement.blur(); overlay.classList.add('hidden');
+}
+
+function die(cause) {
+  if(state!=='playing')return;
+  resetRestartPrompt();document.getElementById('restartcontrols').hidden=true;
+  startEl.textContent='RETRY RUN';
+  touching=false; moved=false;
+  state = 'dead';stopAudio(); document.getElementById('milestone').hidden=true;const hint=document.getElementById('crashhint');hint.hidden=!cause;hint.textContent=cause==='low'?'Orange block: jump earlier, or change lane.':cause==='tall'?'Red block: change lane. It is too tall to jump.':cause==='hunter'?'Dodge or jump blocks; slide under beams. Orbs push the hunter back.':cause==='mission'?'Three hits end the mission. Read the floor warnings and use FIRE when aligned.':cause==='win'?'Mochi gathered. Frost moon crossed. Festival lantern saved! Retry for new routes.':''; playTone(130,0.25);
+  scoreEl.textContent=String(Math.floor(score));statsEl.textContent=collected+' orbs · '+Math.floor(distance)+' m';document.getElementById('chase').textContent='';
+  const previousRun=runHistory.find(r=>r.mode===mode),comparison=document.getElementById('comparison');comparison.hidden=!previousRun;if(previousRun){const delta=Math.floor(score)-previousRun.score;const signed=n=>(n>0?'+':'')+n;comparison.replaceChildren();for(const text of ['vs last '+DIFFICULTIES[mode].label+': '+signed(delta)+' pts / '+signed(Math.floor(distance)-previousRun.distance)+' m','Orbs '+signed(collected-previousRun.orbs)+' / Survival '+signed(Math.floor(runSeconds)-previousRun.seconds)+'s']){const line=document.createElement('div');line.textContent=text;comparison.append(line);}}
+  const breakdown=document.getElementById('scorebreakdown');breakdown.hidden=false;breakdown.textContent=Math.max(0,Math.floor(score)-collected*50-chainBonus-jumpBonus-riskBonus-(cause==='win'?500:0))+' distance pts + '+(collected*50)+' orb pts ('+collected+' x 50)'+(chainBonus?' + '+chainBonus+' chain pts':'')+(jumpBonus?' + '+jumpBonus+' jump pts':'')+(riskBonus?' + '+riskBonus+' near-miss pts':'')+(cause==='win'?' + 500 mission pts':'');
+  const priorRecords=records[mode]||{distance:0,orbs:0,seconds:0},highlights=[];
+  if(Math.floor(distance)>priorRecords.distance)highlights.push('distance '+Math.floor(distance)+' m');
+  if(collected>priorRecords.orbs)highlights.push('orbs '+collected);
+  if(Math.floor(runSeconds)>(priorRecords.seconds||0))highlights.push('survival '+Math.floor(runSeconds)+'s');
+  const recordHighlights=document.getElementById('recordhighlights');recordHighlights.hidden=!highlights.length;recordHighlights.textContent=highlights.length?'PERSONAL BEST: '+highlights.join(' / '):'';
+  saveRunStats();
+  const newRecord=Math.floor(score)>best;
+  best = Math.max(best, Math.floor(score));
+  safeStore.set(mode==='normal'?'neonrush_best':'neonrush_best_'+mode, best);showStats();
+  pauseEl.hidden = true; controlsEl.hidden=true; soundEl.hidden=false;
+  modesEl.style.display = 'flex';
+  bestEl.textContent = 'BEST ' + best;
+  titleEl.textContent = cause==='win'?'MISSION COMPLETE':cause==='mission'?'MISSION FAILED':cause==='hunter'?'CAUGHT BY THE HUNTER':'GAME OVER';updateHunter();
+  subtitleEl.textContent = '';
+  finalEl.style.display = 'block';
+  finalEl.textContent = DIFFICULTIES[mode].label + ' score ' + Math.floor(score);
+  subtitleEl.textContent = (newRecord?'NEW BEST! / ':'') + collected + ' orbs / ' + Math.floor(distance) + ' m / '+Math.floor(runSeconds)+'s';
+  instrEl.innerHTML = '<div class="blink">press space or tap to retry</div>';
+  overlay.inert=false; overlay.classList.remove('hidden');
+}
+
+function togglePause(reason) {
+  if(graphicsLost)return;
+  if (state === 'playing') {
+    touching=false; moved=false;
+    resetRestartPrompt();document.getElementById('restartcontrols').hidden=false;
+    startEl.textContent='RESUME RUN';
+    state = 'paused';stopAudio();updateHunter(); const summary=document.getElementById('pausesummary');summary.hidden=false;summary.textContent='THIS RUN: '+Math.floor(score)+' pts / '+Math.floor(distance)+' m / '+collected+' orbs / '+Math.floor(runSeconds)+'s active'+(shieldHeld?' / SHIELD READY':'');document.getElementById('milestone').hidden=true; controlsEl.hidden=true; soundEl.hidden=false; titleEl.textContent = 'PAUSED';
+    subtitleEl.textContent = reason==='hidden'?'Auto-paused: app was in background':reason==='blur'?'Auto-paused: window lost focus':reason==='rotate'?'Auto-paused: screen rotated':'take a breath'; finalEl.style.display = 'none';
+    instrEl.innerHTML = '<div>Tap or press Space to resume</div><div>Left / Right or A / D: lane</div><div>Space / Up / W: jump</div><div>Swipe sideways: lane; '+(tapJump?'tap / swipe up: jump':'swipe up: jump; tap jump off')+'</div><div>P / Escape: pause; M: sound</div>'+(mode==='mission'?'<div>F / FIRE: shoot when drone is aligned</div>':'')+(mode==='chase'||mode==='mission'?'<div>Blue beam: Down / swipe down / SLIDE</div>':'');
+    overlay.inert=false; overlay.classList.remove('hidden'); pauseEl.textContent = 'RESUME'; pauseEl.setAttribute('aria-label','Resume game');
+  } else if (state === 'paused') {
+    resetRestartPrompt();document.getElementById('restartcontrols').hidden=true;
+    document.getElementById('pausesummary').hidden=true;settingsEl.open=false; historyEl.open=false; state = 'playing';updateHunter(); controlsEl.hidden=false; soundEl.hidden=true; overlay.inert=true; if(overlay.contains(document.activeElement))document.activeElement.blur(); overlay.classList.add('hidden'); pauseEl.textContent = 'PAUSE'; pauseEl.setAttribute('aria-label','Pause game');
+  }
+}
+let restartPending=false,menuPending=false;
+function resetRestartPrompt(){restartPending=false;menuPending=false;document.getElementById('tomenu').textContent='MAIN MENU';document.getElementById('restart').textContent='RESTART RUN';document.getElementById('cancelrestart').hidden=true;}
+const restartControls=document.getElementById('restartcontrols');
+for(const event of ['touchstart','touchend','mousedown','click'])restartControls.addEventListener(event,e=>e.stopPropagation(),{passive:true});
+document.getElementById('restart').addEventListener('click',()=>{if(state!=='paused'||graphicsLost)return;if(!restartPending){resetRestartPrompt();restartPending=true;document.getElementById('restart').textContent='DISCARD & RESTART?';document.getElementById('cancelrestart').hidden=false;}else{restoreMenuText();startGame();}});
+document.getElementById('cancelrestart').addEventListener('click',resetRestartPrompt);
+document.getElementById('tomenu').addEventListener('click',()=>{if(state!=='paused'||graphicsLost)return;if(!menuPending){resetRestartPrompt();menuPending=true;document.getElementById('tomenu').textContent='DISCARD & MENU?';document.getElementById('cancelrestart').hidden=false;return;}resetRestartPrompt();reset();state='menu';document.getElementById('hud').style.visibility='hidden';touching=false;moved=false;document.getElementById('restartcontrols').hidden=true;document.getElementById('pausesummary').hidden=true;modesEl.style.display='flex';pauseEl.hidden=true;controlsEl.hidden=true;soundEl.hidden=false;startEl.textContent='START RUN';titleEl.textContent='NEON RUSH';subtitleEl.textContent=DIFFICULTIES[mode].label+' / '+DIFFICULTIES[mode].hint;finalEl.style.display='none';instrEl.innerHTML=menuInstructions;settingsEl.open=false;historyEl.open=false;applyGestures();overlay.inert=false;overlay.classList.remove('hidden');});
+pauseEl.addEventListener('click', (e) => { e.stopPropagation(); togglePause(); });
+pauseEl.addEventListener('touchstart', (e) => e.stopPropagation(), {passive:true});
+pauseEl.addEventListener('touchend', (e) => e.stopPropagation(), {passive:true});
+pauseEl.addEventListener('mousedown', (e) => e.stopPropagation());
+document.addEventListener('visibilitychange', () => { if (document.hidden && state === 'playing') togglePause('hidden'); });
+window.addEventListener('blur', () => { if (state === 'playing') togglePause('blur'); });
+for (const id of ['left','jump','right','slide','fire']) {
+  const button=document.getElementById(id);
+  for(const event of ['touchstart','touchend','mousedown'])button.addEventListener(event,e=>e.stopPropagation(),{passive:true});
+  button.addEventListener('click', e=> { e.stopPropagation(); if(state!=='playing')return; if(id==='jump')jump();else if(id==='slide')slide();else if(id==='fire')fireMission(); else moveLane(id==='left'?-1:1); });
+}
+// Input
+let touchStartX = 0, touchStartY = 0, touching = false, moved = false;
+window.addEventListener('keydown', (e) => {
+  if (e.target.closest('#restartcontrols') && (e.code === 'Space' || e.code === 'Enter')) return;
+  if (e.target.closest('#settings, #history') && (e.code === 'Space' || e.code === 'Enter')) return;
+  if (e.target.closest('#settings, #history') && ['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Home','End','PageUp','PageDown'].includes(e.code)) return;
+  if (e.target === startEl && (e.code === 'Space' || e.code === 'Enter')) return;
+  if (e.target === soundEl && (e.code === 'Space' || e.code === 'Enter')) return;
+  if (e.target.closest('#touchcontrols') && (e.code === 'Space' || e.code === 'Enter')) return;
+  if (e.target.closest('#modes') && (e.code === 'Space' || e.code === 'Enter')) return;
+  if (e.target === pauseEl && (e.code === 'Space' || e.code === 'Enter')) return;
+  if (['Space','ArrowUp','ArrowLeft','ArrowRight'].includes(e.code)) e.preventDefault();
+  if (e.repeat) return;
+  if(e.code==='KeyF'&&mode==='mission'&&state==='playing'){fireMission();return;}
+  if(e.code==='KeyM'){soundEl.click();return;}
+  if (e.code === 'KeyP' || e.code === 'Escape') { togglePause(); return; }
+  if (state === 'paused') { if (e.code === 'Space' || e.code === 'Enter') togglePause(); return; }
+  if (state !== 'playing') {
+    if (e.code === 'Space' || e.code === 'Enter') { restoreMenuText(); startGame(); }
+    return;
+  }
+  if(e.code==='ArrowDown'&&(mode==='chase'||mode==='mission')){e.preventDefault();slide();}
+  if (e.code === 'ArrowLeft' || e.code === 'KeyA') moveLane(-1);
+  else if (e.code === 'ArrowRight' || e.code === 'KeyD') moveLane(1);
+  else if (e.code === 'Space' || e.code === 'ArrowUp' || e.code === 'KeyW') jump();
+});
+window.addEventListener('touchstart', (e) => {
+  if(e.touches.length!==1){touching=false; moved=false; return;}
+  const t = e.touches[0];
+  touchStartX = t.clientX; touchStartY = t.clientY;
+  touching = true; moved = false;
+}, { passive: false });
+window.addEventListener('touchmove', (e) => {
+  if (!touching) return;
+  e.preventDefault();
+  const t = e.touches[0];
+  const dx = t.clientX - touchStartX, dy = t.clientY - touchStartY;
+  if (Math.abs(dx) > swipeThreshold() && Math.abs(dx) > Math.abs(dy)) {
+    if (state === 'playing') moveLane(dx > 0 ? 1 : -1);
+    touchStartX = t.clientX; touchStartY = t.clientY; moved = true;
+  } else if (dy < -(swipeThreshold()+10)) {
+    if (state === 'playing') jump();
+    touchStartX = t.clientX; touchStartY = t.clientY; moved = true;
+  } else if(dy > swipeThreshold()+10) {
+    if((mode==='chase'||mode==='mission')&&state==='playing')slide();moved=true; // Down never becomes tap-to-jump.
+  }
+}, { passive: false });
+window.addEventListener('touchcancel', () => { touching=false; moved=false; });
+window.addEventListener('touchend', (e) => {
+  if(e.touches.length){touching=false; moved=false; return;}
+  if (!touching) return;
+  touching = false;
+  if (!moved) { // tap
+    if (state === 'playing') {if(tapJump)jump();}
+    else if (state === 'paused') togglePause();
+    else { restoreMenuText(); startGame(); }
+  }
+});
+window.addEventListener('mousedown', (e) => {
+  if(e.button!==0)return;
+  if (state === 'paused') togglePause();
+  else if (state !== 'playing') { restoreMenuText(); startGame(); }
+});
+
+function restoreMenuText() {
+  if(graphicsLost)return;
+  document.getElementById('recordhighlights').hidden=true;document.getElementById('scorebreakdown').hidden=true;titleEl.textContent = 'NEON RUSH';
+  finalEl.style.display = 'none';
+}
+function updateRunnerStatus(){document.getElementById('runnerstatus').textContent=['LEFT','CENTER','RIGHT'][lane]+' / '+((mode==='chase'||mode==='mission')&&runSeconds<slideUntil?'SLIDING':jumping?'AIRBORNE':'JUMP READY');}
+function moveLane(d) {
+  lane = Math.max(0, Math.min(2, lane + d));
+  targetX = LANES[lane]; updateRunnerStatus();
+}
+function jump() {
+  if(mode==='chase'||mode==='mission')slideUntil=0;
+  if (!jumping) { jumping = true; vy = mode==='mission'?(mission.phase===0?8.5:mission.phase===1?9.8:8.5):8.5; jumpBuffer=0; playCue('jump');pickupUntil=performance.now()+350;pickupEl.textContent='JUMP!';pickupEl.style.opacity='1';emitSparks(player.position.x,.1,0,0x77ffff); }
+  else jumpBuffer=0.12;
+  updateRunnerStatus();
+}
+
+// Finite three-act mission. Separate from the existing endless modes.
+const mission={phase:0,phaseTime:0,spawn:0,cores:0,hp:3,guard:0,bossHP:6,bossLane:1,bossMove:0,fireUntil:0,bossClock:0,windowHits:0,lastOpen:false,routeLane:1,warning:null,sequence:0,shots:[]};
+const coreMat=new THREE.MeshStandardMaterial({color:0xffddea,emissive:0xbb7799,emissiveIntensity:.8});
+const drone=new THREE.Group(),droneHull=new THREE.Mesh(new THREE.IcosahedronGeometry(1.1,1),new THREE.MeshStandardMaterial({color:0xbb3377,emissive:0x661144,metalness:.6,roughness:.3}));drone.add(droneHull);const droneEye=new THREE.Mesh(new THREE.BoxGeometry(.8,.18,.15),new THREE.MeshBasicMaterial({color:0xffee77}));droneEye.position.z=1;drone.add(droneEye);for(const side of[-1,1]){const wing=new THREE.Mesh(new THREE.BoxGeometry(1.2,.2,.6),bodyMat);wing.position.x=side*1.4;drone.add(wing)}drone.position.set(0,2,-20);drone.visible=false;scene.add(drone);
+const bossShield=new THREE.Mesh(new THREE.SphereGeometry(1.55,20,12),new THREE.MeshBasicMaterial({color:0x8877ff,wireframe:true,transparent:true,opacity:.45}));drone.add(bossShield);
+const shotGeo=new THREE.BoxGeometry(.12,.12,1.2),shotMat=new THREE.MeshBasicMaterial({color:0x88ffff});
+const warningTiles=new THREE.Group(),warningMat=new THREE.MeshBasicMaterial({color:0xff3366,transparent:true,opacity:.45,depthWrite:false});for(const x of LANES){const m=new THREE.Mesh(new THREE.PlaneGeometry(1.9,35),warningMat);m.rotation.x=-Math.PI/2;m.position.set(x,.07,-17);m.visible=false;warningTiles.add(m)}scene.add(warningTiles);
+function resetMission(){mission.phase=0;mission.phaseTime=0;mission.spawn=.8;mission.cores=0;mission.hp=3;mission.guard=0;mission.bossHP=6;mission.bossLane=1;mission.bossMove=0;mission.fireUntil=0;mission.bossClock=0;mission.windowHits=0;mission.lastOpen=false;mission.routeLane=Math.floor(Math.random()*3);drone.position.x=0;mission.warning=null;mission.sequence=0;for(const s of mission.shots)scene.remove(s);mission.shots=[];drone.visible=false;warningTiles.children.forEach(m=>m.visible=false);}
+function missionBlock(l,z,kind='tall'){const low=kind==='low',beam=kind==='beam',h=low?.8:beam?.45:2.6;const o=new THREE.Mesh(new THREE.BoxGeometry(1.4,h,1.2),beam?beamMat:obstacleMats[low?1:0]);o.position.set(LANES[l],beam?1.65:h/2,z);o.userData={lane:l,low,overhead:beam};addObstacleCue(o,low);if(beam){o.children[0].material=beamCue;o.children[0].scale.y=.6;}scene.add(o);obstacles.push(o);}
+function missionCore(l,z){const o=new THREE.Mesh(orbGeo,coreMat);o.position.set(LANES[l],1.1,z);o.userData={spin:0,core:true};scene.add(o);orbs.push(o);}
+function clearMissionField(){for(const o of obstacles){scene.remove(o);o.geometry.dispose()}obstacles.length=0;for(const o of orbs)scene.remove(o);orbs.length=0;mission.warning=null;warningTiles.children.forEach(m=>m.visible=false);}
+function enterMissionPhase(p){clearMissionField();mission.phase=p;floorMat.color.setHex([0xb7a0d0,0x88ccdd,0xe9aa88][p]);mission.phaseTime=0;mission.spawn=1.8;mission.sequence=0;pickupUntil=performance.now()+1500;pickupEl.textContent='';if(p===1)mission.hp=Math.min(3,mission.hp+1);if(p===2){drone.visible=true;mission.bossMove=0;mission.bossClock=0;mission.windowHits=0;mission.lastOpen=false;drone.position.x=0;}}
+function hurtMission(){if(runSeconds<mission.guard||state!=='playing')return;mission.hp--;mission.guard=runSeconds+1.2;emitSparks(player.position.x,1,0,0xff5577);pickupUntil=performance.now()+900;pickupEl.textContent='HIT! '+Math.max(0,mission.hp)+' HEARTS LEFT';if(mission.hp<=0)die('mission');}
+function fireMission(){if(mode!=='mission'||state!=='playing'||mission.phase!==2||runSeconds<mission.fireUntil)return;mission.fireUntil=runSeconds+.28;const s=new THREE.Mesh(shotGeo,shotMat);s.position.set(player.position.x,1.6,-1);scene.add(s);mission.shots.push(s);}
+function updateMission(dt){mission.phaseTime+=dt;mission.spawn-=dt;drone.visible=mission.phase===2;const names=['1 / 3  MOCHI MEADOW','2 / 3  FROST MOON','3 / 3  LANTERN GUARDIAN'];document.body.classList.toggle('bossphase',mode==='mission'&&mission.phase===2);document.getElementById('missiontitle').textContent=names[mission.phase];document.getElementById('missioninfo').textContent='♥'.repeat(Math.max(0,mission.hp))+'  '+(mission.phase===0?'MOCHI '+mission.cores+'/6':mission.phase===1?'EXIT OPENS '+Math.max(0,18-mission.phaseTime).toFixed(0)+'s':'GUARDIAN '+mission.bossHP+'/6');document.getElementById('missiontip').textContent=mission.phase===0?'Gather 6 mochi. Low gravity: longer hops. Rocks follow the treats!':mission.phase===1?'Heavy-gravity ice moon: short hops. Take the gap or SLIDE under ice beams.':mission.bossClock%4.8<2.4?'SHIELD UP - dodge the marked lane; get lined up.':Math.abs(player.position.x-drone.position.x)<1?mission.windowHits>=2?'GUARDIAN ARMORED - reposition for the next opening':'SHIELD DOWN - ALIGNED! FIRE / F now!':'SHIELD DOWN - line up and FIRE / F!';
+ if(mission.phase===0){if(mission.cores>=6){enterMissionPhase(1);return;}if(mission.spawn<=0){const n=mission.sequence++;let l=(mission.routeLane+1+Math.floor(Math.random()*2))%3;mission.routeLane=l;missionCore(l,-48);missionCore(l,-55);missionBlock(l,-62,'low');missionBlock((l+1+Math.floor(Math.random()*2))%3,-48,'tall');mission.spawn=2.7;}}
+ else if(mission.phase===1){if(mission.phaseTime>=18){enterMissionPhase(2);return;}if(mission.spawn<=0&&!mission.warning){const l=(mission.routeLane+1+Math.floor(Math.random()*2))%3;mission.routeLane=l;mission.sequence++;const other=(l+1+Math.floor(Math.random()*2))%3;mission.warning={lane:l,other,time:1.2,beam:mission.sequence%2===0};mission.spawn=Math.max(1.8,2.7-mission.phaseTime*.04);}}
+ else{mission.bossClock+=dt;const open=mission.bossClock%4.8>=2.4;if(open&&!mission.lastOpen)mission.windowHits=0;mission.lastOpen=open;bossShield.visible=!open||mission.windowHits>=2;droneEye.material.color.setHex(open?0x55ffbb:0xffee77);mission.bossMove-=dt;if(mission.bossMove<=0&&!open){mission.bossLane=(mission.bossLane+1+Math.floor(Math.random()*2))%3;mission.bossMove=2.8;}drone.position.x+=(LANES[mission.bossLane]-drone.position.x)*Math.min(1,dt*4);droneHull.rotation.y+=reduceMotion?0:dt*.6;if(mission.spawn<=0&&!mission.warning&&!open){mission.warning={lane:lane,other:mission.bossHP<=3?(lane+1+Math.floor(Math.random()*2))%3:null,time:1.2,beam:mission.bossHP<=3};mission.spawn=mission.bossHP<=3?1.8:2.5;mission.sequence++;}}
+ warningTiles.children.forEach(m=>m.visible=false);if(mission.warning){const w=mission.warning;warningTiles.children[w.lane].visible=true;if(w.other!==null&&w.other!==undefined)warningTiles.children[w.other].visible=true;w.time-=dt;if(w.time<=0){missionBlock(w.lane,-20,w.beam?'beam':'tall');if(w.other!==null&&w.other!==undefined)missionBlock(w.other,-20,'tall');mission.warning=null;}}
+ for(let i=mission.shots.length-1;i>=0;i--){const s=mission.shots[i];s.position.z-=65*dt;if(s.position.z<=drone.position.z){if(mission.phase===2&&mission.bossClock%4.8>=2.4&&mission.windowHits<2&&Math.abs(s.position.x-drone.position.x)<1.2){mission.bossHP--;mission.windowHits++;emitSparks(drone.position.x,2,-20,0xffff88);pickupUntil=performance.now()+600;pickupEl.textContent='GUARDIAN HIT! '+Math.max(0,mission.bossHP)+' LEFT';}scene.remove(s);mission.shots.splice(i,1);if(mission.bossHP<=0){score+=500;clearMissionField();drone.visible=false;die('win');return;}}}
+ bodyMat.opacity=1;bodyMat.transparent=false;
+}
+const clock = new THREE.Clock();
+function animate() {
+  requestAnimationFrame(animate);
+  const dt = Math.min(clock.getDelta(), 0.05);
+
+  if (state === 'playing') {
+    musicTick();updateSparks(dt);updateSpeedFeel(dt);updateDistrict(dt);
+    runSeconds+=dt; updateRuntime();updateChain();updateShield(); updateMilestone();updateRunGoal();
+    distance += speed * dt;
+    score += speed * dt * 2;
+    speed = Math.min(DIFFICULTIES[mode].max, speed + dt * (mode==='chase'?runSeconds<slowUntil?0:2.2:DIFFICULTIES[mode].ramp)); // fair upper limit
+    if(mode==='chase'){hunterGap-=dt*(.32+Math.min(.75,distance/1500));updateHunter();if(hunterGap<=2.5){die('hunter');}}
+    if(mode==='mission')updateMission(dt);
+    updatePace();
+    scoreEl.textContent = String(Math.floor(score)); updateChase();
+    statsEl.textContent = collected + ' orbs · ' + Math.floor(distance) + ' m';
+    document.getElementById('rungoal').textContent=goalDone?'GOAL COMPLETE':goldUnlocked?'GOAL '+Math.min(250,Math.floor(distance))+'/250m '+Math.min(10,collected)+'/10 orbs':'EARN GOLD: '+Math.min(250,Math.floor(distance))+'/250m '+Math.min(10,collected)+'/10 orbs';
+    pickupEl.style.opacity = performance.now() < pickupUntil ? '1' : '0';
+
+    // move track segments toward camera, recycle
+    for (const s of segments) {
+      s.position.z += speed * dt;
+      if (s.position.z > SEG_LEN) s.position.z -= SEG_LEN * SEG_COUNT;
+    }
+
+    // spawn
+    spawnTimer -= dt;
+    if (spawnTimer <= 0&&mode!=='mission') { spawnObstacle(); spawnTimer = Math.max(0.45, 1.3 - speed * 0.02); }
+    orbTimer -= dt;
+    if (orbTimer <= 0&&mode!=='mission') { orbSpawnCount++;spawnOrb(orbSpawnCount%4===0,orbSpawnCount%8===0); orbTimer = 0.9 + Math.random() * 0.8; }
+
+    jumpBuffer=Math.max(0,jumpBuffer-dt);
+    shieldTimer-=dt;if(shieldTimer<=0&&mode!=='mission'){spawnShield();shieldTimer=18;}
+    for(let i=shieldPickups.length-1;i>=0;i--){const p=shieldPickups[i];p.position.z+=speed*dt;if(!reduceMotion)p.rotation.y+=dt*2;if(p.position.z>12){scene.remove(p);shieldPickups.splice(i,1);}else if(Math.abs(p.position.z-player.position.z)<1.2&&Math.abs(p.position.x-player.position.x)<1.1&&y<1.8){shieldHeld=true;emitSparks(player.position.x,1,0,0x77ffbb);scene.remove(p);shieldPickups.splice(i,1);updateShield();}}
+    // player lateral + jump physics
+    player.position.x += (targetX - player.position.x) * Math.min(1, dt * 12);
+    if (jumping) {
+      vy -= (mode==='mission'?(mission.phase===0?19:mission.phase===1?34:26):26) * dt;
+      y += vy * dt;
+      if (y <= 0) { y = 0; vy = 0; jumping = false; if(jumpBuffer>0)jump(); }
+    }
+    player.position.y = y;body.scale.y=(mode==='chase'||mode==='mission')&&runSeconds<slideUntil?.4:1;runnerTrim.scale.y=body.scale.y;courier.scale.y=body.scale.y;const gait=reduceMotion?0:Math.sin(runSeconds*15)*.45;robotLegs.forEach((m,i)=>m.rotation.x=jumping?-.5:gait*(i?1:-1));robotArms.forEach((m,i)=>m.rotation.x=jumping?-1:gait*(i?-1:1));updateRunnerStatus();
+    shadow.position.x=player.position.x; shadow.scale.setScalar(1+y*0.18); shadow.material.opacity=0.32/(1+y*0.5);
+    if(!reduceMotion)body.rotation.x += dt * (jumping ? 4 : 1);
+    if(!reduceMotion)body.rotation.y += dt * 2;
+
+    // obstacles
+    for (let i = obstacles.length - 1; i >= 0; i--) {
+      const o = obstacles[i];
+      o.position.z += speed * dt;
+      if (o.position.z > 12) { scene.remove(o); o.geometry.dispose(); obstacles.splice(i, 1); continue; }
+      const dz = Math.abs(o.position.z - player.position.z);
+      const dx = Math.abs(o.position.x - player.position.x);
+      if(dz<2.2&&dx>=1.0&&dx<1.8&&!o.userData.low&&!o.userData.overhead)o.userData.nearSeen=true;
+      if (dz < 1.1 && dx < 1.0) {
+        const top = o.userData.low ? 0.8 : o.geometry.parameters.height;
+        if(o.userData.low&&y>=top-0.15&&jumping)o.userData.jumpClear=true;
+        if (o.userData.overhead?!(runSeconds<slideUntil&&!jumping):(y + 0.0 < top - 0.15)) { if(shieldHeld||runSeconds<shieldGuardUntil){if(shieldHeld){shieldHeld=false;shieldGuardUntil=runSeconds+0.8;emitSparks(player.position.x,1,0,0x77ffbb);}scene.remove(o);o.geometry.dispose();obstacles.splice(i,1);updateShield();}else if(mode==='mission'){scene.remove(o);o.geometry.dispose();obstacles.splice(i,1);hurtMission();if(state!=='playing')break;}else if(mode==='chase'){if(runSeconds>=hitUntil){hunterGap-=9;slowUntil=runSeconds+1.2;hitUntil=runSeconds+.8;speed=Math.max(8,speed-4);pickupUntil=performance.now()+750;pickupEl.textContent='HIT! HUNTER CLOSER';emitSparks(player.position.x,1,0,0xff5577);}scene.remove(o);o.geometry.dispose();obstacles.splice(i,1);updateHunter();if(hunterGap<=2.5){die('hunter');break;}}else{die(o.userData.low?'low':'tall');break;} }
+      }
+      // Reward an actual close pass, never a distant dodge or shield absorption.
+      if(mode!=='mission'&&!o.userData.low&&!o.userData.overhead&&o.position.z-player.position.z>=1.1&&!o.userData.nearPaid){o.userData.nearPaid=true;if(state==='playing'&&o.userData.nearSeen&&dx>=1.0&&y<.65&&runSeconds>=shieldGuardUntil){score+=15;riskBonus+=15;scoreEl.textContent=String(Math.floor(score));pickupUntil=performance.now()+750;pickupEl.textContent='+15 NEAR MISS';emitSparks(player.position.x,.6,0,0x66ddff);updateChase();}}
+      if(mode!=='mission'&&state==='playing'&&obstacles.includes(o)&&o.userData.low&&o.userData.jumpClear&&!o.userData.jumpPaid&&o.position.z-player.position.z>=1.1){o.userData.jumpPaid=true;if(dx<1.0&&jumping&&y>=0.65){score+=20;jumpBonus+=20;scoreEl.textContent=String(Math.floor(score));pickupUntil=performance.now()+750;pickupEl.textContent='+20 JUMP CLEAR';pickupEl.style.opacity='1';updateChase();}}
+    }
+    // orbs
+    for (let i = orbs.length - 1; state === 'playing' && i >= 0; i--) {
+      const o = orbs[i];
+      o.position.z += speed * dt;
+      o.userData.spin += dt * 4;
+      o.rotation.y = o.userData.spin;
+      o.position.y = 1.1 + Math.sin(o.userData.spin) * 0.2;
+      if (o.position.z > 12) { scene.remove(o); orbs.splice(i, 1); continue; }
+      if (Math.abs(o.position.z - player.position.z) < (runSeconds<magnetUntil?2.2:1.2) &&
+          Math.abs(o.position.x - player.position.x) < (runSeconds<magnetUntil?3.4:1.1) &&
+          y < 1.8) {
+        if(mode==='mission'&&o.userData.core){mission.cores++;}
+        if(mode==='chase'){hunterGap=Math.min(34,hunterGap+.8);updateHunter();}emitSparks(o.position.x,1.1,o.position.z,0xffee55);score += 50; collected++; const chainAward=collectChain(); scoreEl.textContent=String(Math.floor(score)); statsEl.textContent=collected+' orbs · '+Math.floor(distance)+' m'; playCue('coin'); pickupUntil=performance.now()+750; pickupEl.textContent=chainAward?'+50 ORB +25 CHAIN':'+50 ORB'; pickupEl.style.opacity='1'; updateChase();
+        scene.remove(o); orbs.splice(i, 1);
+      }
+    }
+
+    // camera follows subtly
+    camera.position.x += ((reduceMotion ? 0 : player.position.x * 0.35) - camera.position.x) * Math.min(1, dt * 5);
+    camera.lookAt(reduceMotion ? 0 : player.position.x * 0.5, 1, -10);
+  } else if (state !== 'paused') {
+    // idle menu animation
+    if(!reduceMotion)body.rotation.y += dt * 1.2;
+    if(!reduceMotion)body.rotation.x += dt * 0.6;
+  }
+
+  renderer.render(scene, camera);
+}
+animate();
+
+let portraitLayout=window.innerHeight>=window.innerWidth;
+window.addEventListener('resize', () => {
+  const nextPortrait=window.innerHeight>=window.innerWidth;
+  if(nextPortrait!==portraitLayout&&state==='playing')togglePause('rotate');
+  portraitLayout=nextPortrait;
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+</script>
+</body>
+</html>

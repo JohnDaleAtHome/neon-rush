@@ -884,10 +884,29 @@ func build_scenery():
   side_planes.append(plane)
  for i in range(16):
   var side = -1 if i % 2 == 0 else 1
-  var trunk = box(Vector3(0.25, 2.4, 0.25), Vector3(side * (5.5 + (i % 3)), 1.2, -i * 5 - 10), Color("70422a"))
-  remove_child(trunk); scenery.add_child(trunk)
-  var top = box(Vector3(1.8, 1.4, 1.8), trunk.position + Vector3(0, 1.6, 0), Color("927641"))
-  remove_child(top); scenery.add_child(top)
+  var tree = Node3D.new()
+  tree.position = Vector3(side*(6.5+(i%3)*1.8),0,-i*5-10)
+  scenery.add_child(tree)
+  var trunk = MeshInstance3D.new()
+  var cylinder = CylinderMesh.new()
+  cylinder.top_radius = 0.10
+  cylinder.bottom_radius = 0.22
+  cylinder.height = 3.2
+  trunk.mesh = cylinder
+  trunk.position.y = 1.6
+  trunk.material_override = material(Color("6e4526"))
+  tree.add_child(trunk)
+  for j in range(3):
+   var canopy = MeshInstance3D.new()
+   var foliage = SphereMesh.new()
+   foliage.radius = 1.1-j*0.15
+   foliage.height = 1.6-j*0.15
+   foliage.radial_segments = 9
+   foliage.rings = 5
+   canopy.mesh = foliage
+   canopy.position = Vector3((j-1)*0.6,3.0+j*0.40,(j%2)*0.4)
+   canopy.material_override = material(Color("c27a35") if j%2 == 0 else Color("a96632"))
+   tree.add_child(canopy)
 
 func begin_unlock():
  dimmer.hide()
@@ -1655,9 +1674,28 @@ func build_level_props(index: int):
    add_child(ring)
    scene_props.append(ring)
   elif index == 5:
-   var column = box(Vector3(0.35,4,0.35),at+Vector3(0,2,0),Color("963e3a"))
+   var column = MeshInstance3D.new()
+   var shaft = CylinderMesh.new()
+   shaft.top_radius = 0.20
+   shaft.bottom_radius = 0.26
+   shaft.height = 4.0
+   column.mesh = shaft
+   column.position = at+Vector3(0,2,0)
+   column.material_override = material(Color("9c3d34"))
+   add_child(column)
    scene_props.append(column)
-   var lantern = box(Vector3(0.7,0.7,0.7),at+Vector3(0,3.5,0),Color("ffd48a"))
+   for y in [0.2,3.7]:
+    var cap = box(Vector3(0.9,0.22,0.9),at+Vector3(0,y,0),Color("c9a24e"))
+    scene_props.append(cap)
+   var lantern = MeshInstance3D.new()
+   var globe = SphereMesh.new()
+   globe.radius = 0.38
+   globe.height = 0.70
+   lantern.mesh = globe
+   lantern.position = at+Vector3(0,3.3,0)
+   lantern.material_override = material(Color("ffd98a"),true)
+   add_child(lantern)
+   add_glow(lantern,Color(1.0,0.66,0.30,0.25),0.028)
    scene_props.append(lantern)
 
 func build_stars():

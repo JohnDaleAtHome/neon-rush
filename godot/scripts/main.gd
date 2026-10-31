@@ -354,6 +354,8 @@ func toggle_pause():
  reset_discard_prompt()
  if animator: animator.speed_scale = 0.0 if paused else 1.0
  if paused:
+  progress_label.hide()
+  status_label.hide()
   dimmer.show()
   stop_audio()
   controls.hide()
@@ -365,6 +367,8 @@ func toggle_pause():
   menu_button.show()
   message.text = "PAUSED - your run is frozen."
  else:
+  progress_label.show()
+  status_label.show()
   dimmer.hide()
   panel.hide()
   controls.visible = options.buttons
@@ -450,6 +454,8 @@ func on_action():
  start_level()
 
 func start_level():
+ progress_label.show()
+ status_label.show()
  options.last_mode = mode
  save_options()
  mode_select.select(mode_names.find(mode))

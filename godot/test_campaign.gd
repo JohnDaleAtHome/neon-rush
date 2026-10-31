@@ -5,6 +5,7 @@ func run():
  root.add_child(g)
  await process_frame
  g.set_process(false)
+ g.rng.seed = 104729
  g.mode = "story"
  g.level = 0
  g.pieces = []
@@ -32,7 +33,7 @@ func run():
     var nz = -100.0
     for item in g.entities:
      if item.get_meta("kind") == "orb" and item.position.z < -1 and item.position.z > nz:
-      target = g.LANES.find(item.position.x)
+      target = roundi(item.position.x/2.2)+1
       nz = item.position.z
     for item in g.entities:
      if item.get_meta("kind") not in ["orb","shield","shot"] and item.position.z > -9 and item.position.z < 1:
@@ -46,7 +47,9 @@ func run():
   else: g._process(1.0/60)
   visits[g.level] = true
  print("CAMPAIGN_RESULT steps=",steps," deaths=",deaths," levels=",visits," final=",g.message.text," pieces=",g.pieces)
- assert(steps < 24000 and g.action.text == "NEW JOURNEY")
+ if not (steps < 24000 and g.action.text == "NEW JOURNEY"):
+  quit(1)
+  return
  g.queue_free()
  await process_frame
  quit()

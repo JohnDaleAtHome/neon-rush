@@ -524,6 +524,11 @@ func start_level():
  height = 0
  velocity = 0
  jump_buffer = 0
+ slide_time = 0
+ fire_time = 0
+ touch_active = false
+ touch_moved = false
+ touch_origin = Vector2.ZERO
  lane = 1
  speed = 16 if mode == "story" and level == 4 else 10 if mode == "easy" else 19 if mode == "hard" else 14 if mode != "story" else 12
  guard = 0

@@ -1232,6 +1232,9 @@ func create_guardian() -> MeshInstance3D:
  return guardian
 
 func update_guardian_art(opened: bool):
+ var visual_state = "exhausted" if opened and boss_hits >= 2 else "open" if opened else "closed"
+ if boss.get_meta("visual_state","") == visual_state: return
+ boss.set_meta("visual_state",visual_state)
  var tint = Color("e3b45e") if opened and boss_hits >= 2 else Color("6fcfae") if opened else Color("a862b5")
  boss.get_node("EclipseRing").material_override = material(tint,true)
  boss.material_override = material(Color("30203f") if not opened else Color("526463") if boss_hits < 2 else Color("69533c"))

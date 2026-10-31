@@ -438,7 +438,7 @@ for (const button of modesEl.children) {
   button.addEventListener('mousedown', e => e.stopPropagation());
   button.addEventListener('touchstart', e => e.stopPropagation(),{passive:true});
   button.addEventListener('touchend', e => e.stopPropagation(),{passive:true});
-  button.addEventListener('click', e => { e.stopPropagation(); mode=button.dataset.mode;updateHunter(); saveOptions(); document.getElementById('modebadge').textContent=DIFFICULTIES[mode].label; best=storedBest(mode==='normal'?'neonrush_best':'neonrush_best_'+mode); bestEl.textContent='BEST '+best; for(const b of modesEl.children)b.setAttribute('aria-pressed',String(b===button)); showStats();if(state==='menu'){speed=DIFFICULTIES[mode].start;updatePace();} if(state==='menu')subtitleEl.textContent=DIFFICULTIES[mode].label+' / '+DIFFICULTIES[mode].hint; });
+  button.addEventListener('click', e => { e.stopPropagation(); if(state!=='menu'&&state!=='dead')return; mode=button.dataset.mode;updateHunter(); saveOptions(); document.getElementById('modebadge').textContent=DIFFICULTIES[mode].label; best=storedBest(mode==='normal'?'neonrush_best':'neonrush_best_'+mode); bestEl.textContent='BEST '+best; for(const b of modesEl.children)b.setAttribute('aria-pressed',String(b===button)); showStats();if(state==='menu'){speed=DIFFICULTIES[mode].start;updatePace();} if(state==='menu')subtitleEl.textContent=DIFFICULTIES[mode].label+' / '+DIFFICULTIES[mode].hint; });
 }
 let speed = 14, distance = 0, spawnTimer = 0, orbTimer = 0;
 let lane = 1, targetX = 0, vy = 0, y = 0, jumping = false;
@@ -1070,4 +1070,4 @@ window.addEventListener('resize', () => {
 });
 </script>
 </body>
- </html>
+   </html>

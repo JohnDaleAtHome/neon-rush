@@ -1,0 +1,32 @@
+extends SceneTree
+func _init(): call_deferred("run")
+func run():
+ var g = load("res://scenes/main.tscn").instantiate()
+ root.add_child(g)
+ await process_frame
+ g.set_process(false)
+ g.mode = "story"
+ g.level = 2
+ g.pieces = g.PIECES.slice(0,2)
+ g.start_level()
+ g._process(1)
+ var before = g.stats.get("story",{}).get("runs",0)
+ g.toggle_pause()
+ g.request_discard("menu")
+ assert(g.running and g.paused and g.elapsed == 1 and g.action.text == "KEEP RUN")
+ g.on_action()
+ assert(g.running and not g.paused and g.discard_pending == "")
+ g.toggle_pause()
+ g.on_fresh_pressed()
+ assert(g.running and g.paused and g.fresh_button.text == "DISCARD & RESTART?")
+ g.on_fresh_pressed()
+ assert(g.running and not g.paused and g.elapsed == 0 and g.level == 2 and g.pieces.size() == 2)
+ assert(g.stats.story.runs == before+1)
+ g._process(1)
+ g.toggle_pause()
+ g.request_discard("menu")
+ g.request_discard("menu")
+ assert(not g.running and not g.paused and g.fresh_button.text == "NEW JOURNEY")
+ assert(g.stats.story.runs == before+2)
+ print("PASS pause discard confirmation, keep run, restart checkpoint, menu and one-attempt accounting")
+ quit()

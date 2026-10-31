@@ -1628,7 +1628,20 @@ func build_level_props(index: int):
    mesh.height = mesh.radius
    rock.mesh = mesh
    rock.position = at
-   rock.material_override = material(Color("b0a9bd") if index == 1 else Color("5a455f"))
+   rock.material_override = material(Color("77728e") if index == 1 else Color("403648"))
+   if index == 1:
+    var crater = TorusMesh.new()
+    crater.inner_radius = mesh.radius * 0.65
+    crater.outer_radius = mesh.radius
+    rock.mesh = crater
+    rock.scale.y = 0.24
+    rock.position.y = 0.025
+   else:
+    mesh.height = mesh.radius * 1.6
+    mesh.radial_segments = 7
+    mesh.rings = 4
+    rock.rotation = Vector3(i*0.2,i*0.7,0.2)
+    rock.position.y = mesh.radius * 0.4
    add_child(rock)
    scene_props.append(rock)
   elif index == 3:
@@ -1673,6 +1686,7 @@ func adapt_layout():
  var size = get_viewport().get_visible_rect().size
  if not is_instance_valid(panel): return
  var compact = size.y < 650
+ layout_moons(size)
  panel.position = Vector2((size.x-340)/2,155 if compact else 365)
  message.position.y = 15 if compact and not running else 100 if compact else 145
  message.size.y = 120 if compact else 170
@@ -1688,6 +1702,15 @@ func adapt_layout():
  controls.anchor_right = 0
  controls.offset_left = center-width/2
  controls.offset_right = center+width/2
+
+func layout_moons(size: Vector2):
+ if moons.size() != 3: return
+ var landscape = size.x > size.y
+ for i in range(moons.size()):
+  var fraction = (0.40 + i*0.10) if landscape else (0.20+i*0.25)
+  var pixel_y = maxf(265.0,size.y*0.32)+(1-i)*13.0
+  # Keep celestial silhouettes below the full objective text band.
+  moons[i].position = camera.project_position(Vector2(size.x*fraction,pixel_y),60.0+i*15.0)
 
 func configure_window():
  var physical = get_window().size

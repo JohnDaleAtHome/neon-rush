@@ -1,0 +1,50 @@
+{
+  "meadow/contact_shadow.png": {
+    "bytes": 4503,
+    "sha256": "50c6b934a35af3b923e8fc02c8f8f40d62fd763c2ae9caace066a2a5d52fa353"
+  },
+  "meadow/hills.png": {
+    "bytes": 15452,
+    "sha256": "7b40c4006cb6d26c452f1df938acbed1cfffee49f65b7e066eacf899722c0062"
+  },
+  "meadow/meadow_side.png": {
+    "bytes": 18171,
+    "sha256": "b90e0e218783f4ad54375dc4d157903f420ca92b6ee7d1248ed85c29aab0810b"
+  },
+  "meadow/path.png": {
+    "bytes": 36753,
+    "sha256": "39c3ffb61f74534c0af72e072c4b45ae893a2c01ddabd0b135c0dd5e57814e8b"
+  },
+  "meadow/plant_a.png": {
+    "bytes": 10833,
+    "sha256": "70c9bd748f35cc2759a6cff6f5425d6001da201ee7b9085d435cbae2bb1a24c6"
+  },
+  "meadow/plant_b.png": {
+    "bytes": 7218,
+    "sha256": "a5dee1eb8f498c1cc1945cf4d028f37b23544b2301c841044b0677af224c5287"
+  },
+  "meadow/plant_c.png": {
+    "bytes": 9166,
+    "sha256": "2ad7d973959eb7058b09c76e001d66957beff7282342688a40e83bf58fc0eb08"
+  },
+  "meadow/sky.png": {
+    "bytes": 970,
+    "sha256": "1e0cedb38a5732e02a866e2a310e76f0d68c860ddc4f143a36d94baed4fd5db3"
+  },
+  "mochi/mochi.glb": {
+    "bytes": 731676,
+    "sha256": "18cd557d9a5dd219f3346d23f7cc3fc9b215ecbd3512969c1e25e5f7f5fe3b80"
+  },
+  "ui/moon_chip.png": {
+    "bytes": 2184,
+    "sha256": "2d02fe41fc7fc28d188390c4680dc595ac59acea25b7e4cc22bb3a0419bce1a6"
+  },
+  "ui/toggle_off.png": {
+    "bytes": 1688,
+    "sha256": "908fe4bb82f7f8713decadf80d2a472a7641ba277f05b5c1db011c456305833e"
+  },
+  "ui/toggle_on.png": {
+    "bytes": 2085,
+    "sha256": "3d5d86c418a04a304bc365cd88fad8b6cd1862ba7ee7267b18d6f2979dc11f88"
+  }
+}

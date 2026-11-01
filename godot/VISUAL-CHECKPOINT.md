@@ -17,6 +17,14 @@ or a complete Godot rewrite. No paid assets or official-host replacement.
 - Light-quality changes remove/restore module props, horizon and shadow rather
   than leaving stale scenery. Other worlds retain base direct lighting.
 
+## Asset recovery
+
+Before Godot import, run `python3 godot/fetch-assets.py`. The12new visual assets
+are tracked as exact encoded source bytes in `visual-sourcepack/`, not native
+binary blobs. The stdlib decoder restores/verifies them offline; original28
+baseline assets still need the existing checksum network recovery. A bare
+checkout without recovery is not ready to import.
+
 ## Evidence and remaining gates
 
 Final release-specific evidence is recorded in the accompanying build

@@ -301,17 +301,6 @@ def fur_tuft(center, direction, width, length):
       'WEIGHTS_0':add_accessor(js,binb,np.tile(wts0[ni],(len(vv),1)).astype(np.float32),'VEC4')},
       'indices':add_accessor(js,binb,ff.astype(np.uint32).reshape(-1),'SCALAR',34963),
       'material':0,'mode':4})
-# Layered swept cheek/neck tufts replace the three large outward spikes.
-for sign in [-1,1]:
-    for i in range(5):
-        z=0.0191+i*0.00048
-        fur_tuft(np.array([sign*(0.0048+0.00015*np.sin(i)), -0.0020,z]),
-                 [sign*0.75,0.55,(i-3)*0.12],0.00053,0.00065+(i%3)*0.00012)
-for i in range(5):
-    x=(i-2)*0.00065
-    fur_tuft(np.array([x,-0.00035,0.0261-abs(x)*0.18]),
-             [0.25,0.65,0.7],0.00064,0.0013+(i%2)*0.0003)
-
 # --- accessories (world bind space) ---
 height = size[1]
 off_boot = height*0.012
@@ -345,7 +334,7 @@ for f in idx[core_mask[idx].all(1)]:
         weights=np.zeros(len(jnames))
         for j,w in zip(jix[vi],wts[vi]):weights[j]+=w
         poly.append((wpos[vi],pos[vi],nrm[vi],weights))
-    poly=clip(clip(poly,2,0.0138,True,1),2,0.0195,False,1)
+    poly=clip(clip(poly,2,0.0118,True,1),2,0.0195,False,1)
     if len(poly)<3:continue
     polygons=[poly]
     if np.mean([v[0][2] for v in poly])>-0.29:
@@ -383,12 +372,13 @@ print('clipped jacket',len(V),'vertices',len(F),'faces')
 # Thin magenta stitched hem follows the clipped garment boundary, not a lathe ring.
 MAT_STITCH=len(mats);mats.append({'name':'Jacket_Stitch','doubleSided':True,'pbrMetallicRoughness':{'baseColorFactor':[0.78,0.12,0.51,1],'metallicFactor':0,'roughnessFactor':.6},'emissiveFactor':[.20,.005,.065]})
 from collections import Counter
-edges=Counter(tuple(sorted((int(a),int(b)))) for f in F for a,b in zip(f,np.roll(f,-1)))
+def edge_key(a,b):return tuple(sorted((tuple(np.round(V[int(a)],7)),tuple(np.round(V[int(b)],7)))))
+edges=Counter(edge_key(a,b) for f in F for a,b in zip(f,np.roll(f,-1)))
 sv=[];sn=[];sj=[];sw=[];sf=[]
 for f in F:
  for aa,bb in zip(f,np.roll(f,-1)):
-  if edges[tuple(sorted((int(aa),int(bb))))]!=1:continue
-  if max(V[aa,2],V[bb,2])>0.0141:continue
+  if edges[edge_key(aa,bb)]!=1:continue
+  if max(V[aa,2],V[bb,2])>0.0123:continue
   cc=next(k for k in f if k not in [aa,bb]);base=len(sv)
   for q,t in [(aa,0),(bb,0),(bb,.08),(aa,.08)]:
    sv.append(V[q]*(1-t)+V[cc]*t+N[q]*.00004);sn.append(N[q]);sj.append(J[q]);sw.append(W[q])
@@ -633,8 +623,8 @@ for side in [-1,1]:
  vv=[];nn=[];ff=[]
  for step in range(13):
   t=step/12
-  center=np.array([side*(.08+t*.55),1.49+.10*np.sin(t*4.5),-.29-t*.65])
-  width=.07*(1-.35*t)
+  center=np.array([side*(.08+t*.55),1.49+.14*np.sin(t*4.5),-.29-t*.95])
+  width=.115*(1-.40*t)
   for edge in [-1,1]:vv.append(center+np.array([0,edge*width,0]));nn.append(np.array([0,0,1.]))
  for step in range(12):
   a=step*2;ff.extend([[a,a+1,a+3],[a,a+3,a+2]])
@@ -643,7 +633,7 @@ for side in [-1,1]:
  # Narrow cyan seam follows the same ribbon edge.
  edgev=[];edgen=[];edgef=[]
  for step in range(13):
-  t=step/12;c=np.array([side*(.08+t*.55),1.49+.10*np.sin(t*4.5)+.07*(1-.35*t),-.286-t*.65])
+  t=step/12;c=np.array([side*(.08+t*.55),1.49+.14*np.sin(t*4.5)+.115*(1-.40*t),-.286-t*.95])
   for delta in [0,-.012]:edgev.append(c+np.array([0,delta,0]));edgen.append([0,0,1])
  for step in range(12):
   a=step*2;edgef.extend([[a,a+1,a+3],[a,a+3,a+2]])
@@ -681,6 +671,82 @@ for primitive in prims:
  v[:,0]+=np.sign(v[:,0])*t*t*.0025
  primitive['attributes']['POSITION']=add_accessor(js,binb,v.astype(np.float32),'VEC3',34962)
 
+
+# Reconstructed curved ear volumes replace the original thin upper-ear geometry.
+for primitive in list(prims):
+ if mats[primitive['material']]['name'] not in ['Bunny_Main','Bunny_Secondary']:continue
+ v=accessor(js,binb,primitive['attributes']['POSITION']);ji=accessor(js,binb,primitive['attributes']['JOINTS_0']);ww=accessor(js,binb,primitive['attributes']['WEIGHTS_0'])
+ ew=np.zeros(len(v))
+ for k in range(4):ew+=ww[:,k]*np.array([jnames[int(q)].startswith('Ear') for q in ji[:,k]])
+ faces=accessor(js,binb,primitive['indices']).reshape(-1,3)
+ keep=~((ew[faces].mean(1)>.65)&(v[faces,2].min(1)>.0270))
+ if keep.any():primitive['indices']=add_accessor(js,binb,faces[keep].astype(np.uint32).reshape(-1),'SCALAR',34963)
+ else:prims.remove(primitive)
+def ear_center(t,side):
+ return np.array([side*(.0038+.0058*t+.0006*np.sin(t*np.pi)), -.0020+.0120*t*t, .0260+.0120*t-.0050*t*t])
+def ear_prim(side,inner=False,lock=0):
+ vv=[];nn=[];jj=[];ww=[];ff=[];rows=18;cols=14
+ for row in range(rows):
+  t=row/(rows-1)
+  center=ear_center(t,side)
+  tangent=ear_center(min(1,t+.001),side)-ear_center(max(0,t-.001),side);tangent/=np.linalg.norm(tangent)
+  across=np.cross(tangent,[0,1,0]);across/=np.linalg.norm(across);depth=np.cross(tangent,across)
+  width=(.00165*np.sin(np.pi*(t*.94+.04))**.65+.00004)*(1 if not inner else .61)
+  thick=.00028*(np.sin(t*np.pi)*.7+.3)
+  if lock:
+   center+=across*lock*.0007
+   center+=depth*.00035
+   width*=.46
+  for col in range(cols):
+   a=col*2*np.pi/cols
+   q=center+across*np.cos(a)*width+depth*np.sin(a)*thick
+   if inner:
+    u=-1+2*col/(cols-1)
+    q=center+across*u*width+depth*(thick+.00010)
+   vv.append(q);normal=across*np.cos(a)+depth*np.sin(a);nn.append(depth if inner else normal)
+   e1=jnames.index('Ear1.'+('L' if side>0 else 'R'));e2=e1+1;e3=e1+2
+   u=t*2;weights=[max(0,1-u),1-abs(u-1),max(0,u-1),0]
+   jj.append([e1,e2,e3,0]);ww.append(weights)
+ for row in range(rows-1):
+  for col in range(cols-1 if inner else cols):
+   a=row*cols+col;b=row*cols+(col+1)%cols;c=b+cols;d=a+cols;ff.extend([[a,c,b],[a,d,c]] if inner else [[a,b,c],[a,c,d]])
+ attrs={}
+ for key,data,typ in [('POSITION',vv,'VEC3'),('NORMAL',nn,'VEC3'),('JOINTS_0',jj,'VEC4'),('WEIGHTS_0',ww,'VEC4')]:attrs[key]=add_accessor(js,binb,np.array(data,np.uint8 if key=='JOINTS_0' else np.float32),typ,34962 if key=='POSITION' else None)
+ prims.append({'attributes':attrs,'indices':add_accessor(js,binb,np.array(ff,np.uint32).reshape(-1),'SCALAR',34963),'material':1 if inner else 0,'mode':4})
+for side in [-1,1]:
+ ear_prim(side)
+ ear_prim(side,True)
+ # Short tapering swept locks break the outer ear silhouette, weighted to its rig.
+ for step in range(6):
+  t0=.25+step*.105;vv=[];nn=[];jj=[];ww=[];ff=[]
+  c0=ear_center(t0,side);tan=ear_center(t0+.001,side)-ear_center(t0-.001,side);tan/=np.linalg.norm(tan)
+  across=np.cross(tan,[0,1,0]);across/=np.linalg.norm(across);depth=np.cross(tan,across)
+  width=.00165*np.sin(np.pi*(t0*.94+.04))**.65+.00004
+  outward=across*side
+  base=c0+outward*width*.80
+  for row in range(8):
+   u=row/7;center=base+tan*.0022*u+outward*.00055*np.sin(u*np.pi*.75)+np.array([0,.0005,0])*u*u
+   for col in range(8):
+    angle=col*2*np.pi/8;normal=outward*np.cos(angle)+depth*np.sin(angle)
+    vv.append(center+outward*np.cos(angle)*(.00045*(1-u)**.8+.000004)+depth*np.sin(angle)*(.00014*(1-u)+.000004));nn.append(normal)
+    blend=min(1,t0+u*.12)*2;e1=jnames.index('Ear1.'+('L' if side>0 else 'R'));jj.append([e1,e1+1,e1+2,0]);ww.append([max(0,1-blend),1-abs(blend-1),max(0,blend-1),0])
+  for row in range(7):
+   for col in range(8):
+    aa=row*8+col;bb=row*8+(col+1)%8;cc=bb+8;dd=aa+8;ff.extend([[aa,bb,cc],[aa,cc,dd]])
+  attrs={}
+  for key,data,typ in [('POSITION',vv,'VEC3'),('NORMAL',nn,'VEC3'),('JOINTS_0',jj,'VEC4'),('WEIGHTS_0',ww,'VEC4')]:attrs[key]=add_accessor(js,binb,np.array(data,np.uint8 if key=='JOINTS_0' else np.float32),typ,34962 if key=='POSITION' else None)
+  prims.append({'attributes':attrs,'indices':add_accessor(js,binb,np.array(ff,np.uint32).reshape(-1),'SCALAR',34963),'material':0,'mode':4})
+
+# A gently tapered lower face keeps a rounded forehead and smaller muzzle.
+for primitive in prims:
+ name=mats[primitive['material']]['name']
+ if name not in ['Bunny_Main','Bunny_Secondary','Belly_Fur','Nose_Pink','Mouth_Dark']:continue
+ v=accessor(js,binb,primitive['attributes']['POSITION']).astype(float)
+ ji=accessor(js,binb,primitive['attributes']['JOINTS_0']);ww=accessor(js,binb,primitive['attributes']['WEIGHTS_0'])
+ hw=np.zeros(len(v))
+ for k in range(4):hw+=ww[:,k]*np.array([jnames[int(q)]=='Head' for q in ji[:,k]])
+ v[:,0]*=1-np.clip((.023-v[:,2])/.004,0,1)*hw*.08
+ primitive['attributes']['POSITION']=add_accessor(js,binb,v.astype(np.float32),'VEC3',34962)
 
 # Oval eye silhouette and smaller pupil retain the proven front surface depth.
 for primitive in prims:
@@ -775,26 +841,30 @@ for side in [-1,1]:
  for key,data,typ in [('POSITION',v,'VEC3'),('NORMAL',n,'VEC3'),('JOINTS_0',np.tile(jix0[ni],(len(v),1)).astype(np.uint8),'VEC4'),('WEIGHTS_0',np.tile(wts0[ni],(len(v),1)).astype(np.float32),'VEC4')]:
   prim['attributes'][key]=add_accessor(js,binb,np.asarray(data,dtype=np.uint8 if key=='JOINTS_0' else np.float32),typ,34962 if key=='POSITION' else None)
  prim['indices']=add_accessor(js,binb,np.array(ff,np.uint32).reshape(-1),'SCALAR',34963);prims.append(prim)
-# Attached head-only fur. Exclude raised hands in the same mesh-height band.
-fur_rng=np.random.default_rng(4611)
-dom0=np.array(jnames)[jix0[np.arange(len(pos0)),wts0.argmax(1)]]
-possible=np.where((pos0[:,2]>.020)&(pos0[:,2]<.0275)&(np.abs(pos0[:,0])<.0065)&(pos0[:,1]>-.0010)&np.isin(dom0,['Head','Ear1.L','Ear1.R']))[0]
-fur_rng.shuffle(possible);selected=[]
-for vi in possible:
- c=pos0[vi]
- if any(np.linalg.norm(c-pos0[q])<.00055 for q in selected):continue
- selected.append(vi)
- if len(selected)>=55:break
-for vi in selected:
- normal=nrm0[vi]/max(np.linalg.norm(nrm0[vi]),1e-9)
- direction=normal*.4+np.array([np.sign(pos0[vi,0])*.12,.6,.2])
- fur_tuft(pos0[vi]-normal*.00012,direction,.00024,float(fur_rng.uniform(.00024,.00042)))
-# Short layered cheek fringe follows the actual face surface and sweeps back.
+# Curved overlapping groom locks replace the short random crown spikes.
+def groom_lock(base,direction,length,width,thickness):
+ base=np.array(base,float);d=np.array(direction,float);d/=np.linalg.norm(d)
+ side=np.cross(d,[0,0,1.0]);side/=np.linalg.norm(side);normal=np.cross(side,d)
+ vv=[];nn=[];ff=[];rows=10;cols=10
+ for row in range(rows):
+  t=row/(rows-1);center=base+d*length*t+np.array([0,.00065,.00030])*np.sin(t*np.pi*.8)
+  w=width*(1-t*t)**.7+.000008;h=thickness*(1-t)**.8+.000008
+  for col in range(cols):
+   angle=col*2*np.pi/cols;v=center+side*np.cos(angle)*w+normal*np.sin(angle)*h
+   vv.append(v);nn.append(side*np.cos(angle)+normal*np.sin(angle))
+ for row in range(rows-1):
+  for col in range(cols):
+   a=row*cols+col;b=row*cols+(col+1)%cols;c=b+cols;dd=a+cols;ff.extend([[a,c,b],[a,dd,c]])
+ ni=int(np.sum((pos0-base)**2,axis=1).argmin());attrs={}
+ for key,data,typ in [('POSITION',vv,'VEC3'),('NORMAL',nn,'VEC3'),('JOINTS_0',np.tile(jix0[ni],(len(vv),1)),'VEC4'),('WEIGHTS_0',np.tile(wts0[ni],(len(vv),1)),'VEC4')]:attrs[key]=add_accessor(js,binb,np.array(data,np.uint8 if key=='JOINTS_0' else np.float32),typ,34962 if key=='POSITION' else None)
+ prims.append({'attributes':attrs,'indices':add_accessor(js,binb,np.array(ff,np.uint32).reshape(-1),'SCALAR',34963),'material':0,'mode':4})
 for side in [-1,1]:
- for step in range(7):
-  x=side*(.0052+.00008*np.sin(step*2));z=.0199+step*.00047
-  y=face_depth(x,z)+.00012
-  fur_tuft(np.array([x,y,z]),[side*.45,.9,.15+step*.06],.00022,.00055+(step%3)*.00008)
+ for step in range(4):
+  x=side*(.0048+.00012*step);z=.0204+step*.00070;y=face_depth(x,z)+.00018
+  groom_lock([x,y+.00015,z],[side*.18,1,.08],.0012+step*.00010,.00068,.00012)
+for step in range(3):
+ x=(step-1)*.0007
+ groom_lock([x,-.0001,.0260-abs(x)*.12],[x*50,1,.08],.0027+(step%2)*.0002,.0012,.00020)
 # Cyan irises have a darker edge and lighter inner ring, not a uniform blue sticker.
 for primitive in prims:
  if mats[primitive['material']]['name']!='Eye_White':continue
@@ -809,7 +879,7 @@ for primitive in prims:
 for side in [-1,1]:
  vv=[];nn=[];ff=[]
  for row in range(9):
-  t=row/8;c=np.array([side*(.10+.16*t),1.64-.48*t,.23+.06*np.sin(t*np.pi)])
+  t=row/8;c=np.array([side*(.10+.16*t),1.64-.55*t,.23+.06*np.sin(t*np.pi)])
   for edge in [-1,1]:vv.append(c+np.array([side*edge*.055,edge*.018,0]));nn.append([0,0,1])
  for row in range(8):
   k=row*2;ff.extend([[k,k+1,k+3],[k,k+3,k+2]])
@@ -817,11 +887,35 @@ for side in [-1,1]:
  # narrow colored stitching on the visible lapel edge
  vv=[];nn=[];ff=[]
  for row in range(9):
-  t=row/8;c=np.array([side*(.10+.16*t+.05),1.64-.48*t+.018,.234+.06*np.sin(t*np.pi)])
+  t=row/8;c=np.array([side*(.10+.16*t+.05),1.64-.55*t+.018,.234+.06*np.sin(t*np.pi)])
   for edge in [-1,1]:vv.append(c+np.array([edge*.006,0,0]));nn.append([0,0,1])
  for row in range(8):
   k=row*2;ff.extend([[k,k+1,k+3],[k,k+3,k+2]])
  rigid_prim(np.array(vv),np.array(nn),np.array(ff),'Torso',MAT_TRIM if side==1 else MAT_MAGENTA,'lapel_seam')
+# Small muzzle and swept upper eyelids, keeping all existing face weights.
+for primitive in prims:
+ name=mats[primitive['material']]['name']
+ if name in ['Nose_Pink','Mouth_Dark']:
+  v=accessor(js,binb,primitive['attributes']['POSITION']).astype(float)
+  if name=='Nose_Pink':
+   c=v.mean(0);v=c+(v-c)*np.array([.70,.85,.65])
+  else:v[:,0]*=.66;v[:,2]=.0200+(v[:,2]-.0200)*.64
+  primitive['attributes']['POSITION']=add_accessor(js,binb,v.astype(np.float32),'VEC3',34962)
+for side in [-1,1]:
+ vv=np.array([[side*.00455,face_depth(side*.00455,.0239)-.00027,.0239],[side*.00523,face_depth(side*.0048,.0242)-.00027,.02415],[side*.00478,face_depth(side*.00478,.0235)-.00027,.02348]],float)
+ ni=int(np.sum((pos0-vv.mean(0))**2,axis=1).argmin());attrs={}
+ for key,data,typ in [('POSITION',vv,'VEC3'),('NORMAL',np.tile([side*.3,-1,0],(3,1)),'VEC3'),('JOINTS_0',np.tile(jix0[ni],(3,1)),'VEC4'),('WEIGHTS_0',np.tile(wts0[ni],(3,1)),'VEC4')]:attrs[key]=add_accessor(js,binb,np.array(data,np.uint8 if key=='JOINTS_0' else np.float32),typ,34962 if key=='POSITION' else None)
+ prims.append({'attributes':attrs,'indices':add_accessor(js,binb,np.array([0,1,2],np.uint32),'SCALAR',34963),'material':MAT_LID,'mode':4})
+# Backpack straps follow the torso, with inset cyan and magenta stitch edges.
+for side in [-1,1]:
+ for material,width,zshift in [(MAT_JACKET,.035,0),(MAT_TRIM if side>0 else MAT_MAGENTA,.006,.004)]:
+  vv=[];nn=[];ff=[]
+  for row in range(9):
+   t=row/8;c=np.array([side*(.29-.10*t),1.65-.55*t,.20+.09*np.sin(t*np.pi)+zshift])
+   for edge in [-1,1]:vv.append(c+[edge*width,0,0]);nn.append([0,0,1])
+  for row in range(8):
+   k=row*2;ff.extend([[k,k+1,k+3],[k,k+3,k+2]])
+  rigid_prim(np.array(vv),np.array(nn),np.array(ff),'Torso',material,'backpack_strap')
 # Batch accessory/fur primitives by material and attribute layout. Preserve skin data.
 groups={}
 for primitive in prims:

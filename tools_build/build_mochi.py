@@ -495,6 +495,37 @@ for p in prims:
     vv[:,0]*=1+0.13*cheek
     p['attributes']['POSITION']=add_accessor(js,binb,vv.astype(np.float32),'VEC3',34962)
 
+# Wrist cuffs: bands follow the actual lower-arm surface and original skin weights.
+MAT_MAGENTA=len(mats);mats.append({'name':'Neon_Magenta','doubleSided':True,'pbrMetallicRoughness':{'baseColorFactor':[0.75,0.12,0.48,1],'metallicFactor':0.0,'roughnessFactor':0.5},'emissiveFactor':[0.32,0.015,0.12]})
+for side in ['L','R']:
+ arm=jnames.index('LowerArm.'+side)
+ local=(np.linalg.inv(G[skin['joints'][arm]])@np.concatenate([wpos,np.ones((len(wpos),1))],axis=1).T).T[:,:3]
+ armvertices=np.where(domname=='LowerArm.'+side)[0]
+ lo,hi=np.percentile(local[armvertices,1],[0,100])
+ # Distal third of the forearm, excluding the fingers. Clipped through triangles.
+ bandlo=lo+(hi-lo)*0.62;bandhi=lo+(hi-lo)*0.88
+ for cuff_material,bandlo,bandhi in [(MAT_JACKET,bandlo,bandhi),(MAT_MAGENTA,bandlo,bandlo+(bandhi-bandlo)*.15)]:
+  V=[];N=[];J=[];W=[];F=[]
+  for face in idx[np.isin(domname[idx],['LowerArm.'+side]).any(1)]:
+   poly=[]
+   for vi in face:
+    weights=np.zeros(len(jnames))
+    for ji,ww in zip(jix[vi],wts[vi]):weights[ji]+=ww
+    poly.append((local[vi],pos[vi],nrm[vi],weights))
+   poly=clip(clip(poly,1,bandlo,True),1,bandhi,False)
+   if len(poly)<3:continue
+   base=len(V)
+   for lp,v,n,weights in poly:
+    jsort=np.argsort(weights)[-4:][::-1];ws=weights[jsort];ws/=ws.sum()
+    V.append(v+n*(0.00015 if cuff_material==MAT_MAGENTA else 0.00012));N.append(n);J.append(jsort);W.append(ws)
+   for k in range(1,len(poly)-1):F.append([base,base+k,base+k+1])
+  if V:
+   at={}
+   for key,data,typ in [('POSITION',V,'VEC3'),('NORMAL',N,'VEC3'),('JOINTS_0',J,'VEC4'),('WEIGHTS_0',W,'VEC4')]:
+    at[key]=add_accessor(js,binb,np.array(data,dtype=np.uint8 if key=='JOINTS_0' else np.float32),typ,34962 if key=='POSITION' else None)
+   prims.append({'attributes':at,'indices':add_accessor(js,binb,np.array(F,np.uint32).reshape(-1),'SCALAR',34963),'material':cuff_material,'mode':4})
+   print('wrist cuff',side,len(V),len(F))
+
 import os
 os.makedirs(os.path.dirname(DST), exist_ok=True)
 for n in js['nodes']:

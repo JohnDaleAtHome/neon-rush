@@ -268,42 +268,22 @@ func _set_horizon_visible(visible: bool) -> void:
 	horizon_root.visible = visible
 
 
-func _plant_material(texture_path: String) -> StandardMaterial3D:
-	var mat := StandardMaterial3D.new()
-	mat.albedo_texture = load(texture_path)
-	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
-	mat.alpha_scissor_threshold = 0.35
-	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
-	mat.emission_enabled = true
-	mat.emission = Color(1, 1, 1)
-	mat.emission_texture = mat.albedo_texture
-	mat.emission_energy_multiplier = 0.22
-	return mat
-
-
 func _build_plants(main_node) -> void:
 	var prng := RandomNumberGenerator.new()
 	prng.seed = 20261101
-	var textures := [ASSET_DIR + "plant_a.png", ASSET_DIR + "plant_b.png", ASSET_DIR + "plant_c.png"]
-	var materials := []
-	for t in textures:
-		materials.append(_plant_material(t))
-	# Varied plants replace the 30 identical grass cards.
+	var flower_material := StandardMaterial3D.new()
+	flower_material.vertex_color_use_as_albedo = true
+	flower_material.roughness = 0.9
+	# Solid stems, leaves and flower heads replace the original flat cards.
 	for i in range(34):
 		var side := -1 if i % 2 == 0 else 1
 		var plant := MeshInstance3D.new()
-		var quad := QuadMesh.new()
-		var scale_factor := 0.8 + prng.randf() * 1.0
-		quad.size = Vector2(1.7 * scale_factor, 1.4 * scale_factor)
-		plant.mesh = quad
-		plant.material_override = materials[i % materials.size()]
-		plant.position = Vector3(
-			side * (4.9 + prng.randf() * 3.4),
-			0.7 * scale_factor - 0.04,
-			-6.0 - i * 4.1 - prng.randf() * 2.4)
-		plant.set_meta("bank_clearance",plant.position.y+0.12)
-		plant.position.y += _bank_height(plant.position.x,plant.position.z)+0.12
-		plant.rotation.y = prng.randf_range(-0.3, 0.3)
+		plant.mesh = _flower_clump(i%3,prng)
+		plant.material_override = flower_material
+		plant.position = Vector3(side*(4.9+prng.randf()*3.4),0,-6.0-i*4.1-prng.randf()*2.4)
+		plant.set_meta("bank_clearance",0.0)
+		plant.position.y = _bank_height(plant.position.x,plant.position.z)
+		plant.rotation.y = prng.randf_range(-PI,PI)
 		main_node.add_child(plant)
 		main_node.scene_props.append(plant)
 	# Mid-ground fern/shrub clumps fill the banks with dimensional foliage.
@@ -387,3 +367,57 @@ func _process(_dt: float) -> void:
 	var spread: float = 1.0 + jump * 0.5
 	shadow.scale = Vector3(spread, 1.0, spread)
 	shadow_mat.albedo_color = Color(1, 1, 1, 1.0 - jump * 0.55)
+
+
+func _flower_clump(kind: int, rng: RandomNumberGenerator) -> ArrayMesh:
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var stem_color := Color("5b927c")
+	var leaf_color := Color("427a61")
+	var blooms := 3 if kind==0 else 5
+	for i in range(blooms):
+		var base := Vector3(rng.randf_range(-0.35,0.35),0,rng.randf_range(-0.22,0.22))
+		var height := rng.randf_range(0.65,1.45) if kind!=2 else rng.randf_range(0.4,0.85)
+		_append_stalk(st,base,height,0.025,stem_color)
+		for j in range(2):
+			var sign_x := -1.0 if j==0 else 1.0
+			_append_oval(st,base+Vector3(sign_x*0.15,height*(0.3+j*0.2),0),Vector3(0.23,0.075,0.09),leaf_color)
+		var top := base+Vector3.UP*height
+		if kind==0:
+			for petal in range(5):
+				var angle := petal*TAU/5.0
+				_append_oval(st,top+Vector3(cos(angle)*0.14,0,sin(angle)*0.14),Vector3(0.13,0.075,0.13),Color("b67acc"))
+			_append_oval(st,top+Vector3.UP*0.05,Vector3(0.075,0.065,0.075),Color("e8cda1"))
+		elif kind==1:
+			_append_oval(st,top,Vector3(0.065,0.18,0.065),Color("9ad7ca"))
+		else:
+			_append_oval(st,top,Vector3(0.13,0.12,0.13),Color("79b9b1"))
+	return st.commit()
+
+
+func _append_stalk(st: SurfaceTool, base: Vector3, height: float, radius: float, color: Color) -> void:
+	for k in range(6):
+		var a := k*TAU/6.0
+		var b := (k+1)*TAU/6.0
+		var n1 := Vector3(cos(a),0,sin(a))
+		var n2 := Vector3(cos(b),0,sin(b))
+		var points := [base+n1*radius,base+n2*radius,base+n2*radius*0.6+Vector3.UP*height,base+n1*radius*0.6+Vector3.UP*height]
+		for idx in [0,1,2,0,2,3]:
+			st.set_color(color)
+			st.set_normal(n1 if idx==0 or idx==3 else n2)
+			st.add_vertex(points[idx])
+
+
+func _append_oval(st: SurfaceTool, center: Vector3, radii: Vector3, color: Color) -> void:
+	for row in range(4):
+		for col in range(6):
+			var normals: Array[Vector3] = []
+			for q in [Vector2(col,row),Vector2(col+1,row),Vector2(col+1,row+1),Vector2(col,row+1)]:
+				var phi: float = q.y*PI/4.0
+				var theta: float = q.x*TAU/6.0
+				normals.append(Vector3(sin(phi)*cos(theta),cos(phi),sin(phi)*sin(theta)))
+			for idx in [0,2,1,0,3,2]:
+				var n := normals[idx]
+				st.set_normal((n/radii).normalized())
+				st.set_color(color)
+				st.add_vertex(center+n*radii)

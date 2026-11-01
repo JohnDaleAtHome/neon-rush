@@ -198,3 +198,23 @@ Validation includes all28headless suites, exact rig/animation-byte checks,
 42native animation samples, clean import/export and actual browser pixels.
 These are regression fixtures, not natural L5/L6/reunion play, physical-device,
 audio, human-fun or final-art acceptance. Publicv29 stays frozen.
+
+## v46 cohesive character/world refinement (WIP)
+
+Flatter fitted oval eyes, smaller attached head fur, shared UV-rooted animated
+scarf/seams and17batched character surfaces preserve the14animation channels and
+inverse binds. Meadow now has stronger rolling banks, curved understory,
+irregular crowns, cooler fog, subtle slate path detail and cloud-veiled moons.
+HUD/gameplay/three-moon layout remain unchanged. A denser ground-cover pass was
+rejected after pixels and measurements; final cover totals114,048vertices and
+canopies576vertices each. Angular/repeated plants, smooth generic character
+features and detached moons remain open art gaps, not accepted final visuals.
+
+All28suites pass from recovered source, builder bytes match and all39binary
+assets recover exactly (12visual +27baseline binaries, plus baseline license).
+42native poses, fixed-pose scarf motion, multisize menu/play/pause and light
+toggle/browser scroll pixels were inspected. The measured SwiftShader browser
+comparison reduces submitted draws/triangles but has2.3%/5.3% worse mean frame
+intervals at390/1280. This is not physical-device performance proof. See
+[validation](docs/V46-VISUAL-VALIDATION.md) for counts, method and limitations.
+No public deployment or final-art/campaign acceptance is claimed.

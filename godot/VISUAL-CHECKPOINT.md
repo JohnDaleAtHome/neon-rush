@@ -51,3 +51,15 @@ this is not polished landscape art. Other levels/NPCs/guardian/reunion did not
 receive a matching final-art pass. Natural L5 completion/L6/reunion, physical
 device performance, browser audio listening and human fun/art acceptance remain
 open. All previous canon/mechanic simplifications in PORT-STATUS.md still apply.
+
+
+## v39 character expression/proportion checkpoint (WIP)
+The generator now replaces the pinched V-shaped mouth with a small curved smile,
+reduces eye projection/width, shortens ear root scales and reduces lower-arm
+branches uniformly to0.78. Finger descendants follow those branch transforms.
+All14animation channels and inverse bind matrices are unchanged; four named
+rest-node scales intentionally differ, so original node JSON equality is no
+longer claimed. This is exploratory concept-directed work, not accepted final
+art. Bulky fingers, simple fur, jacket detail and round eye forms remain.
+42native snapshots sample14animations at10/50/90percent; native fixtures do not
+replace actual gameplay, natural campaign, physical-device or human acceptance.

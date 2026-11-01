@@ -18,7 +18,7 @@ func run():
  assert(m!=null)
  root.add_child(m)
  inspect(m)
- for name in ["Bunny_Main","Bunny_Secondary","Eye_White","Eye_Black","Nose_Pink","Mouth_Dark","Belly_Fur","Bunny_Jacket","Neon_Trim","Pendant_Glow"]:
+ for name in ["Bunny_Main","Bunny_Secondary","Eye_White","Eye_Black","Nose_Pink","Mouth_Dark","Belly_Fur","Bunny_Jacket","Neon_Trim","Pendant_Glow","Neon_Magenta"]:
   assert(found.has(name))
  m.queue_free()
  await process_frame

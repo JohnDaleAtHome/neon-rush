@@ -10,6 +10,10 @@ func run():
  assert(g.meadow_visual.active)
  assert(g.meadow_visual.rolling_banks.size()==2)
  assert(g.meadow_visual.horizon_layers.size()==34)
+ for hill in g.meadow_visual.horizon_layers:
+  assert(hill.position.is_finite() and hill.scale.is_finite())
+  assert(hill.position.z< -80.0)
+ assert(g.env_world.environment.sky.sky_material.shader.resource_path.ends_with("meadow_sky.gdshader"))
  for x in [-53.8,-24.0,-3.8,3.8,24.0,53.8]:
   assert(absf(g.meadow_visual._bank_height(x,-144.0)+0.14)<0.001)
  for bank in g.meadow_visual.rolling_banks:
@@ -49,12 +53,12 @@ func run():
   var fern=g.scene_props[i]
   assert(fern.material_override is ShaderMaterial)
   var arr=fern.mesh.surface_get_arrays(0)
-  assert(arr[Mesh.ARRAY_VERTEX].size()==1404)
-  assert(arr[Mesh.ARRAY_COLOR].size()==1404)
+  assert(arr[Mesh.ARRAY_VERTEX].size()==2052)
+  assert(arr[Mesh.ARRAY_COLOR].size()==2052)
   fern_vertices+=arr[Mesh.ARRAY_VERTEX].size()
-  for k in range(1080,1404):assert(absf(fern.position.x+arr[Mesh.ARRAY_VERTEX][k].x*fern.scale.x)>=4.2499)
+  for k in range(1080,2052):assert(absf(fern.position.x+arr[Mesh.ARRAY_VERTEX][k].x*fern.scale.x)>=4.2499)
   for v in arr[Mesh.ARRAY_VERTEX]:assert(v.is_finite())
- assert(fern_vertices==67392)
+ assert(fern_vertices==98496)
  var original_props=g.scene_props.duplicate()
  g.options.light=true
  g.apply_options()

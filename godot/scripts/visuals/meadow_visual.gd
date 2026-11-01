@@ -176,8 +176,10 @@ func _build_horizon() -> void:
 			mesh.radial_segments = 20
 			mesh.rings = 10
 			hill.mesh = mesh
-			hill.scale = Vector3(hrng.randf_range(18,30),hrng.randf_range(6,11),hrng.randf_range(16,30))
-			hill.position = Vector3(-210.0+i*26.0+hrng.randf_range(-6,6),-3.0,-135.0-layer*38.0+hrng.randf_range(-8,8))
+			hill.scale = Vector3(hrng.randf_range(22,38),hrng.randf_range(7,17),hrng.randf_range(24,40))
+			var hill_x := -210.0+i*26.0+hrng.randf_range(-6,6)
+			var center_recede := (1.0-smoothstep(25.0,90.0,absf(hill_x)))*40.0
+			hill.position = Vector3(hill_x,-4.0,-105.0-layer*45.0-center_recede+hrng.randf_range(-12,12))
 			var hm := ShaderMaterial.new()
 			hm.shader = load("res://scripts/visuals/meadow_bank.gdshader")
 			hm.set_shader_parameter("grass_low",Vector3(0.04,0.10,0.065))
@@ -327,13 +329,14 @@ func _build_plants(main_node) -> void:
 			var base := Vector3(cos(angle)*radius,0,sin(angle)*radius)
 			for blade in range(3):
 				var turn := angle+blade*2.1
-				var across := Vector3(cos(turn),0,sin(turn))*0.045
-				var bend := Vector3(sin(turn),0,cos(turn))*0.10
-				var height := prng.randf_range(0.15,0.34)
+				var across := Vector3(cos(turn),0,sin(turn))*prng.randf_range(0.018,0.032)
+				var bend := Vector3(sin(turn),0,cos(turn))*prng.randf_range(0.10,0.22)
+				var height := prng.randf_range(0.16,0.38)
+				var middle := base+bend*0.23+Vector3.UP*height*0.66
 				var tip := base+bend+Vector3.UP*height
-				for v in [base-across,base+across,tip]:
-					st.set_normal(Vector3.UP)
-					st.set_color(Color(0.243,0.4,0.278,0.4) if blade%2==0 else Color(0.204,0.329,0.231,0.4))
+				for v in [base-across,base+across,middle+across*0.65,base-across,middle+across*0.65,middle-across*0.65,middle-across*0.65,middle+across*0.65,tip]:
+					st.set_normal((Vector3.UP*0.75-bend.normalized()*0.25).normalized())
+					st.set_color(Color(0.23,0.37,0.25,0.4) if blade%2==0 else Color(0.18,0.30,0.21,0.4))
 					st.add_vertex(v)
 		shrub.mesh = st.commit()
 		shrub.scale = Vector3.ONE*1.45

@@ -1,5 +1,6 @@
 """Build mochi.glb from bunny.glb: WIP concept-directed materials + skinned accessories.
-Keeps skeleton, all 14 animations, mesh/skin structure, and material names
+Preserves hierarchy and all 14 animation channels; adjusts ear/forearm bind scales.
+Keeps mesh/skin structure and material names
 Bunny_Main/Bunny_Secondary/Eye_White/Eye_Black (game tint compatibility)."""
 import json, sys, os
 import numpy as np
@@ -496,5 +497,41 @@ for p in prims:
 
 import os
 os.makedirs(os.path.dirname(DST), exist_ok=True)
+for n in js['nodes']:
+ if n.get('name') in ['Ear1.L','Ear1.R']:
+  n['scale']=[v*f for v,f in zip(n.get('scale',[1,1,1]),[0.96,0.74,0.96])]
+ if n.get('name') in ['LowerArm.L','LowerArm.R']:
+  n['scale']=[v*0.78 for v in n.get('scale',[1,1,1])]
+for p in js['meshes'][0]['primitives']:
+ name=js['materials'][p['material']]['name']
+ if name=='Mouth_Dark':
+  old=accessor(js,binb,p['attributes']['POSITION']);ids=np.unique(accessor(js,binb,p['indices']).astype(int))
+  nearest=ids[np.argmin(np.sum((old[ids]-[0,-0.0063,0.020])**2,axis=1))]
+  joints=accessor(js,binb,p['attributes']['JOINTS_0'])[nearest];weights=accessor(js,binb,p['attributes']['WEIGHTS_0'])[nearest]
+  v=[];n=[];faces=[]
+  for step in range(17):
+   t=-1+step/8
+   center=np.array([0.00145*t,-0.00625+0.0005*t*t,0.0197+0.00058*t*t])
+   for ring in range(6):
+    angle=2*np.pi*ring/6;normal=np.array([0,np.cos(angle),np.sin(angle)])
+    v.append(center+normal*0.000115);n.append(normal)
+  for step in range(16):
+   for ring in range(6):
+    aa=step*6+ring;bb=step*6+(ring+1)%6;cc=bb+6;dd=aa+6
+    faces.extend([[aa,bb,cc],[aa,cc,dd]])
+  p['attributes']={
+   'POSITION':add_accessor(js,binb,np.array(v,np.float32),'VEC3',34962),
+   'NORMAL':add_accessor(js,binb,np.array(n,np.float32),'VEC3'),
+   'JOINTS_0':add_accessor(js,binb,np.tile(joints,(len(v),1)).astype(np.uint8),'VEC4'),
+   'WEIGHTS_0':add_accessor(js,binb,np.tile(weights,(len(v),1)).astype(np.float32),'VEC4')}
+  p['indices']=add_accessor(js,binb,np.array(faces,np.uint32).reshape(-1),'SCALAR',34963)
+ if name in ['Eye_White','Eye_Black','Eye_Catch']:
+  v=accessor(js,binb,p['attributes']['POSITION']).astype(float)
+  for side in [-1,1]:
+   mask=v[:,0]*side>0
+   center=np.array([side*0.0041,-0.0033,0.02277])
+   v[mask]=center+(v[mask]-center)*np.array([0.88,0.68,0.9])
+  p['attributes']['POSITION']=add_accessor(js,binb,v.astype(np.float32),'VEC3',34962)
+
 save(DST, js, binb)
 print("wrote", DST, os.path.getsize(DST), "bytes;", len(js['accessors']), "accessors;", len(prims), "bunny prims")

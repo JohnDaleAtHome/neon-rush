@@ -1,42 +1,30 @@
 # Meadow visual candidate
 
-Scoped to level 0 (Neon Meadow), with Light quality off. It adds a calmer path,
-varied plants/stones, distant treeline, banks, fireflies, sky/fog and a contact
-shadow. This is a WIP visual direction, not finished environment art.
+Scoped to level 0 (Neon Meadow), with Light quality off. This is incremental WIP environment art, not style acceptance or a finished campaign.
 
-## Files and integration
+## Scene and lifecycle
 
-- `scripts/visuals/meadow_visual.gd` owns the scene module.
-- `scripts/visuals/meadow_terrain.gdshader` owns textured terrain, fog and fade.
-- `assets/visuals/meadow/` contains original procedurally authored PNG art.
-- Main calls `bind` after scenery creation, lets the module build props after
-  freeing the old props, and calls `apply` after restoring the base world.
-- Props use the existing scroll/wrap/free lifecycle. Horizon/shadow nodes are
-  created once and hidden outside the active theme. Light changes reapply the
-  current world, so Settings can remove and restore the module immediately.
+- `scripts/visuals/meadow_visual.gd` owns the module.
+- `meadow_terrain.gdshader` keeps the existing textured path.
+- `meadow_bank.gdshader` gives banks, underlay and hills an opaque world-space grass color and fragment-computed depth fog.
+- Two smooth-normal rolling bank meshes stay outside abs(x) 3.8. Their rear/outer edges taper to the continuous underlay. They replace the six small berms and hide the original side planes only in full Meadow.
+- Thirty-four overlapping 3D hills and thirty-six groves replace the two flat ridge quads. Groves remain within the shaped bank footprint.
+- Props total 98: 34 plant cards, 48 dimensional fern/shrub clumps, 8 stones and 8 fireflies. Their existing scroll/wrap/free lifecycle is preserved. Terrain-bound props recalculate their height against the bank as they move.
+- Main calls bind after scenery creation, lets the module build props after clearing old props, and applies the module after restoring the base world. Horizon and shadow are created once and hidden outside full Meadow. Light quality changes restore the original side planes and minimal scene.
+- Contact shadow follows the player. Collision, level timing and saves are unchanged.
 
-The underlay extends beneath the entire visible field, rather than beginning
-behind a transparent terrain fade. It uses the same lit terrain shader as the
-banks, with geometry fading disabled. This removes the former sky-through gap
-and strong diagonal colour wedge in the inspected desktop view. The contact
-shadow follows the player; no gameplay collision changes are introduced.
+The first rolling-bank draft exposed broad diagonal dark bands from repeating the gradient side texture over the mesh. Controlled replacement with world-space color noise removed those bands in inspected Web screenshots. Removing the alpha output alone had not fixed them. The opaque material and continuous underlay avoid transparent triangle sorting and ground gaps. Fog is computed per fragment rather than interpolating a fog value over large underlay triangles.
 
-## Combined lighting
+## Lighting
 
-Main uses direct-light energy 0.85 for the full Meadow candidate and 1.7 for
-other worlds/Light mode. Meadow ambient energy is 0.45; leaving the module
-restores the previous ambient values. Fur emission is zero with low rim and
-restrained eye emission, so white face form remains visible in the combined
-scene instead of clipping to a featureless white shape.
+Main uses direct-light energy 0.85 for full Meadow and 1.7 elsewhere/Light mode. Meadow ambient energy is 0.45; leaving the module restores prior ambient values. Existing restrained fur/eye emission and coordinated sky/fog remain.
 
-## Verification and limits
+## Verification
 
-See `VISUAL-CHECKPOINT.md` for the final integration evidence. Portrait
-390x844 and desktop1280x800 actual Web captures were inspected. Light quality
-on/off restores the minimal/full scene without duplicate props. A focused
-regression tests50Meadow props, cleanup, restored lighting, other-world/endless
-transitions and an opaque Settings/Stats panel.
+The 28 headless suites pass, including expanded visual integration coverage for bank geometry/corridor, far-edge taper, 98 props, height tracking, cleanup, Light restoration and other-world/endless transitions. The campaign fixture reaches all six levels and reunion in 8911 steps with zero deaths. That fixture is synthetic, not natural-play acceptance.
 
-The treeline remains graphic and flat, with a visible horizontal tonal region.
-Moons and near banks still need art review. This milestone does not settle
-physical-device performance, full-campaign art or human visual acceptance.
+Godot 4.7.2 import and release Web export succeed. Actual Web pixels were inspected at 390x844 and 1280x800 for start, scrolling, ducking and a visible bale/dew encounter. No browser page errors were recorded, and release QA state is undefined. Test labels do not prove a jump occurred: one timed Space capture showed the runner grounded.
+
+## Open limits
+
+The scene has more depth, but distant terrain still reads as a tonal horizon strip and trees/ferns remain simple low-poly forms. Plant cards, moons and the existing path fade remain visible stylistic seams. Mochi still needs rig-aware proportions/expression work. No physical-device performance, natural full-campaign acceptance, art approval or public deployment is claimed.

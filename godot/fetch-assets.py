@@ -2,8 +2,9 @@
 """Recover exact Godot assets from the companion stage. No third-party packages."""
 from pathlib import Path
 from urllib.request import urlopen
-import hashlib,json,sys
+import hashlib,json,sys,runpy
 ROOT=Path(__file__).resolve().parent
+runpy.run_path(str(ROOT/'restore-visual-assets.py'),run_name='__main__')
 manifest=json.loads((ROOT/'assets-manifest.json').read_text())
 for rel,entry in manifest.items():
     dest=ROOT/'assets'/rel

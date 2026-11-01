@@ -17,9 +17,20 @@ void fragment(){
  float far_fade = 1.0-smoothstep(46.0,112.0,view_depth);
  vec2 moving_point=world_point.xz+vec2(0.0,scroll*25.0);
  float grain=noise(moving_point*7.0)*0.7+noise(moving_point*1.1)*0.3;
- vec3 surface=mix(vec3(0.022,0.030,0.052),vec3(0.029,0.043,0.065),grain);
+ // Broad slate slabs with quiet engraved joints, not a stretched noise strip.
+ vec2 slab=vec2(world_point.x*0.62,moving_point.y*0.20);
+ float row=floor(slab.y);
+ slab.x+=mod(row,2.0)*0.5;
+ vec2 joint=abs(fract(slab)-0.5);
+ float seam=smoothstep(0.465,0.495,max(joint.x,joint.y));
+ float slab_tone=hash(floor(slab));
+ vec3 surface=mix(vec3(0.026,0.043,0.065),vec3(0.049,0.065,0.085),grain*0.35+slab_tone*0.30);
+ surface*=1.0-seam*0.26;
+ // Soft shoulder glow stays at the physical edge, outside all three lanes.
+ float shoulder=exp(-pow((abs(world_point.x)-3.65)*3.0,2.0));
+ surface+=vec3(0.012,0.05,0.055)*shoulder;
  ALBEDO = surface*(1.0-fog_amount);
- EMISSION = fog_color*fog_amount;
+ EMISSION = fog_color*fog_amount+vec3(0.0,0.015,0.022)*shoulder*(1.0-fog_amount);
  ROUGHNESS = 0.95;
  ALPHA = fade_geometry ? far_fade : 1.0;
 }

@@ -83,3 +83,8 @@ The current Meadow/horizon and full-game acceptance gaps remain unchanged.
 ## Meadow geometry increment - 1 November 2026
 
 The post-v35 local candidate replaces tiny berms/flat ridge quads with rolling bank meshes, overlapping 3D hills, groves and fern clusters. World-space bank color removes broad texture-induced diagonal bands. Bank edges taper to the underlay; terrain-bound props track the shaped bank while scrolling. Original side planes restore in Light mode and other themes. No gameplay/main-script changes are part of this increment. All 28 suites pass, with actual portrait/desktop scrolling and hazard/dew pixels inspected. See `godot/MEADOW-VISUAL.md` for exact evidence and remaining horizon, art and device gaps. This is an incremental WIP checkpoint, not concept fidelity or campaign art acceptance.
+
+
+## Solid Meadow foliage increment - 1 November 2026
+
+After v36,the34flat plant cards are replaced by single-mesh solid flower/reed clumps with stems/leaves and vertex colors. No new binary assets or shared gameplay code change. Path nonlinear fog/fade is calculated per fragment rather than per vertex. Expanded integration and all28suites pass;actual portrait/desktop scrolling,duck and bale/dew pixels inspected. The path still has a tonal seam and the distant horizon remains a strip. This is incremental WIP,not landscape-art approval or physical-device acceptance.

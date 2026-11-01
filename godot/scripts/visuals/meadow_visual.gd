@@ -75,7 +75,7 @@ func apply(index: int) -> void:
 	environment.fog_depth_curve = 1.25
 	environment.fog_light_color = MEADOW_FOG
 	environment.fog_light_energy = 1.0
-	environment.fog_sky_affect = 0.35
+	environment.fog_sky_affect = 0.0
 	if not ambient_saved:
 		saved_ambient_color = environment.ambient_light_color
 		saved_ambient_energy = environment.ambient_light_energy
@@ -192,7 +192,7 @@ func _build_horizon() -> void:
 	var grove_rng := RandomNumberGenerator.new()
 	grove_rng.seed = 771203
 	var leaf_mats: Array[ShaderMaterial] = []
-	for col in [Color("224c40"),Color("1c443c"),Color("2a5548")]:
+	for col in [Color("2a5549"),Color("21453e"),Color("3b6352")]:
 		var lm := ShaderMaterial.new()
 		lm.shader = load("res://scripts/visuals/meadow_foliage.gdshader")
 		lm.set_shader_parameter("base_color",Vector3(col.r,col.g,col.b))
@@ -204,6 +204,9 @@ func _build_horizon() -> void:
 		var side := -1.0 if i%2==0 else 1.0
 		var x := side*grove_rng.randf_range(15.0,48.0)
 		var z := grove_rng.randf_range(-125.0,-52.0)
+		if i<8:
+			x=side*grove_rng.randf_range(13.0,22.0)
+			z= -26.0-float(i)*6.0
 		var height := grove_rng.randf_range(5.0,10.0)
 		var tree := Node3D.new()
 		tree.position = Vector3(x,_bank_height(x,z),z)

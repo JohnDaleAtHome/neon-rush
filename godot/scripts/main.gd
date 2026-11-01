@@ -107,6 +107,11 @@ var last_open = false
 var fire_time = 0.0
 var pending_advance = false
 var rng = RandomNumberGenerator.new()
+var meadow_visual
+var world_sun: DirectionalLight3D
+var visual_world_index := 0
+var visual_light_enabled := false
+var visual_world_ready := false
 
 func material(color: Color, glow = false) -> StandardMaterial3D:
  var m = StandardMaterial3D.new()
@@ -141,6 +146,7 @@ func _ready():
  env.environment = e
  add_child(env)
  var sun = DirectionalLight3D.new()
+ world_sun = sun
  sun.rotation_degrees = Vector3(-40, -25, 0)
  sun.light_energy = 1.7
  add_child(sun)
@@ -176,7 +182,8 @@ func _ready():
   moon_glows.append(glow)
  player = Node3D.new()
  add_child(player)
- bunny = load("res://assets/bunny.glb").instantiate()
+ bunny = MochiVisual.create()
+ assert(bunny != null,"Mochi visual asset is required for review")
  player.add_child(bunny)
  bunny.scale = Vector3.ONE * 0.55
  find_animator(bunny)
@@ -186,6 +193,9 @@ func _ready():
  player.add_child(runner_variant)
  build_scenery()
  build_stars()
+ meadow_visual = load("res://scripts/visuals/meadow_visual.gd").new()
+ add_child(meadow_visual)
+ meadow_visual.bind(self)
  var layer = CanvasLayer.new()
  add_child(layer)
  var root = Control.new()
@@ -293,6 +303,7 @@ func _ready():
  configure_window()
  get_viewport().size_changed.connect(adapt_layout)
  adapt_layout()
+ NeonHudTheme.apply(root, {"primary": action, "pad": controls, "pause": pause_button, "hud": hud, "title": message, "status": status_label, "progress": progress_label, "dimmer": dimmer})
  var had_engine_options = FileAccess.file_exists("user://options.json") or browser_options_exist()
  load_stats()
  load_options()
@@ -306,7 +317,7 @@ func _ready():
  load_checkpoint()
  apply_options()
  apply_world(level if mode == "story" else -1)
- show_beat("Mochi and the Moon Bridge", "Mochi is Chang'e's rabbit. The eclipse shattered the bridge. Her silver bell still rings. Gather five pieces and find your way home.", "BEGIN / RESUME JOURNEY" if mode == "story" else "START " + display_mode(mode))
+ show_beat("Mochi and the Moon Bridge", NeonHudTheme.INTRO_WORDS, "BEGIN / RESUME JOURNEY" if mode == "story" else "START " + display_mode(mode))
  print("GODOT_READY ", Engine.get_version_info().string, " animations=", animation_names)
 
 func hide_carrot(node: Node):
@@ -540,12 +551,12 @@ func start_level():
  guardian_feedback_time = 0
  last_open = false
  apply_world(level if mode == "story" else 0 if mode == "mission" else -1)
- message.text = ["Gather six glowing dew drops. Jump bales, dodge bees.", "Silver Moon: long hops over crater lips.", "Cinnamon Moon: slide under branches; help a firefly.", "Storm Moon: jump waves, slide under lightning arches.", "Gather light: +1.4m. Hits cost4.5m. Keep the shadow away.", "Five lights open the palace. Align and FIRE when shield falls."][level]
+ message.text = NeonHudTheme.LEVEL_HINTS[level]
  if boss: boss.queue_free(); boss = null
  if mode == "story" and level == 5:
   assert(pieces.size() == 5)
   boss = create_guardian()
- if mode != "story": message.text = "CHASE: collect light and avoid hits. SLIDE under blue arches." if mode == "chase" else "MISSION: gather six mochi, cross the frost moon, face the guardian." if mode == "mission" else "Jump low blocks, dodge tall blocks. Three treats build a chain and a short magnet."
+ if mode != "story": message.text = NeonHudTheme.mode_hint(mode)
  apply_options()
  if options.sound: music_player.play()
 
@@ -815,6 +826,10 @@ func add_cue(hazard: Node3D, kind: String):
  hazard.add_child(label)
 
 func apply_world(index: int):
+ visual_world_index = index
+ if world_sun: world_sun.light_energy = 0.85 if index == 0 and not options.light else 1.7
+ visual_light_enabled = options.light
+ visual_world_ready = true
  var m = material(Color.WHITE if index >= 0 and index < 4 else COLORS[index] if index >= 0 else Color("77708e"))
  var theme = ["meadow", "sand", "grove", "sea", "comet", "palace"][maxi(index,0)]
  if index >= 0 and index < 4: m.albedo_texture = load("res://assets/textures/ground_" + theme + ".png")
@@ -867,6 +882,7 @@ func apply_world(index: int):
  environment.sky = sky
  environment.background_mode = Environment.BG_SKY
  sky_stars.visible = options.stars and not options.light
+ if meadow_visual: meadow_visual.apply(index)
 
 func terrain_material(source: StandardMaterial3D, fog_color: Color) -> ShaderMaterial:
  var result = ShaderMaterial.new()
@@ -1413,6 +1429,8 @@ func record_story_attempt(outcome: String):
  save_stats()
 
 func apply_options():
+ if visual_world_ready and visual_light_enabled != bool(options.light):
+  apply_world(visual_world_index)
  apply_system_motion()
  if not is_instance_valid(controls): return
  controls.visible = running and not paused and options.buttons
@@ -1571,6 +1589,7 @@ func open_settings():
  var safe_space = Control.new()
  safe_space.custom_minimum_size.y = 24
  list.add_child(safe_space)
+ NeonHudTheme.style_popup(list)
 
 func mode_records_text(key: String, record: Dictionary) -> String:
  return "%s\nBest score: %d pts\nLongest distance: %dm\nMost treats: %d\nLongest time: %ds\nRecorded %s: %d" % [display_mode(key),int(record.get("best",0)),int(record.get("distance",0)),int(record.get("treats",0)),int(record.get("seconds",0)),"level attempts" if key == "story" else "attempts",int(record.get("runs",0))]
@@ -1630,6 +1649,7 @@ func open_stats():
  order.item_selected.connect(func(_i): refresh.call())
  limit.toggled.connect(func(_on): refresh.call())
  refresh.call()
+ NeonHudTheme.style_popup(list)
 
 func shown_average(rows: Array) -> String:
  if rows.is_empty(): return ""
@@ -1778,6 +1798,7 @@ func build_level_props(index: int):
  for p in scene_props: p.queue_free()
  scene_props.clear()
  if index < 0 or options.light: return
+ if meadow_visual and meadow_visual.build_props(self, index): return
  for i in range(30):
   var side = -1 if i % 2 == 0 else 1
   var at = Vector3(side * (5.2 + (i%3)*1.6),0.1,-i*4.5-8)

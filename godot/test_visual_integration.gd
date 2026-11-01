@@ -1,0 +1,47 @@
+extends SceneTree
+func _init(): call_deferred("run")
+func run():
+ var g=load("res://scenes/main.tscn").instantiate()
+ root.add_child(g)
+ await process_frame
+ g.set_process(false)
+ g.options.light=false
+ g.apply_world(0)
+ assert(g.meadow_visual.active)
+ assert(is_equal_approx(g.world_sun.light_energy,0.85))
+ assert(g.animation_names.size()==14)
+ assert(g.scene_props.size()==50)
+ var original_props=g.scene_props.duplicate()
+ g.options.light=true
+ g.apply_options()
+ assert(not g.meadow_visual.active)
+ assert(is_equal_approx(g.world_sun.light_energy,1.7))
+ assert(not g.meadow_visual.horizon_root.visible)
+ assert(not g.meadow_visual.shadow.visible)
+ assert(g.scene_props.is_empty())
+ await process_frame
+ for p in original_props: assert(not is_instance_valid(p))
+ g.options.light=false
+ g.apply_options()
+ assert(g.meadow_visual.active)
+ assert(g.scene_props.size()==50)
+ assert(g.meadow_visual.horizon_root.visible)
+ g.apply_world(1)
+ assert(not g.meadow_visual.active)
+ assert(not g.meadow_visual.horizon_root.visible)
+ assert(g.scene_props.size()==30)
+ g.apply_world(-1)
+ assert(not g.meadow_visual.active)
+ assert(g.scene_props.is_empty())
+ g.apply_world(0)
+ assert(g.meadow_visual.active)
+ assert(g.scene_props.size()==50)
+ var popup=g.popup_frame("TEST")
+ NeonHudTheme.style_popup(popup)
+ var frame=popup.get_parent().get_parent()
+ assert(frame is PanelContainer)
+ assert(is_equal_approx(frame.get_theme_stylebox("panel").bg_color.a,1.0))
+ print("PASS Meadow light-toggle cleanup/restoration, theme transitions and opaque HUD popup")
+ g.queue_free()
+ await process_frame
+ quit()

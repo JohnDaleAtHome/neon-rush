@@ -57,12 +57,16 @@ func run():
   var fern=g.scene_props[i]
   assert(fern.material_override is ShaderMaterial)
   var arr=fern.mesh.surface_get_arrays(0)
-  assert(arr[Mesh.ARRAY_VERTEX].size()==2052)
-  assert(arr[Mesh.ARRAY_COLOR].size()==2052)
+  assert(arr[Mesh.ARRAY_VERTEX].size()==2376)
+  assert(arr[Mesh.ARRAY_COLOR].size()==2376)
   fern_vertices+=arr[Mesh.ARRAY_VERTEX].size()
-  for k in range(1080,2052):assert(absf(fern.position.x+arr[Mesh.ARRAY_VERTEX][k].x*fern.scale.x)>=4.2499)
+  for k in range(1080,2376):assert(absf(fern.position.x+arr[Mesh.ARRAY_VERTEX][k].x*fern.scale.x)>=4.2499)
   for v in arr[Mesh.ARRAY_VERTEX]:assert(v.is_finite())
- assert(fern_vertices==98496)
+ assert(fern_vertices==114048)
+ var canopy=g.meadow_visual._canopy_mesh(1.2,46)
+ var canopy_vertices=canopy.surface_get_arrays(0)[Mesh.ARRAY_VERTEX]
+ assert(canopy_vertices.size()==576)
+ for v in canopy_vertices:assert(v.is_finite() and v.length()<1.5)
  var original_props=g.scene_props.duplicate()
  g.options.light=true
  g.apply_options()

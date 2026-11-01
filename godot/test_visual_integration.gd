@@ -34,6 +34,9 @@ func run():
  assert(chip.bg_color.a<0.8)
  for moon in g.moons:assert(moon.material_override.shader.resource_path.ends_with("meadow_moon.gdshader"))
  assert(g.scene_props.size()==98)
+ assert(g.moons[0].scale.is_equal_approx(Vector3.ONE*1.55))
+ assert(g.moons[1].scale.is_equal_approx(Vector3.ONE*0.75))
+ assert(g.moons[2].scale.is_equal_approx(Vector3.ONE*0.50))
  var flower_vertices=0
  for i in range(34):
   var plant=g.scene_props[i]
@@ -71,6 +74,7 @@ func run():
  g.options.light=true
  g.apply_options()
  assert(not g.meadow_visual.active)
+ for moon in g.moons:assert(moon.scale.is_equal_approx(Vector3.ONE))
  for moon in g.moons:assert(moon.material_override.shader.resource_path=="res://scripts/moon.gdshader")
  for side in g.side_planes:assert(side.visible)
  assert(is_equal_approx(g.world_sun.light_energy,1.7))

@@ -1,8 +1,8 @@
 shader_type spatial;
 render_mode fog_disabled;
 uniform vec3 fog_color : source_color = vec3(0.1,0.2,0.1);
-uniform vec3 grass_low : source_color = vec3(0.055,0.11,0.063);
-uniform vec3 grass_high : source_color = vec3(0.078,0.15,0.088);
+uniform vec3 grass_low : source_color = vec3(0.075,0.15,0.085);
+uniform vec3 grass_high : source_color = vec3(0.14,0.235,0.135);
 varying float view_depth;
 varying vec3 world_point;
 float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
@@ -13,7 +13,7 @@ void vertex(){
  view_depth = depth;
 }
 void fragment(){
- float patch=noise(world_point.xz*0.22)*0.7+noise(world_point.xz*1.7)*0.3;
+ float patch=noise(world_point.xz*0.14)*0.6+noise(world_point.xz*0.75)*0.3+noise(world_point.xz*6.0)*0.1;
  float fog_amount = smoothstep(20.0,140.0,view_depth);
  vec3 surface=mix(grass_low,grass_high,patch);
  ALBEDO = surface*(1.0-fog_amount);

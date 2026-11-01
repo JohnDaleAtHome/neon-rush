@@ -6,6 +6,16 @@ func inspect(n):
   for i in range(n.mesh.get_surface_count()):
    var mat=n.mesh.surface_get_material(i)
    if mat:found[String(mat.resource_name)]=true
+   if mat and String(mat.resource_name)=="Bunny_Main":
+    var shell=mat.next_pass
+    var count=0
+    while shell:
+     assert(shell is ShaderMaterial)
+     assert(shell.shader.resource_path.ends_with("mochi_fur_shell.gdshader"))
+     count+=1
+     assert(count<=1)
+     shell=shell.next_pass
+    assert(count==1)
    var a=n.mesh.surface_get_arrays(i)
    var v=a[Mesh.ARRAY_VERTEX]
    for p in v:assert(p.is_finite())

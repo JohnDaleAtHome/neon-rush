@@ -250,9 +250,9 @@ func _build_horizon() -> void:
 			leaf.mesh = _canopy_mesh(sphere.radius,i*7+crown)
 			var angle := crown*2.4
 			var reach := height*(0.19 if crown<5 else 0.08)
-			leaf.position = Vector3(cos(angle)*reach,height*(0.58+0.055*crown),sin(angle)*reach)
+			leaf.position = Vector3(cos(angle)*reach,height*(0.60+0.055*crown),sin(angle)*reach)
 			leaf.rotation.y = angle
-			leaf.scale = Vector3(1.2,1.0,0.86)
+			leaf.scale = Vector3(1.12+float((i+crown)%3)*0.10,0.95+float(crown%3)*0.11,0.90)
 			leaf.material_override = leaf_mats[(i+crown)%leaf_mats.size()]
 			tree.add_child(leaf)
 		horizon_root.add_child(tree)
@@ -304,7 +304,8 @@ func _build_plants(main_node) -> void:
 		var plant := MeshInstance3D.new()
 		plant.mesh = _flower_clump(i%3,prng)
 		plant.material_override = flower_material
-		plant.position = Vector3(side*(4.9+prng.randf()*3.4),0,-6.0-i*4.1-prng.randf()*2.4)
+		var drift := int(i/4)
+		plant.position = Vector3(side*(6.0+float(i%2)*2.0+prng.randf()),0,-8.0-float(drift)*15.5-float(i%4)*0.7)
 		plant.set_meta("bank_clearance",0.0)
 		plant.position.y = _bank_height(plant.position.x,plant.position.z)
 		plant.rotation.y = prng.randf_range(-PI,PI)
@@ -333,37 +334,33 @@ func _build_plants(main_node) -> void:
 				for sign_x in [-1.0,1.0]:
 					_append_fern_leaf(st,center,across*sign_x+direction*0.45+Vector3.UP*0.55,length,Color("3e725a"))
 			_append_fern_leaf(st,direction*reach*0.84+Vector3.UP*high*0.95,direction,0.18,Color("527f65"))
-		# Broad curved ground-cover leaves, clustered across the rolling banks.
-		for tuft in range(4):
+		# Dense meadow drifts: many narrow tapered blades, not sparse broad shards.
+		for blade in range(72):
 			var angle := prng.randf()*TAU
-			var radius := sqrt(prng.randf())*4.1
+			var radius := sqrt(prng.randf())*1.65
 			var base := Vector3(cos(angle)*radius,0,sin(angle)*radius)
-			for blade in range(3):
-				var turn := angle+blade*2.1
-				var across := Vector3(cos(turn),0,sin(turn))*prng.randf_range(0.10,0.17)
-				var bend := Vector3(sin(turn),0,cos(turn))*prng.randf_range(0.25,0.48)
-				var height := prng.randf_range(0.08,0.21)
-				for section in range(3):
-					for arc in range(6):
-						var points: Array[Vector3] = []
-						var normals: Array[Vector3] = []
-						for q in [Vector2(section,arc),Vector2(section+1,arc),Vector2(section+1,arc+1),Vector2(section,arc+1)]:
-							var t: float = q.x/3.0
-							var angle_leaf: float = q.y*TAU/6.0
-							var width := pow(sin(t*PI),0.65)*0.95+0.015
-							var center := base+bend*t+Vector3.UP*sin(t*PI*0.7)*height
-							points.append(center+across*width*cos(angle_leaf)+Vector3.UP*width*sin(angle_leaf)*0.045)
-							normals.append((across.normalized()*cos(angle_leaf)*0.45+Vector3.UP*sin(angle_leaf)).normalized())
-						for k in [0,2,1,0,3,2]:
-							st.set_normal(normals[k])
-							st.set_color(Color(0.17,0.34,0.29,0.4) if blade%2==0 else Color(0.12,0.27,0.25,0.4))
-							st.add_vertex(points[k])
+			var turn := angle+prng.randf_range(-1.0,1.0)
+			var across := Vector3(cos(turn),0,sin(turn))*prng.randf_range(0.025,0.055)
+			var bend := Vector3(sin(turn),0,cos(turn))*prng.randf_range(0.10,0.25)
+			var height := prng.randf_range(0.25,0.65)*(1.0-radius*0.22)
+			for section in range(3):
+				var points: Array[Vector3] = []
+				for q in [Vector2(section,-1),Vector2(section,1),Vector2(section+1,1),Vector2(section+1,-1)]:
+					var t: float = q.x/3.0
+					var width := (1.0-t)*0.85+0.02
+					points.append(base+bend*t*t+Vector3.UP*height*t+across*width*q.y)
+				for k in [0,2,1,0,3,2]:
+					st.set_normal((Vector3.UP*0.65+across.normalized()*0.35).normalized())
+					st.set_color(Color(0.10,0.23,0.23,0.4).lerp(Color(0.24,0.42,0.39,0.4),float(section)/3.0))
+					st.add_vertex(points[k])
 
 		shrub.mesh = st.commit()
 		shrub.scale = Vector3.ONE*1.45
 		shrub.material_override = shrub_material
 		var side := -1 if i%2==0 else 1
-		shrub.position = Vector3(side*prng.randf_range(5.0,24.0),0,-4.0-i*2.9)
+		var drift := int(i/6)
+		var tier := i%6
+		shrub.position = Vector3(side*(6.2+float(tier%3)*1.5+sin(drift*1.7)*0.6),0,-5.0-float(drift)*17.0-float(tier/3)*4.0-prng.randf()*4.0)
 		shrub.position.y = _bank_height(shrub.position.x,shrub.position.z)
 		# Anchor only the new short grass to sloped banks and protect the corridor.
 		var arrays := shrub.mesh.surface_get_arrays(0)
@@ -516,7 +513,7 @@ func _canopy_mesh(radius: float, seed_id: int) -> ArrayMesh:
 				var phi: float = q.y*PI/8.0
 				var theta: float = q.x*TAU/12.0
 				var normal := Vector3(sin(phi)*cos(theta),cos(phi),sin(phi)*sin(theta))
-				var lobe := 1.0+0.09*sin(theta*5.0+seed_id)*sin(phi*4.0)+0.06*cos(phi*7.0+theta*3.0)
+				var lobe := 1.0+0.14*sin(theta*5.0+seed_id)*sin(phi*4.0)+0.08*cos(phi*7.0+theta*3.0)
 				points.append(normal*radius*lobe*Vector3(1.0,0.78,1.0))
 			for k in [0,2,1,0,3,2]:
 				st.set_normal(points[k].normalized())

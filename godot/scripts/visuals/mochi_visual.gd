@@ -66,6 +66,10 @@ static func _enhance(node: Node) -> void:
 							coat.set_shader_parameter("layer",float(layer+1))
 							previous.next_pass=coat
 							previous=coat
+				"Bunny_Jacket":
+					var cloth := ShaderMaterial.new()
+					cloth.shader = load("res://scripts/visuals/mochi_jacket.gdshader")
+					mi.set_surface_override_material(i, cloth)
 				"Scarf_Navy", "Scarf_Seam":
 					var scarf := ShaderMaterial.new()
 					scarf.shader = load("res://scripts/visuals/mochi_scarf.gdshader")

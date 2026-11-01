@@ -48,6 +48,8 @@ level0 Meadow module and moon-themed HUD. Lighting preserves face form; this
 is still not a finished match to the concept. Level0 scenery is a review
 candidate, not final environment art or a pass on other levels. See
 VISUAL-CHECKPOINT.md for remaining character/treeline and acceptance gaps.
-The source now tracks new visual assets; original28baseline assets still use
-the preserved checksum recovery workflow. Official and immutable review builds
+The source tracks exact new visual bytes in an ASCII sourcepack, not native
+PNG/GLB Git blobs. Run `python3 godot/fetch-assets.py` before import: the12new
+visual assets restore offline from trackedchunks with SHA256checks; original28
+baseline assets still use the preserved checksum network recovery workflow. Official and immutable review builds
 are unchanged by source integration.

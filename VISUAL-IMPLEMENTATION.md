@@ -100,3 +100,11 @@ longer claimed. This is exploratory concept-directed work, not accepted final
 art. Bulky fingers, simple fur, jacket detail and round eye forms remain.
 42native snapshots sample14animations at10/50/90percent; native fixtures do not
 replace actual gameplay, natural campaign, physical-device or human acceptance.
+
+
+## v40 white-fur/cuff WIP
+Runtime main/belly fur albedo is a lighter cool white instead of blue-grey.
+Dark wrist cuffs with narrow magenta piping are clipped from the forearm mesh
+and preserve its skin weights, rather than floating rigid rings. This is a
+small costume increment, not final concept fidelity; fingers, eyes, silhouette,
+fur surface and most costume details remain simplified. No mechanic changes.

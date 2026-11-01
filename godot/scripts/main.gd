@@ -1921,10 +1921,13 @@ func layout_moons(size: Vector2):
  if moons.size() != 3: return
  var landscape = size.x > size.y
  for i in range(moons.size()):
+  moons[i].scale=Vector3.ONE
   var fraction = (0.40 + i*0.10) if landscape else (0.20+i*0.25)
   var pixel_y = maxf(265.0,size.y*0.32)+(1-i)*13.0
   # Keep celestial silhouettes below the full objective text band.
   moons[i].position = camera.project_position(Vector2(size.x*fraction,pixel_y),60.0+i*15.0)
+
+ if meadow_visual and meadow_visual.active: meadow_visual.layout_moons(size)
 
 func configure_window():
  var physical = get_window().size

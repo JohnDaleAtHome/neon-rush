@@ -301,11 +301,16 @@ def fur_tuft(center, direction, width, length):
       'WEIGHTS_0':add_accessor(js,binb,np.tile(wts0[ni],(len(vv),1)).astype(np.float32),'VEC4')},
       'indices':add_accessor(js,binb,ff.astype(np.uint32).reshape(-1),'SCALAR',34963),
       'material':0,'mode':4})
+# Layered swept cheek/neck tufts replace the three large outward spikes.
 for sign in [-1,1]:
-    for z,dx,dz in [(0.0205,1,-0.15),(0.0194,0.9,-0.45),(0.0214,1,0.2)]:
-        fur_tuft(np.array([sign*0.0045,-0.0028,z]),[sign*dx,0,dz],0.00065,0.0013)
-for x,z,d in [(-0.0015,0.026,[0.4,0,1]),(0,0.0262,[-0.4,0,1]),(0.0015,0.0259,[0.8,0,0.8])]:
-    fur_tuft(np.array([x,-0.0006,z]),d,0.0008,0.0018)
+    for i in range(5):
+        z=0.0191+i*0.00048
+        fur_tuft(np.array([sign*(0.0048+0.00015*np.sin(i)), -0.0020,z]),
+                 [sign*0.75,0.55,(i-3)*0.12],0.00053,0.00065+(i%3)*0.00012)
+for i in range(5):
+    x=(i-2)*0.00065
+    fur_tuft(np.array([x,-0.00035,0.0261-abs(x)*0.18]),
+             [0.25,0.65,0.7],0.00064,0.0013+(i%2)*0.0003)
 
 # --- accessories (world bind space) ---
 height = size[1]
@@ -374,6 +379,25 @@ if sv:
         at[key]=add_accessor(js,binb,np.array(data,dtype=np.uint8 if key=='JOINTS_0' else np.float32),typ,34962 if key=='POSITION' else None)
     prims.append({'attributes':at,'indices':add_accessor(js,binb,np.array(sf,np.uint32).reshape(-1),'SCALAR',34963),'material':MAT_TRIM,'mode':4})
 print('clipped jacket',len(V),'vertices',len(F),'faces')
+
+# Thin magenta stitched hem follows the clipped garment boundary, not a lathe ring.
+MAT_STITCH=len(mats);mats.append({'name':'Jacket_Stitch','doubleSided':True,'pbrMetallicRoughness':{'baseColorFactor':[0.78,0.12,0.51,1],'metallicFactor':0,'roughnessFactor':.6},'emissiveFactor':[.20,.005,.065]})
+from collections import Counter
+edges=Counter(tuple(sorted((int(a),int(b)))) for f in F for a,b in zip(f,np.roll(f,-1)))
+sv=[];sn=[];sj=[];sw=[];sf=[]
+for f in F:
+ for aa,bb in zip(f,np.roll(f,-1)):
+  if edges[tuple(sorted((int(aa),int(bb))))]!=1:continue
+  if max(V[aa,2],V[bb,2])>0.0141:continue
+  cc=next(k for k in f if k not in [aa,bb]);base=len(sv)
+  for q,t in [(aa,0),(bb,0),(bb,.08),(aa,.08)]:
+   sv.append(V[q]*(1-t)+V[cc]*t+N[q]*.00004);sn.append(N[q]);sj.append(J[q]);sw.append(W[q])
+  sf.extend([[base,base+1,base+2],[base,base+2,base+3]])
+if sv:
+ at={}
+ for key,data,typ in [('POSITION',sv,'VEC3'),('NORMAL',sn,'VEC3'),('JOINTS_0',sj,'VEC4'),('WEIGHTS_0',sw,'VEC4')]:
+  at[key]=add_accessor(js,binb,np.array(data,dtype=np.uint8 if key=='JOINTS_0' else np.float32),typ,34962 if key=='POSITION' else None)
+ prims.append({'attributes':at,'indices':add_accessor(js,binb,np.array(sf,np.uint32).reshape(-1),'SCALAR',34963),'material':MAT_STITCH,'mode':4})
 
 def skinned_prim(verts, normals, faces, ref_pos, mat_idx, tag, ref_mask=None, forced=None):
     """verts in world bind space; copy weights from nearest reference body vert
@@ -479,7 +503,7 @@ print('catchlights', len(Vv), 'verts')
 ci = int(NR*0.62)
 c = centers[ci]; r=radii[ci]
 cxy = c + np.array([0,0,r+margin+height*0.065])
-Vv,Nn,Ff = crescent(cxy, height*0.046, height*0.016, [0,0,1])
+Vv,Nn,Ff = crescent(cxy, height*0.034, height*0.010, [0,0,1])
 # rigid charm: every pendant vert uses the weights of the single nearest body
 # vert, so the crescent never shears when the torso bends
 d2 = ((allv-cxy)**2).sum(1); d2[~torso_mask]=1e18
@@ -494,6 +518,35 @@ for p in prims:
     cheek=np.exp(-((z-0.0208)/0.0034)**2)
     vv[:,0]*=1+0.13*cheek
     p['attributes']['POSITION']=add_accessor(js,binb,vv.astype(np.float32),'VEC3',34962)
+
+# Boot ankle bands and cyan soles: clipped from the weighted foot shell.
+for side in ['L','R']:
+    foot=jnames.index('Foot.'+side)
+    local=(np.linalg.inv(G[skin['joints'][foot]])@np.concatenate([wpos,np.ones((len(wpos),1))],axis=1).T).T[:,:3]
+    region=np.where(domname=='Foot.'+side)[0]
+    # World vertical bands preserve the original foot silhouette and skin weights.
+    lo,hi=np.percentile(wpos[region,1],[0,100])
+    for material,low,high in [(MAT_TRIM,lo,lo+(hi-lo)*.09),(MAT_TRIM,lo+(hi-lo)*.94,hi)]:
+        V=[];N=[];J=[];W=[];F=[]
+        for face in idx[np.isin(domname[idx],['Foot.'+side]).all(1)]:
+            poly=[]
+            for vi in face:
+                weights=np.zeros(len(jnames))
+                for ji,ww in zip(jix[vi],wts[vi]):weights[ji]+=ww
+                poly.append((wpos[vi],pos[vi],nrm[vi],weights))
+            poly=clip(clip(poly,1,low,True),1,high,False)
+            if len(poly)<3:continue
+            base=len(V)
+            for wp,v,n,weights in poly:
+                jsort=np.argsort(weights)[-4:][::-1];ws=weights[jsort];ws/=ws.sum()
+                sc=np.cbrt(abs(np.linalg.det(JG[jsort[0]][:3,:3])))
+                V.append(v+n*(off_boot*1.16/sc));N.append(n);J.append(jsort);W.append(ws)
+            for k in range(1,len(poly)-1):F.append([base,base+k,base+k+1])
+        if V:
+            at={}
+            for key,data,typ in [('POSITION',V,'VEC3'),('NORMAL',N,'VEC3'),('JOINTS_0',J,'VEC4'),('WEIGHTS_0',W,'VEC4')]:
+                at[key]=add_accessor(js,binb,np.array(data,dtype=np.uint8 if key=='JOINTS_0' else np.float32),typ,34962 if key=='POSITION' else None)
+            prims.append({'attributes':at,'indices':add_accessor(js,binb,np.array(F,np.uint32).reshape(-1),'SCALAR',34963),'material':material,'mode':4})
 
 # Wrist cuffs: bands follow the actual lower-arm surface and original skin weights.
 MAT_MAGENTA=len(mats);mats.append({'name':'Neon_Magenta','doubleSided':True,'pbrMetallicRoughness':{'baseColorFactor':[0.75,0.12,0.48,1],'metallicFactor':0.0,'roughnessFactor':0.5},'emissiveFactor':[0.32,0.015,0.12]})
@@ -532,9 +585,14 @@ for n in js['nodes']:
  if n.get('name') in ['Ear1.L','Ear1.R']:
   n['scale']=[v*f for v,f in zip(n.get('scale',[1,1,1]),[0.96,0.74,0.96])]
  if n.get('name') in ['LowerArm.L','LowerArm.R']:
-  n['scale']=[v*0.78 for v in n.get('scale',[1,1,1])]
+  n['scale']=[v*f for v,f in zip(n.get('scale',[1,1,1]),[0.69,0.73,0.69])]
 for p in js['meshes'][0]['primitives']:
  name=js['materials'][p['material']]['name']
+ if name=='Nose_Pink':
+  v=accessor(js,binb,p['attributes']['POSITION']).astype(float)
+  ids=np.unique(accessor(js,binb,p['indices']).astype(int));center=v[ids].mean(0)
+  v[ids]=center+(v[ids]-center)*np.array([0.80,0.86,0.80])
+  p['attributes']['POSITION']=add_accessor(js,binb,v.astype(np.float32),'VEC3',34962)
  if name=='Mouth_Dark':
   old=accessor(js,binb,p['attributes']['POSITION']);ids=np.unique(accessor(js,binb,p['indices']).astype(int))
   nearest=ids[np.argmin(np.sum((old[ids]-[0,-0.0063,0.020])**2,axis=1))]

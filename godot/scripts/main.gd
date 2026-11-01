@@ -1487,10 +1487,13 @@ func apply_bunny_tint(node: Node):
  if node is MeshInstance3D:
   for i in range(node.get_surface_override_material_count()):
    var src = node.mesh.surface_get_material(i)
-   if src is StandardMaterial3D:
+   if src is StandardMaterial3D and String(src.resource_name) in ["Bunny_Secondary", "Eye_White"]:
     var m = src.duplicate()
     if String(src.resource_name) == "Bunny_Secondary": m.albedo_color = Color("9ed6af") if options.color == "mint" else Color("ba9cdd") if options.color == "violet" else Color("e7a3ba")
-    if String(src.resource_name) == "Eye_White" and options.gold and gold_unlocked: m.albedo_color = Color("ffdc78")
+    if String(src.resource_name) == "Eye_White" and options.gold and gold_unlocked:
+     m.albedo_color = Color("ffdc78")
+     m.vertex_color_use_as_albedo = false
+     m.emission = Color("ffdc78")
     node.set_surface_override_material(i,m)
  for child in node.get_children(): apply_bunny_tint(child)
 

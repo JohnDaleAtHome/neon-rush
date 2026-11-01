@@ -34,9 +34,9 @@ static func _enhance(node: Node) -> void:
 			var m := mi.mesh.surface_get_material(i) as StandardMaterial3D
 			if m == null: continue
 			match String(m.resource_name):
-				"Bunny_Main", "Bunny_Secondary":
+				"Bunny_Main", "Bunny_Secondary", "Belly_Fur":
 					# soft fur: matte finish, subtle luminous edge, no metal
-					m.albedo_color = Color("a9b5c5") if String(m.resource_name) == "Bunny_Main" else m.albedo_color
+					m.albedo_color = Color("a9b5c5") if String(m.resource_name) in ["Bunny_Main", "Belly_Fur"] else m.albedo_color
 					m.metallic = 0.0
 					m.roughness = 0.85
 					m.rim_enabled = true

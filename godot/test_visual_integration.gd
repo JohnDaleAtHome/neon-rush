@@ -24,6 +24,7 @@ func run():
  for side in g.side_planes:assert(not side.visible)
  assert(is_equal_approx(g.world_sun.light_energy,0.85))
  assert(g.animation_names.size()==14)
+ for moon in g.moons:assert(moon.material_override.shader.resource_path.ends_with("meadow_moon.gdshader"))
  assert(g.scene_props.size()==98)
  var flower_vertices=0
  for i in range(34):
@@ -48,15 +49,17 @@ func run():
   var fern=g.scene_props[i]
   assert(fern.material_override is ShaderMaterial)
   var arr=fern.mesh.surface_get_arrays(0)
-  assert(arr[Mesh.ARRAY_VERTEX].size()==1080)
-  assert(arr[Mesh.ARRAY_COLOR].size()==1080)
+  assert(arr[Mesh.ARRAY_VERTEX].size()==1404)
+  assert(arr[Mesh.ARRAY_COLOR].size()==1404)
   fern_vertices+=arr[Mesh.ARRAY_VERTEX].size()
+  for k in range(1080,1404):assert(absf(fern.position.x+arr[Mesh.ARRAY_VERTEX][k].x*fern.scale.x)>=4.2499)
   for v in arr[Mesh.ARRAY_VERTEX]:assert(v.is_finite())
- assert(fern_vertices==51840)
+ assert(fern_vertices==67392)
  var original_props=g.scene_props.duplicate()
  g.options.light=true
  g.apply_options()
  assert(not g.meadow_visual.active)
+ for moon in g.moons:assert(moon.material_override.shader.resource_path=="res://scripts/moon.gdshader")
  for side in g.side_planes:assert(side.visible)
  assert(is_equal_approx(g.world_sun.light_energy,1.7))
  assert(not g.meadow_visual.horizon_root.visible)
@@ -73,6 +76,7 @@ func run():
  assert(not g.meadow_visual.active)
  assert(not g.meadow_visual.horizon_root.visible)
  assert(g.scene_props.size()==30)
+ for moon in g.moons:assert(moon.material_override.shader.resource_path=="res://scripts/moon.gdshader")
  g.apply_world(-1)
  assert(not g.meadow_visual.active)
  assert(g.scene_props.is_empty())

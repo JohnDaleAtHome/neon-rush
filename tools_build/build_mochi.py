@@ -717,15 +717,57 @@ for primitive in prims:
    v[mask,2]=.02330+(v[mask,2]-c[2])*.00031/ext[2]
    v[mask,1]=-.00454+(v[mask,1]-c[1])*.000025/ext[1]+(np.abs(v[mask,0])-.0040)*.50
  primitive['attributes']['POSITION']=add_accessor(js,binb,v.astype(np.float32),'VEC3',34962)
+# Fit each lens to the sampled front face, including its curvature.
+body_primitive=prims[0]
+body_points=accessor(js,binb,body_primitive['attributes']['POSITION']).astype(float)
+body_faces=accessor(js,binb,body_primitive['indices']).reshape(-1,3)
+face_triangles=body_points[body_faces]
+face_triangles=face_triangles[(face_triangles[:,:,2].min(1)>.018)&(face_triangles[:,:,2].max(1)<.026)&(face_triangles[:,:,1].mean(1)<-.002)]
+def face_depth(x,z):
+ hits=[]
+ for tri in face_triangles:
+  mat=np.stack([tri[1,[0,2]]-tri[0,[0,2]],tri[2,[0,2]]-tri[0,[0,2]]],axis=1)
+  if abs(np.linalg.det(mat))<1e-12:continue
+  uv=np.linalg.solve(mat,np.array([x,z])-tri[0,[0,2]])
+  if min(uv)>=-1e-6 and sum(uv)<=1.000001:hits.append(tri[0,1]+uv[0]*(tri[1,1]-tri[0,1])+uv[1]*(tri[2,1]-tri[0,1]))
+ if hits:return min(hits)
+ distance=np.sum((body_points[:,[0,2]]-[x,z])**2,axis=1)
+ valid=np.where((body_points[:,1]<-.002)&(body_points[:,2]>.018)&(body_points[:,2]<.026))[0]
+ return body_points[valid[distance[valid].argmin()],1]
+for primitive in prims:
+ name=mats[primitive['material']]['name']
+ if name not in ['Eye_White','Eye_Black','Eye_Catch']:continue
+ vv=[];nn=[];ff=[];jj=[];ww=[]
+ for side in [-1,1]:
+  cx=side*.00365;cz=.02275
+  rx,rz,offset={'Eye_White':(.00122,.00162,.00017),'Eye_Black':(.00048,.00097,.00029),'Eye_Catch':(.00020,.00028,.00043)}[name]
+  if name=='Eye_Catch':cx-=.00020;cz+=.00055
+  start=len(vv)
+  for ring in range(6):
+   radius=ring/5
+   for k in range(48):
+    angle=k*2*np.pi/48;x=cx+np.cos(angle)*rx*radius;z=cz+np.sin(angle)*rz*radius
+    y=face_depth(x,z)-offset-(1-radius*radius)*.00004
+    vv.append([x,y,z]);normal=np.array([side*.45,-1,.05]);normal/=np.linalg.norm(normal);nn.append(normal)
+    vi=int(np.sum((pos0-[x,y,z])**2,axis=1).argmin());jj.append(jix0[vi]);ww.append(wts0[vi])
+  for ring in range(5):
+   for k in range(48):
+    a=start+ring*48+k;b=start+ring*48+(k+1)%48;c=b+48;d=a+48
+    ff.extend([[a,c,b],[a,d,c]])
+ attributes={}
+ for key,data,typ in [('POSITION',vv,'VEC3'),('NORMAL',nn,'VEC3'),('JOINTS_0',jj,'VEC4'),('WEIGHTS_0',ww,'VEC4')]:
+  attributes[key]=add_accessor(js,binb,np.array(data,np.uint8 if key=='JOINTS_0' else np.float32),typ,34962 if key=='POSITION' else None)
+ primitive['attributes']=attributes;primitive['indices']=add_accessor(js,binb,np.array(ff,np.uint32).reshape(-1),'SCALAR',34963)
 # Dark fitted eyelid rims sit at the oval edge, not around a protruding sphere.
 MAT_LID=len(mats);mats.append({'name':'Eye_Liner','doubleSided':True,'pbrMetallicRoughness':{'baseColorFactor':[.035,.045,.07,1],'roughnessFactor':.85}})
 for side in [-1,1]:
  vv=[];nn=[];ff=[]
  for k in range(48):
   t=k*2*np.pi/48
-  for size in [1.0,1.12]:
-   x=side*.0040+np.cos(t)*.00122*size
-   vv.append([x,-.00432+(abs(x)-.0040)*.50,.02275+np.sin(t)*.00162*size]);nn.append([side*.45,-1,0])
+  for size in [1.0,1.06]:
+   x=side*.00365+np.cos(t)*.00122*size*.98
+   z=.02275+np.sin(t)*.00162*size
+   vv.append([x,face_depth(x,z)-.00022,z]);nn.append([side*.45,-1,0])
  for k in range(48):
   a=k*2;b=((k+1)%48)*2;ff.extend([[a,b,a+1],[a+1,b,b+1]])
  v=np.array(vv);n=np.array(nn);ni=int(np.sum((pos0-v.mean(0))**2,axis=1).argmin());prim={'attributes':{},'material':MAT_LID,'mode':4}
@@ -746,6 +788,22 @@ for vi in selected:
  normal=nrm0[vi]/max(np.linalg.norm(nrm0[vi]),1e-9)
  direction=normal*.4+np.array([np.sign(pos0[vi,0])*.12,.6,.2])
  fur_tuft(pos0[vi]-normal*.00012,direction,.00024,float(fur_rng.uniform(.00024,.00042)))
+# Short layered cheek fringe follows the actual face surface and sweeps back.
+for side in [-1,1]:
+ for step in range(7):
+  x=side*(.0052+.00008*np.sin(step*2));z=.0199+step*.00047
+  y=face_depth(x,z)+.00012
+  fur_tuft(np.array([x,y,z]),[side*.45,.9,.15+step*.06],.00022,.00055+(step%3)*.00008)
+# Cyan irises have a darker edge and lighter inner ring, not a uniform blue sticker.
+for primitive in prims:
+ if mats[primitive['material']]['name']!='Eye_White':continue
+ v=accessor(js,binb,primitive['attributes']['POSITION']).astype(float);colors=[]
+ for q in v:
+  side=1 if q[0]>0 else -1
+  radial=np.sqrt(((q[0]-side*.00365)/.00122)**2+((q[2]-.02275)/.00162)**2)
+  brightness=.60+.40*(1-radial)
+  colors.append([brightness*.9,brightness, min(1.0,brightness*1.12),1])
+ primitive['attributes']['COLOR_0']=add_accessor(js,binb,np.array(colors,np.float32),'VEC4')
 # Batch accessory/fur primitives by material and attribute layout. Preserve skin data.
 groups={}
 for primitive in prims:
@@ -761,7 +819,7 @@ for (material,keys),items in groups.items():
   offset+=len(merged['POSITION'][-1])
  attributes={}
  for key in keys:
-  data=np.concatenate(merged[key]);typ={'POSITION':'VEC3','NORMAL':'VEC3','JOINTS_0':'VEC4','WEIGHTS_0':'VEC4','TEXCOORD_0':'VEC2'}[key]
+  data=np.concatenate(merged[key]);typ={'POSITION':'VEC3','NORMAL':'VEC3','JOINTS_0':'VEC4','WEIGHTS_0':'VEC4','TEXCOORD_0':'VEC2','COLOR_0':'VEC4'}[key]
   attributes[key]=add_accessor(js,binb,data.astype(np.uint8 if key=='JOINTS_0' else np.float32),typ,34962 if key=='POSITION' else None)
  batched.append({'attributes':attributes,'indices':add_accessor(js,binb,np.concatenate(faces).astype(np.uint32),'SCALAR',34963),'material':material,'mode':4})
 prims[:]=batched

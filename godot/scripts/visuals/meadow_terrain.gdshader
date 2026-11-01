@@ -18,14 +18,14 @@ void fragment(){
  vec2 moving_point=world_point.xz+vec2(0.0,scroll*25.0);
  float grain=noise(moving_point*7.0)*0.7+noise(moving_point*1.1)*0.3;
  // Broad slate slabs with quiet engraved joints, not a stretched noise strip.
- vec2 slab=vec2(world_point.x*0.62,moving_point.y*0.20);
+ vec2 slab=vec2(world_point.x*0.80,moving_point.y*0.36);
  float row=floor(slab.y);
  slab.x+=mod(row,2.0)*0.5;
  vec2 joint=abs(fract(slab)-0.5);
  float seam=smoothstep(0.465,0.495,max(joint.x,joint.y));
  float slab_tone=hash(floor(slab));
- vec3 surface=mix(vec3(0.026,0.043,0.065),vec3(0.049,0.065,0.085),grain*0.35+slab_tone*0.30);
- surface*=1.0-seam*0.26;
+ vec3 surface=mix(vec3(0.035,0.060,0.085),vec3(0.11,0.15,0.18),grain*0.28+slab_tone*0.55);
+ surface*=1.0-seam*0.65;
  // Soft shoulder glow stays at the physical edge, outside all three lanes.
  float shoulder=exp(-pow((abs(world_point.x)-3.65)*3.0,2.0));
  surface+=vec3(0.012,0.05,0.055)*shoulder;

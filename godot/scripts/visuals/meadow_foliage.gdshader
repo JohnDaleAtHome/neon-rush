@@ -28,7 +28,9 @@ void vertex(){
 void fragment(){
  float fog=smoothstep(20.0,140.0,view_depth);
  vec3 col=vertex_colors?COLOR.rgb:base_color;
- ALBEDO=col*(1.0-fog);
- EMISSION=fog_color*fog;
+ // Soft two-sided wrap keeps dense grass from becoming black blade silhouettes.
+ float grass=vertex_colors && COLOR.a<0.5?1.0:0.0;
+ ALBEDO=col*(1.0-fog)*(1.0-grass*0.70);
+ EMISSION=fog_color*fog+col*0.58*(1.0-fog)*(vertex_colors && COLOR.a<0.5?1.0:0.0);
  ROUGHNESS=1.0;
 }

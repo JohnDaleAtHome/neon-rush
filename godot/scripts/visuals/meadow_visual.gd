@@ -24,6 +24,7 @@ var shadow_mat: StandardMaterial3D
 var horizon_layers: Array[MeshInstance3D] = []
 var horizon_root := Node3D.new()
 var active := false
+var rolling_banks: Array[MeshInstance3D] = []
 var saved_ambient_color := Color.BLACK
 var saved_ambient_energy := 1.0
 var ambient_saved := false
@@ -58,11 +59,13 @@ func apply(index: int) -> void:
 	var light: bool = game != null and game.options.get("light", false)
 	if index != THEME_INDEX or light:
 		active = false
+		for side in game.side_planes: side.visible = true
 		if shadow: shadow.visible = false
 		_set_horizon_visible(false)
 		_restore_ambient()
 		return
 	active = true
+	for side in game.side_planes: side.visible = false
 	var environment: Environment = game.env_world.environment
 	# Atmosphere: coordinated fog and sky so the horizon reads as one scene.
 	environment.fog_enabled = true
@@ -146,63 +149,119 @@ func _build_shadow() -> void:
 func _build_horizon() -> void:
 	# horizon_root groups everything far-field so one toggle controls it.
 	add_child(horizon_root)
-	# Fog-colour underlay beneath the entire visible field (starts under the
-	# banks at z=+10, hidden inside their 0.1-thick boxes until their alpha
-	# fade reveals it, then continues to z=-570): the meadow never visibly
-	# ends and no sky can show through the banks' fade wedges.
+	# Continuous ground below the banks, with the same world-space material.
+	# Bank height tapers onto it at the rear and outer edges.
 	var far := MeshInstance3D.new()
 	var far_mesh := PlaneMesh.new()
 	far_mesh.size = Vector2(900, 580)
 	far.mesh = far_mesh
-	# Match the bank's lit terrain instead of placing flat fog-colour paint
-	# beyond its outer edge. Continuous material hides the diagonal join.
+
 	var far_mat := ShaderMaterial.new()
-	far_mat.shader = load("res://scripts/visuals/meadow_terrain.gdshader")
-	far_mat.set_shader_parameter("terrain_texture", load(ASSET_DIR + "meadow_side.png"))
-	far_mat.set_shader_parameter("uv_scale", Vector2(187.5, 77.333))
+	far_mat.shader = load("res://scripts/visuals/meadow_bank.gdshader")
 	far_mat.set_shader_parameter("fog_color", MEADOW_FOG)
-	far_mat.set_shader_parameter("fade_geometry", false)
 	far.material_override = far_mat
 	far.position = Vector3(0, -0.14, 10 - 290)
 	horizon_root.add_child(far)
-	# Rolling berms break up the flat banks at mid distance.
-	var berm_mat := StandardMaterial3D.new()
-	berm_mat.albedo_color = Color("1a3d30")
-	berm_mat.roughness = 1.0
-	var brng := RandomNumberGenerator.new()
-	brng.seed = 9917
-	for i in range(6):
-		var berm := MeshInstance3D.new()
-		var sphere := SphereMesh.new()
-		sphere.radius = 1.0
-		sphere.height = 2.0
-		berm.mesh = sphere
-		var side := -1 if i % 2 == 0 else 1
-		berm.scale = Vector3(3.0 + brng.randf() * 2.5, 0.7 + brng.randf() * 0.5, 2.0 + brng.randf() * 1.5)
-		berm.position = Vector3(side * (8.0 + brng.randf() * 5.0), -0.35, -35.0 - i * 17.0 - brng.randf() * 8.0)
-		berm.material_override = berm_mat
-		horizon_root.add_child(berm)
-	# Treeline silhouettes: wide enough for landscape viewports, bottoms sunk
-	# below the ground plane, texture fades out at both horizontal ends.
-	var layers := [
-		{"z": -100.0, "width": 520.0, "height": 24.0, "tint": Color("1b3630"), "bottom": -2.0},
-		{"z": -125.0, "width": 660.0, "height": 30.0, "tint": Color("265047"), "bottom": -2.5},
-	]
-	for spec in layers:
-		var band := MeshInstance3D.new()
-		var quad := QuadMesh.new()
-		quad.size = Vector2(spec["width"], spec["height"])
-		band.mesh = quad
-		var mat := StandardMaterial3D.new()
-		mat.albedo_texture = load(ASSET_DIR + "hills.png")
-		mat.albedo_color = spec["tint"]
-		mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-		mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-		mat.cull_mode = BaseMaterial3D.CULL_DISABLED
-		band.material_override = mat
-		band.position = Vector3(0, spec["bottom"] + spec["height"] * 0.5, spec["z"])
-		horizon_root.add_child(band)
-		horizon_layers.append(band)
+	# Rolling banks stay outside the lane corridor; distant ridges have actual shape.
+	for side in [-1.0, 1.0]:
+		var bank := MeshInstance3D.new()
+		bank.mesh = _rolling_bank(side)
+		var mat := ShaderMaterial.new()
+		mat.shader = load("res://scripts/visuals/meadow_bank.gdshader")
+		mat.set_shader_parameter("fog_color",MEADOW_FOG)
+		bank.material_override = mat
+		horizon_root.add_child(bank)
+		rolling_banks.append(bank)
+	# Three-dimensional overlapping hills, not a vertical skyline strip.
+	var hrng := RandomNumberGenerator.new()
+	hrng.seed = 230011
+	for layer in range(2):
+		for i in range(17):
+			var hill := MeshInstance3D.new()
+			var mesh := SphereMesh.new()
+			mesh.radius = 1.0
+			mesh.height = 2.0
+			mesh.radial_segments = 20
+			mesh.rings = 10
+			hill.mesh = mesh
+			hill.scale = Vector3(hrng.randf_range(18,30),hrng.randf_range(6,11),hrng.randf_range(16,30))
+			hill.position = Vector3(-210.0+i*26.0+hrng.randf_range(-6,6),-3.0,-135.0-layer*38.0+hrng.randf_range(-8,8))
+			var hm := ShaderMaterial.new()
+			hm.shader = load("res://scripts/visuals/meadow_bank.gdshader")
+			hm.set_shader_parameter("grass_low",Vector3(0.04,0.10,0.065))
+			hm.set_shader_parameter("grass_high",Vector3(0.06,0.14,0.09))
+			hm.set_shader_parameter("fog_color",MEADOW_FOG)
+			hill.material_override = hm
+			horizon_root.add_child(hill)
+			horizon_layers.append(hill)
+	# Overlapping moonlit groves give the skyline depth and varied organic crowns.
+	var grove_rng := RandomNumberGenerator.new()
+	grove_rng.seed = 771203
+	var leaf_mats: Array[StandardMaterial3D] = []
+	for col in [Color("224c40"),Color("1c443c"),Color("2a5548")]:
+		var lm := StandardMaterial3D.new()
+		lm.albedo_color = col
+		lm.roughness = 1.0
+		leaf_mats.append(lm)
+	var bark := StandardMaterial3D.new()
+	bark.albedo_color = Color("263337")
+	for i in range(36):
+		var side := -1.0 if i%2==0 else 1.0
+		var x := side*grove_rng.randf_range(15.0,48.0)
+		var z := grove_rng.randf_range(-125.0,-52.0)
+		var height := grove_rng.randf_range(5.0,10.0)
+		var tree := Node3D.new()
+		tree.position = Vector3(x,_bank_height(x,z),z)
+		var trunk := MeshInstance3D.new()
+		var cylinder := CylinderMesh.new()
+		cylinder.top_radius = 0.14
+		cylinder.bottom_radius = 0.35
+		cylinder.height = height*0.7
+		cylinder.radial_segments = 7
+		trunk.mesh = cylinder
+		trunk.position.y = height*0.35
+		trunk.material_override = bark
+		tree.add_child(trunk)
+		for crown in range(3):
+			var leaf := MeshInstance3D.new()
+			var sphere := SphereMesh.new()
+			sphere.radius = height*grove_rng.randf_range(0.22,0.32)
+			sphere.height = sphere.radius*2.4
+			sphere.radial_segments = 10
+			sphere.rings = 6
+			leaf.mesh = sphere
+			leaf.position = Vector3(grove_rng.randf_range(-1.4,1.4),height*(0.55+0.10*crown),grove_rng.randf_range(-1.0,1.0))
+			leaf.material_override = leaf_mats[i%leaf_mats.size()]
+			tree.add_child(leaf)
+		horizon_root.add_child(tree)
+
+
+func _bank_height(x: float,z: float) -> float:
+	var edge := smoothstep(4.0,12.0,absf(x))
+	var rear := 1.0-smoothstep(112.0,144.0,-z)
+	var outer := 1.0-smoothstep(44.0,53.8,absf(x))
+	return -0.14+edge*rear*outer*(1.4+0.75*sin(z*0.055+x*0.14)+0.45*sin(z*0.12-x*0.19))
+
+
+func _rolling_bank(side: float) -> ArrayMesh:
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	for iz in range(52):
+		for ix in range(20):
+			var corners: Array[Vector3] = []
+			for q in [Vector2(ix,iz),Vector2(ix+1,iz),Vector2(ix+1,iz+1),Vector2(ix,iz+1)]:
+				var x: float = side*(3.8+q.x*2.5)
+				var z: float = 12.0-q.y*3.0
+				corners.append(Vector3(x,_bank_height(x,z),z))
+			var order := [0,2,1,0,3,2] if side>0 else [0,1,2,0,2,3]
+			for k in order:
+				var v := corners[k]
+				st.set_uv(Vector2(absf(v.x)/50.0,(12-v.z)/156.0))
+				var dx := (_bank_height(v.x+0.1,v.z)-_bank_height(v.x-0.1,v.z))/0.2
+				var dz := (_bank_height(v.x,v.z+0.1)-_bank_height(v.x,v.z-0.1))/0.2
+				st.set_normal(Vector3(-dx,1,-dz).normalized())
+				st.add_vertex(v)
+	return st.commit()
 
 
 func _set_horizon_visible(visible: bool) -> void:
@@ -242,9 +301,39 @@ func _build_plants(main_node) -> void:
 			side * (4.9 + prng.randf() * 3.4),
 			0.7 * scale_factor - 0.04,
 			-6.0 - i * 4.1 - prng.randf() * 2.4)
+		plant.set_meta("bank_clearance",plant.position.y+0.12)
+		plant.position.y += _bank_height(plant.position.x,plant.position.z)+0.12
 		plant.rotation.y = prng.randf_range(-0.3, 0.3)
 		main_node.add_child(plant)
 		main_node.scene_props.append(plant)
+	# Mid-ground fern/shrub clumps fill the banks with dimensional foliage.
+	var shrub_material := StandardMaterial3D.new()
+	shrub_material.albedo_color = Color("3b6653")
+	shrub_material.roughness = 1.0
+	shrub_material.cull_mode = BaseMaterial3D.CULL_DISABLED
+	for i in range(48):
+		var shrub := MeshInstance3D.new()
+		var st := SurfaceTool.new()
+		st.begin(Mesh.PRIMITIVE_TRIANGLES)
+		for blade in range(9):
+			var angle := blade*TAU/9.0 + prng.randf()*0.3
+			var direction := Vector3(cos(angle),0,sin(angle))
+			var across := Vector3(-sin(angle),0,cos(angle))
+			var high := prng.randf_range(0.28,0.72)
+			var reach := prng.randf_range(0.32,0.78)
+			var base := direction*0.08
+			var middle := direction*reach*0.58+Vector3.UP*high
+			var tip := direction*reach+Vector3.UP*high*0.58
+			for v in [base-across*0.04,base+across*0.04,middle+across*0.14,base-across*0.04,middle+across*0.14,middle-across*0.14,middle-across*0.14,middle+across*0.14,tip]:st.add_vertex(v)
+		st.generate_normals()
+		shrub.mesh = st.commit()
+		shrub.material_override = shrub_material
+		var side := -1 if i%2==0 else 1
+		shrub.position = Vector3(side*prng.randf_range(5.0,24.0),0,-4.0-i*2.9)
+		shrub.position.y = _bank_height(shrub.position.x,shrub.position.z)
+		shrub.set_meta("bank_clearance",0.0)
+		main_node.add_child(shrub)
+		main_node.scene_props.append(shrub)
 	# A few cool moonlit stones for ground shape.
 	for i in range(8):
 		var side := -1 if i % 2 == 0 else 1
@@ -257,6 +346,8 @@ func _build_plants(main_node) -> void:
 		rock.mesh = mesh
 		rock.scale = Vector3(1.0, 0.55, 1.0)
 		rock.position = Vector3(side * (4.7 + prng.randf() * 2.6), 0.06, -10.0 - i * 15.0 - prng.randf() * 6.0)
+		rock.set_meta("bank_clearance",rock.position.y+0.12)
+		rock.position.y += _bank_height(rock.position.x,rock.position.z)+0.12
 		var rock_mat := StandardMaterial3D.new()
 		rock_mat.albedo_color = Color("7f86a8")
 		rock_mat.roughness = 1.0
@@ -283,6 +374,9 @@ func _process(_dt: float) -> void:
 	if not active or game == null or not is_instance_valid(player_ref):
 		if shadow: shadow.visible = false
 		return
+	for prop in game.scene_props:
+		if prop.has_meta("bank_clearance"):
+			prop.position.y = float(prop.get_meta("bank_clearance"))+_bank_height(prop.position.x,prop.position.z)
 	var running: bool = game.running and not game.paused
 	shadow.visible = running
 	if not running:

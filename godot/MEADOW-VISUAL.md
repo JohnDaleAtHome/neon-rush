@@ -41,3 +41,16 @@ All28suites pass after fixing two initial typed-variable parse errors. Expanded 
 ## Path seam isolation
 
 A controlled constant-color path eliminated the moving near horizontal tonal boundary, identifying the repeated path texture as the cause rather than depth fade. The candidate now uses restrained world-space noise with scroll offset instead of the non-seamless repeating texture. Actual390/1280scroll/duck/hazard+dew pixels show the near band removed. Obsolete path/hidden-side texture uniforms and assignments are removed. Existing path.png remains recoverable but unused here. All28suites pass. This fixes the near path band only; distant tonal horizon, simple foliage/moons and character gaps remain. No device/natural-campaign acceptance is implied.
+
+
+## v42 Meadow foliage/atmosphere batch (WIP)
+Branched trees use overlapping varied crowns rather than three tall blobs.
+Paired leaflets replace the nine angular fern blades;48ferns total51,840
+vertices. A shared opaque foliage shader adds restrained wind and the same
+fragment-depth fog ramp as the banks to flowers/ferns/tree crowns. Scene prop
+counts/scroll wrapping, bank height following, light-mode cleanup and other
+themes stay unchanged. This is stylized procedural WIP, not final landscape
+art: the distant tonal horizon strip, simple trunks, detached moons and
+limited ground cover remain. No gameplay, character, asset binary or deploy
+changes. Real-device performance and natural campaign/art acceptance remain
+open; desktop/mobile browser fixtures are only visual/regression evidence.

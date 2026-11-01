@@ -57,6 +57,15 @@ static func _enhance(node: Node) -> void:
 					m.emission_enabled = true
 					m.emission = Color(0.55, 0.75, 0.9)
 					m.emission_energy_multiplier = 0.0
+					if String(m.resource_name)=="Bunny_Main":
+						m.next_pass=null
+						var previous: Material = m
+						for layer in range(1):
+							var coat := ShaderMaterial.new()
+							coat.shader=load("res://scripts/visuals/mochi_fur_shell.gdshader")
+							coat.set_shader_parameter("layer",float(layer+1))
+							previous.next_pass=coat
+							previous=coat
 				"Scarf_Navy", "Scarf_Seam":
 					var scarf := ShaderMaterial.new()
 					scarf.shader = load("res://scripts/visuals/mochi_scarf.gdshader")

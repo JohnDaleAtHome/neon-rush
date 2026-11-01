@@ -35,10 +35,18 @@ The deterministic synthetic campaign visits all six levels/reunion in8911steps
 with0deaths; this does
 not complete natural late-campaign acceptance.
 
-Round pupil geometry replaces the old slits, but cyan C/bar shapes within pupils,
-gray outer artifacts, black inner ears and a cyan mouth spot remain visible in
-closeup. Character eyes/expression, fluffy silhouette and pendant are short of the
-tracked concept. Treeline is flat/graphic, horizon tonal banding remains and
+The v35 mesh cleanup fixes reversed pupil/catchlight winding, restores inner ears,
+removes the misplaced collar/hem rings, and rebuilds the pendant as an offset-circle
+crescent. Smaller pupils reveal turquoise irises. Nose, mouth and belly have
+separate materials so user ear tint does not recolor the belly. Cheek width,
+low-poly cheek tufts and forelock are concept-directed silhouette work. A short
+open jacket follows the torso mesh with clipped triangle boundaries instead of a
+floating lathe bib. These are concrete fixes, not accepted concept fidelity:
+fur, ear/hand proportions, costume detail and expression still differ markedly.
+All28suites pass (27previous + geometry/material/finite/skinning checks). Actual
+release desktop/mobile-size gameplay and controlled native run/jump/duck previews
+were inspected. Native previews are fixtures, not natural gameplay acceptance.
+Treeline is flat/graphic, horizon tonal banding remains and
 this is not polished landscape art. Other levels/NPCs/guardian/reunion did not
 receive a matching final-art pass. Natural L5 completion/L6/reunion, physical
 device performance, browser audio listening and human fun/art acceptance remain

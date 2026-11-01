@@ -12,7 +12,7 @@ checksum-verified network recovery for28baseline assets. To restore only the
 new visual assets offline, run `python3 godot/restore-visual-assets.py`.
 
 Chunks are ordered00.b64 through23.b64. The JSON archive carries relative asset
-paths, byte counts, checksums and base64data. The decoder checks the manifest,
+paths, base64 data; manifest.json carries byte counts and checksums. The decoder checks the manifest,
 blocks path traversal and writes atomically after all entries validate.
 
 Changes to visual binaries require regenerating the chunks and manifest. Do

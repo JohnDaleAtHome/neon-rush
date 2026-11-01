@@ -186,11 +186,12 @@ func _build_horizon() -> void:
 	# Overlapping moonlit groves give the skyline depth and varied organic crowns.
 	var grove_rng := RandomNumberGenerator.new()
 	grove_rng.seed = 771203
-	var leaf_mats: Array[StandardMaterial3D] = []
+	var leaf_mats: Array[ShaderMaterial] = []
 	for col in [Color("224c40"),Color("1c443c"),Color("2a5548")]:
-		var lm := StandardMaterial3D.new()
-		lm.albedo_color = col
-		lm.roughness = 1.0
+		var lm := ShaderMaterial.new()
+		lm.shader = load("res://scripts/visuals/meadow_foliage.gdshader")
+		lm.set_shader_parameter("base_color",Vector3(col.r,col.g,col.b))
+		lm.set_shader_parameter("fog_color",MEADOW_FOG)
 		leaf_mats.append(lm)
 	var bark := StandardMaterial3D.new()
 	bark.albedo_color = Color("263337")
@@ -206,21 +207,37 @@ func _build_horizon() -> void:
 		cylinder.top_radius = 0.14
 		cylinder.bottom_radius = 0.35
 		cylinder.height = height*0.7
-		cylinder.radial_segments = 7
+		cylinder.radial_segments = 9
 		trunk.mesh = cylinder
 		trunk.position.y = height*0.35
 		trunk.material_override = bark
 		tree.add_child(trunk)
-		for crown in range(3):
+		for branch in range(3):
+			var twig := MeshInstance3D.new()
+			var branch_mesh := CylinderMesh.new()
+			branch_mesh.top_radius = 0.045
+			branch_mesh.bottom_radius = 0.14
+			branch_mesh.height = height*0.30
+			branch_mesh.radial_segments = 6
+			twig.mesh = branch_mesh
+			twig.position = Vector3(0,height*(0.42+branch*0.09),0)
+			twig.rotation = Vector3(0,branch*2.1,0.7 if branch%2==0 else -0.7)
+			twig.material_override = bark
+			tree.add_child(twig)
+		for crown in range(7):
 			var leaf := MeshInstance3D.new()
 			var sphere := SphereMesh.new()
-			sphere.radius = height*grove_rng.randf_range(0.22,0.32)
-			sphere.height = sphere.radius*2.4
-			sphere.radial_segments = 10
-			sphere.rings = 6
+			sphere.radius = height*grove_rng.randf_range(0.20,0.28)
+			sphere.height = sphere.radius*1.55
+			sphere.radial_segments = 14
+			sphere.rings = 7
 			leaf.mesh = sphere
-			leaf.position = Vector3(grove_rng.randf_range(-1.4,1.4),height*(0.55+0.10*crown),grove_rng.randf_range(-1.0,1.0))
-			leaf.material_override = leaf_mats[i%leaf_mats.size()]
+			var angle := crown*2.4
+			var reach := height*(0.19 if crown<5 else 0.08)
+			leaf.position = Vector3(cos(angle)*reach,height*(0.58+0.055*crown),sin(angle)*reach)
+			leaf.rotation.y = angle
+			leaf.scale = Vector3(1.2,1.0,0.86)
+			leaf.material_override = leaf_mats[(i+crown)%leaf_mats.size()]
 			tree.add_child(leaf)
 		horizon_root.add_child(tree)
 
@@ -260,9 +277,11 @@ func _set_horizon_visible(visible: bool) -> void:
 func _build_plants(main_node) -> void:
 	var prng := RandomNumberGenerator.new()
 	prng.seed = 20261101
-	var flower_material := StandardMaterial3D.new()
-	flower_material.vertex_color_use_as_albedo = true
-	flower_material.roughness = 0.9
+	var flower_material := ShaderMaterial.new()
+	flower_material.shader = load("res://scripts/visuals/meadow_foliage.gdshader")
+	flower_material.set_shader_parameter("vertex_colors",true)
+	flower_material.set_shader_parameter("sway",0.055)
+	flower_material.set_shader_parameter("fog_color",MEADOW_FOG)
 	# Solid stems, leaves and flower heads replace the original flat cards.
 	for i in range(34):
 		var side := -1 if i % 2 == 0 else 1
@@ -276,26 +295,30 @@ func _build_plants(main_node) -> void:
 		main_node.add_child(plant)
 		main_node.scene_props.append(plant)
 	# Mid-ground fern/shrub clumps fill the banks with dimensional foliage.
-	var shrub_material := StandardMaterial3D.new()
-	shrub_material.albedo_color = Color("3b6653")
-	shrub_material.roughness = 1.0
-	shrub_material.cull_mode = BaseMaterial3D.CULL_DISABLED
+	var shrub_material := ShaderMaterial.new()
+	shrub_material.shader = load("res://scripts/visuals/meadow_foliage.gdshader")
+	shrub_material.set_shader_parameter("vertex_colors",true)
+	shrub_material.set_shader_parameter("sway",0.08)
+	shrub_material.set_shader_parameter("fog_color",MEADOW_FOG)
 	for i in range(48):
 		var shrub := MeshInstance3D.new()
 		var st := SurfaceTool.new()
 		st.begin(Mesh.PRIMITIVE_TRIANGLES)
-		for blade in range(9):
-			var angle := blade*TAU/9.0 + prng.randf()*0.3
+		for frond in range(5):
+			var angle := frond*TAU/5.0 + prng.randf()*0.3
 			var direction := Vector3(cos(angle),0,sin(angle))
 			var across := Vector3(-sin(angle),0,cos(angle))
-			var high := prng.randf_range(0.28,0.72)
-			var reach := prng.randf_range(0.32,0.78)
-			var base := direction*0.08
-			var middle := direction*reach*0.58+Vector3.UP*high
-			var tip := direction*reach+Vector3.UP*high*0.58
-			for v in [base-across*0.04,base+across*0.04,middle+across*0.14,base-across*0.04,middle+across*0.14,middle-across*0.14,middle-across*0.14,middle+across*0.14,tip]:st.add_vertex(v)
-		st.generate_normals()
+			var high := prng.randf_range(0.55,0.95)
+			var reach := prng.randf_range(0.45,0.85)
+			for pair in range(4):
+				var t := 0.18+pair*0.20
+				var center := direction*reach*t + Vector3.UP*high*sin(t*PI*0.7)
+				var length := (1.0-t)*0.22+0.035
+				for sign_x in [-1.0,1.0]:
+					_append_fern_leaf(st,center,across*sign_x+direction*0.45+Vector3.UP*0.55,length,Color("3e725a"))
+			_append_fern_leaf(st,direction*reach*0.84+Vector3.UP*high*0.95,direction,0.18,Color("527f65"))
 		shrub.mesh = st.commit()
+		shrub.scale = Vector3.ONE*1.45
 		shrub.material_override = shrub_material
 		var side := -1 if i%2==0 else 1
 		shrub.position = Vector3(side*prng.randf_range(5.0,24.0),0,-4.0-i*2.9)
@@ -410,3 +433,18 @@ func _append_oval(st: SurfaceTool, center: Vector3, radii: Vector3, color: Color
 				st.set_normal((n/radii).normalized())
 				st.set_color(color)
 				st.add_vertex(center+n*radii)
+
+
+func _append_fern_leaf(st: SurfaceTool, base: Vector3, direction: Vector3, length: float, color: Color) -> void:
+	var forward := direction.normalized()
+	var across := Vector3(-forward.z,0,forward.x)
+	for section in range(4):
+		var points: Array[Vector3] = []
+		for q in [Vector2(section,-1),Vector2(section,1),Vector2(section+1,1),Vector2(section+1,-1)]:
+			var t: float = q.x/4.0
+			var width := sin(t*PI)*length*0.30
+			points.append(base+forward*length*t+across*width*q.y+Vector3.UP*sin(t*PI)*0.035)
+		for k in [0,2,1,0,3,2]:
+			st.set_color(color)
+			st.set_normal(Vector3.UP)
+			st.add_vertex(points[k])

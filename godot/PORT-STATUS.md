@@ -41,3 +41,13 @@ Old localStorage stays untouched. First engine use maps valid legacy control/vis
 - Source binaries are recovered through the checksum manifest/bootstrap, with an explicit network dependency on preserved staging source-assets URLs. The source tree is not a self-contained binary asset archive.
 
 The hosted legacy game has not been replaced. Do not call this WIP a completed rewrite. Story canon remains STORYLINE.md. Requirements remain GAME-REQUIREMENTS.md and TECHNICAL-REQUIREMENTS.md. Asset credits remain in assets/ASSET-LICENSES.txt; no paid assets.
+
+## New scoped visual checkpoint (1 November 2026)
+Mochi has a WIP derived model with jacket/boots/cyan details, combined with a
+level0 Meadow module and moon-themed HUD. Lighting preserves face form; this
+is still not a finished match to the concept. Level0 scenery is a review
+candidate, not final environment art or a pass on other levels. See
+VISUAL-CHECKPOINT.md for remaining character/treeline and acceptance gaps.
+The source now tracks new visual assets; original28baseline assets still use
+the preserved checksum recovery workflow. Official and immutable review builds
+are unchanged by source integration.

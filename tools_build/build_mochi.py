@@ -316,8 +316,8 @@ for i in range(5):
 height = size[1]
 off_boot = height*0.012
 
-shell_from_region(['Foot.L'], off_boot, MAT_JACKET, 'boot_L')
-shell_from_region(['Foot.R'], off_boot, MAT_JACKET, 'boot_R')
+shell_from_region(['Foot.L','LowerLeg.L'], off_boot, MAT_JACKET, 'boot_L')
+shell_from_region(['Foot.R','LowerLeg.R'], off_boot, MAT_JACKET, 'boot_R')
 
 # Short open jacket follows existing torso anatomy, not a floating circular tube.
 torso_mask=np.isin(domname,['Torso','Abdomen','Body','Hips']);allv=wpos
@@ -349,7 +349,7 @@ for f in idx[core_mask[idx].all(1)]:
     if len(poly)<3:continue
     polygons=[poly]
     if np.mean([v[0][2] for v in poly])>-0.29:
-        polygons=[clip(poly,0,height*0.055,True),clip(poly,0,-height*0.055,False)]
+        polygons=[clip(poly,0,height*0.026,True),clip(poly,0,-height*0.026,False)]
     for poly in polygons:
         if len(poly)<3:continue
         base=len(V)
@@ -367,7 +367,7 @@ prims.append({'attributes':attrs,'indices':add_accessor(js,binb,F.astype(np.uint
 sv=[];sn=[];sj=[];sw=[];sf=[]
 for f in F:
     for aa,bb in zip(f,np.roll(f,-1)):
-        if abs(abs(WP[aa,0])-height*0.055)>0.0001 or abs(abs(WP[bb,0])-height*0.055)>0.0001:continue
+        if abs(abs(WP[aa,0])-height*0.026)>0.0001 or abs(abs(WP[bb,0])-height*0.026)>0.0001:continue
         if WP[aa,0]*WP[bb,0]<0 or np.mean(WP[[aa,bb],2])< -0.29:continue
         cc=next(k for k in f if k not in [aa,bb]);base=len(sv)
         for q,t in [(aa,0),(bb,0),(bb,0.08),(aa,0.08)]:
@@ -676,8 +676,9 @@ for primitive in prims:
  ear_weight=np.zeros(len(v))
  for k in range(4):ear_weight+=ww[:,k]*np.array([jnames[int(q)].startswith('Ear') for q in ji[:,k]])
  t=np.clip((v[:,2]-.025)/.009,0,1)*ear_weight
- v[:,1]+=t*t*.0038
- v[:,0]+=np.sign(v[:,0])*t*t*.0015
+ v[:,1]+=t*t*.0090
+ v[:,2]-=t*t*.0015
+ v[:,0]+=np.sign(v[:,0])*t*t*.0025
  primitive['attributes']['POSITION']=add_accessor(js,binb,v.astype(np.float32),'VEC3',34962)
 
 
@@ -804,6 +805,23 @@ for primitive in prims:
   brightness=.60+.40*(1-radial)
   colors.append([brightness*.9,brightness, min(1.0,brightness*1.12),1])
  primitive['attributes']['COLOR_0']=add_accessor(js,binb,np.array(colors,np.float32),'VEC4')
+# Broad curved jacket lapels and a cross-body belt are torso-bound costume forms.
+for side in [-1,1]:
+ vv=[];nn=[];ff=[]
+ for row in range(9):
+  t=row/8;c=np.array([side*(.10+.16*t),1.64-.48*t,.23+.06*np.sin(t*np.pi)])
+  for edge in [-1,1]:vv.append(c+np.array([side*edge*.055,edge*.018,0]));nn.append([0,0,1])
+ for row in range(8):
+  k=row*2;ff.extend([[k,k+1,k+3],[k,k+3,k+2]])
+ rigid_prim(np.array(vv),np.array(nn),np.array(ff),'Torso',MAT_JACKET,'lapel')
+ # narrow colored stitching on the visible lapel edge
+ vv=[];nn=[];ff=[]
+ for row in range(9):
+  t=row/8;c=np.array([side*(.10+.16*t+.05),1.64-.48*t+.018,.234+.06*np.sin(t*np.pi)])
+  for edge in [-1,1]:vv.append(c+np.array([edge*.006,0,0]));nn.append([0,0,1])
+ for row in range(8):
+  k=row*2;ff.extend([[k,k+1,k+3],[k,k+3,k+2]])
+ rigid_prim(np.array(vv),np.array(nn),np.array(ff),'Torso',MAT_TRIM if side==1 else MAT_MAGENTA,'lapel_seam')
 # Batch accessory/fur primitives by material and attribute layout. Preserve skin data.
 groups={}
 for primitive in prims:

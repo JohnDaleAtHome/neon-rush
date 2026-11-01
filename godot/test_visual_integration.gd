@@ -43,6 +43,16 @@ func run():
  for prop in g.scene_props:
   if prop.has_meta("bank_clearance"):
    assert(absf(prop.position.y-float(prop.get_meta("bank_clearance"))-g.meadow_visual._bank_height(prop.position.x,prop.position.z))<0.001)
+ var fern_vertices=0
+ for i in range(34,82):
+  var fern=g.scene_props[i]
+  assert(fern.material_override is ShaderMaterial)
+  var arr=fern.mesh.surface_get_arrays(0)
+  assert(arr[Mesh.ARRAY_VERTEX].size()==1080)
+  assert(arr[Mesh.ARRAY_COLOR].size()==1080)
+  fern_vertices+=arr[Mesh.ARRAY_VERTEX].size()
+  for v in arr[Mesh.ARRAY_VERTEX]:assert(v.is_finite())
+ assert(fern_vertices==51840)
  var original_props=g.scene_props.duplicate()
  g.options.light=true
  g.apply_options()

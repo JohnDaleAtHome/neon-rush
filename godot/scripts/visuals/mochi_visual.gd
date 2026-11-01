@@ -56,7 +56,8 @@ static func _enhance(node: Node) -> void:
 					m.emission_energy_multiplier = 1.3
 				"Pendant_Glow":
 					m.emission_enabled = true
-					m.emission = Color(0.49, 1.0, 0.78)
-					m.emission_energy_multiplier = 1.4
+					m.albedo_color = Color(0.23, 0.78, 0.54)
+					m.emission = Color(0.18, 0.65, 0.40)
+					m.emission_energy_multiplier = 0.65
 	for child in node.get_children():
 		_enhance(child)

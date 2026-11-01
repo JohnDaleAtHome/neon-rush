@@ -51,6 +51,7 @@ domname = np.array([jnames[d] for d in dom])
 print("world bbox", wpos.min(0).round(4), wpos.max(0).round(4))
 print("dominant joint names:", sorted(set(domname)))
 
+
 def shell_from_region(names, offset, mat_idx, tag):
     mask = np.isin(domname, names)
     fmask = mask[idx].all(1)
@@ -125,51 +126,35 @@ def torus(center, axis, R, r, seg=40, tseg=10):
     return V,N,np.array(F)
 
 def crescent(center, R, thick, facing):
-    """Uniform-thickness crescent (annulus sector, horns up) in plane perpendicular to `facing`."""
+    """Pointed crescent from the region between intersecting offset circles."""
     f=np.asarray(facing,float); f/=np.linalg.norm(f)
     up=np.array([0,1.0,0]); right=np.cross(up,f); right/=np.linalg.norm(right)
     up2=np.cross(f,right)
-    r_in=R*0.58
-    n=28
-    a_mid=np.radians(-90.0)   # bulge faces down, horns up
-    span=np.radians(115.0)
-    angs=np.linspace(a_mid-span, a_mid+span, n)
-    V=[];N=[];F=[]
-    def pt(r,a): return center + r*(np.cos(a)*right+np.sin(a)*up2)
-    for side in (1,-1):
+    d=R*0.48; ri=R*0.88
+    x=(R*R-ri*ri+d*d)/(2*d); y=np.sqrt(R*R-x*x)
+    ao=np.arctan2(y,x); ai=np.arctan2(y,x-d)
+    outer=np.linspace(ao,2*np.pi-ao,40)
+    inner=np.linspace(ai,2*np.pi-ai,40)
+    V=[]; N=[]; F=[]
+    for sign in [1,-1]:
         base=len(V)
-        off=f*(thick/2*side)
-        for a in angs:
-            V.append(pt(R,a)+off); N.append(side*f)
-            V.append(pt(r_in,a)+off); N.append(side*f)
-        for i in range(n-1):
-            o0=base+2*i; i0=base+2*i+1; o1=base+2*i+2; i1=base+2*i+3
-            if side>0: F.append([o0,i0,o1]); F.append([i0,i1,o1])
-            else:      F.append([o0,o1,i0]); F.append([i0,o1,i1])
-    bo=len(V)
-    for a in angs:
-        d=np.cos(a)*right+np.sin(a)*up2
-        V.append(pt(R,a)+f*thick/2); N.append(d)
-        V.append(pt(R,a)-f*thick/2); N.append(d)
-    for i in range(n-1):
-        F.append([bo+2*i,bo+2*i+2,bo+2*i+1]); F.append([bo+2*i+1,bo+2*i+2,bo+2*i+3])
-    bi=len(V)
-    for a in angs:
-        d=-(np.cos(a)*right+np.sin(a)*up2)
-        V.append(pt(r_in,a)+f*thick/2); N.append(d)
-        V.append(pt(r_in,a)-f*thick/2); N.append(d)
-    for i in range(n-1):
-        F.append([bi+2*i,bi+2*i+1,bi+2*i+2]); F.append([bi+2*i+1,bi+2*i+3,bi+2*i+2])
-    for end,a in ((0,angs[0]),(1,angs[-1])):
-        e=len(V)
-        t=-np.sin(a)*right+np.cos(a)*up2
-        nrm = -t if end==0 else t
-        for r in (R,r_in):
-            V.append(pt(r,a)+f*thick/2); N.append(nrm)
-            V.append(pt(r,a)-f*thick/2); N.append(nrm)
-        if end==0: F.append([e,e+2,e+1]); F.append([e+1,e+2,e+3])
-        else:      F.append([e,e+1,e+2]); F.append([e+1,e+3,e+2])
-    return np.array(V), np.array(N), np.array(F)
+        for a,b in zip(outer,inner):
+            V.extend([center+right*(R*np.cos(a))+up2*(R*np.sin(a))+f*thick/2*sign,
+                      center+right*(d+ri*np.cos(b))+up2*(ri*np.sin(b))+f*thick/2*sign])
+            N.extend([f*sign,f*sign])
+        for i in range(39):
+            k=base+i*2
+            faces=[[k,k+2,k+1],[k+1,k+2,k+3]]
+            if sign<0:faces=[q[::-1] for q in faces]
+            F.extend(faces)
+    # Side walls use outward geometric normals for correct shading/culling.
+    for edge in [0,1]:
+        for i in range(39):
+            a=i*2+edge;b=(i+1)*2+edge
+            pts=[V[a],V[b],V[b+80],V[a+80]]
+            n=np.cross(pts[1]-pts[0],pts[2]-pts[0]);n/=np.linalg.norm(n)+1e-12
+            k=len(V);V.extend(pts);N.extend([n]*4);F.extend([[k,k+1,k+2],[k,k+2,k+3]])
+    return np.array(V),np.array(N),np.array(F)
 
 # scale info
 size = wpos.max(0)-wpos.min(0)
@@ -237,7 +222,7 @@ def uv_sphere(c, r, nu=12, nv=8):
     for i in range(nv):
         for j in range(nu):
             a=i*nu+j; b=i*nu+(j+1)%nu; c2=(i+1)*nu+(j+1)%nu; d2=(i+1)*nu+j
-            F.append([a,d2,c2]); F.append([a,c2,b])
+            F.append([a,c2,d2]); F.append([a,b,c2])
     return np.array(V),np.array(N),np.array(F)
 p_p = prims[3]
 ep = accessor(js, binb, p_p['attributes']['POSITION']).astype(np.float64)
@@ -252,7 +237,7 @@ for wc, pc in zip(wcomps, pcomps):
     yfront = ew[wc][:,1].min()   # mesh space: -y is the facing direction, z is up
     base=len(Vv) if Vv else 0
     off = sum(len(v) for v in Vv)
-    Vc,Nc,Fc = uv_sphere(bc, 0.0013)
+    Vc,Nc,Fc = uv_sphere(bc, 0.00095)
     Vc[:,1] = yfront - 0.0003 + (Vc[:,1]-Vc[:,1].mean())*0.35
     Vv.append(Vc); Nn.append(Nc); Ff.append(Fc+off)
     # rigid: whole pupil follows the iris vert nearest its center
@@ -266,22 +251,8 @@ p_p['attributes']['WEIGHTS_0'] = add_accessor(js, binb, np.asarray(wn3,np.float3
 p_p['indices'] = add_accessor(js, binb, Ff.astype(np.uint32).reshape(-1),'SCALAR',34963)
 p_p['attributes'].pop('TEXCOORD_0', None)  # stale UV count would break Godot's indexed decode
 print('eyes reshaped: pupils rebuilt as round discs, centered on iris')
-# remove the face-overlay shine strips (Bunny_Secondary side pieces floating in
-# front of the iris, which crossed the enlarged pupil as a pale bar);
-# nose/mouth (center) and brow (behind iris plane) pieces are kept
-p_s = prims[1]
-sp = accessor(js, binb, p_s['attributes']['POSITION']).astype(np.float64)
-si = accessor(js, binb, p_s['indices']).astype(int).reshape(-1,3)
-scomps = prim_components(sp, si)
-drop=set()
-for vs in scomps:
-    c = sp[vs].mean(0)
-    zmax = sp[vs][:,2].max()
-    if abs(c[0]) > 0.0028 and zmax > 0.024:
-        drop.update(int(v) for v in vs)
-keep = np.array([f for f in si if int(f[0]) not in drop], np.uint32)
-p_s['indices'] = add_accessor(js, binb, keep.reshape(-1), 'SCALAR', 34963)
-print('removed eye shine strips;', len(drop), 'verts', len(si)-len(keep), 'faces dropped')
+# Preserve Bunny_Secondary inner-ear/nose/mouth components. The disconnected
+# pieces above eye height are inner ears, not eye shine strips.
 # open the eyelids: recess the fur lid band crossing IN FRONT of the eyes
 # (mesh space: -y faces forward, z is up); vertex pull, mesh stays watertight
 p_f = prims[0]
@@ -291,6 +262,50 @@ fp[lid,1] = np.maximum(fp[lid,1], -0.0044)
 p_f['attributes']['POSITION'] = add_accessor(js, binb, fp.astype(np.float32), 'VEC3', 34962)
 print('recessed eyelid band;', int(lid.sum()), 'fur verts pulled back')
 
+# Split nose, mouth and belly from tintable inner ears without overlapping faces.
+sp=prims[1];sv,sn,sj,sw,si=load_prim(sp);remaining=np.ones(len(si),bool)
+for comp in prim_components(sv,si):
+    if len(comp) not in [59,123,55]:continue
+    name,color=('Nose_Pink',[0.9,0.48,0.62,1]) if len(comp)==59 else ('Mouth_Dark',[0.16,0.12,0.18,1]) if len(comp)==123 else ('Belly_Fur',[0.69,0.75,0.83,1])
+    if len(comp)==123:sv[comp,2]+=np.abs(sv[comp,0])*0.35
+    mat=len(mats);mats.append({'name':name,'pbrMetallicRoughness':{'baseColorFactor':color,'roughnessFactor':0.85}})
+    keep=np.isin(si,comp).all(1);remaining &= ~keep
+    q=dict(sp);q['attributes']=dict(sp['attributes']);q['indices']=add_accessor(js,binb,si[keep].astype(np.uint32).reshape(-1),'SCALAR',34963);q['material']=mat
+    q['attributes']['POSITION']=add_accessor(js,binb,sv.astype(np.float32),'VEC3',34962);prims.append(q)
+sp['indices']=add_accessor(js,binb,si[remaining].astype(np.uint32).reshape(-1),'SCALAR',34963)
+
+# Concept silhouette: tapered cheek tufts and forelock.
+# Work in the original mesh basis, so the existing skin and animation contract survives.
+def fur_tuft(center, direction, width, length):
+    direction=np.array(direction,float);direction/=np.linalg.norm(direction)
+    ref=np.array([0,1,0.0]);side=np.cross(direction,ref);side/=np.linalg.norm(side)
+    cross=np.cross(direction,side)
+    vv=[];nn=[];ff=[]
+    rings=6;seg=10
+    for i in range(rings):
+        t=i/(rings-1);rad=width*np.cos(t*np.pi/2)**0.7
+        for j in range(seg):
+            a=j*2*np.pi/seg;d=side*np.cos(a)+cross*np.sin(a)*0.65
+            vv.append(center+direction*(t*length)+d*rad);nn.append(d/np.linalg.norm(d))
+    for i in range(rings-1):
+        for j in range(seg):
+            a=i*seg+j;b=i*seg+(j+1)%seg;c=(i+1)*seg+(j+1)%seg;d=(i+1)*seg+j
+            ff.extend([[a,c,b],[a,d,c]])
+    vv=np.array(vv);nn=np.array(nn);ff=np.array(ff)
+    ni=int(((pos0-center)**2).sum(1).argmin())
+    prims.append({'attributes':{
+      'POSITION':add_accessor(js,binb,vv.astype(np.float32),'VEC3',34962),
+      'NORMAL':add_accessor(js,binb,nn.astype(np.float32),'VEC3'),
+      'JOINTS_0':add_accessor(js,binb,np.tile(jix0[ni],(len(vv),1)).astype(np.uint8),'VEC4'),
+      'WEIGHTS_0':add_accessor(js,binb,np.tile(wts0[ni],(len(vv),1)).astype(np.float32),'VEC4')},
+      'indices':add_accessor(js,binb,ff.astype(np.uint32).reshape(-1),'SCALAR',34963),
+      'material':0,'mode':4})
+for sign in [-1,1]:
+    for z,dx,dz in [(0.0205,1,-0.15),(0.0194,0.9,-0.45),(0.0214,1,0.2)]:
+        fur_tuft(np.array([sign*0.0045,-0.0028,z]),[sign*dx,0,dz],0.00065,0.0013)
+for x,z,d in [(-0.0015,0.026,[0.4,0,1]),(0,0.0262,[-0.4,0,1]),(0.0015,0.0259,[0.8,0,0.8])]:
+    fur_tuft(np.array([x,-0.0006,z]),d,0.0008,0.0018)
+
 # --- accessories (world bind space) ---
 height = size[1]
 off_boot = height*0.012
@@ -298,60 +313,66 @@ off_boot = height*0.012
 shell_from_region(['Foot.L'], off_boot, MAT_JACKET, 'boot_L')
 shell_from_region(['Foot.R'], off_boot, MAT_JACKET, 'boot_R')
 
-# --- jacket: lathe shell around torso axis ---
-core_mask = np.isin(domname, ['Torso','Abdomen','Body'])
-core = wpos[core_mask]
-y_lo, y_hi = np.percentile(core[:,1], [3, 97])
-NR, SEG = 14, 28
-centers=[]; radii=[]
-ys = np.linspace(y_lo, y_hi, NR)
+# Short open jacket follows existing torso anatomy, not a floating circular tube.
+torso_mask=np.isin(domname,['Torso','Abdomen','Body','Hips']);allv=wpos
+core_mask=np.isin(domname,['Torso','Abdomen','Body']);core=wpos[core_mask]
+y_lo,y_hi=np.percentile(core[:,1],[3,97]);NR=14
+ys=np.linspace(y_lo,y_hi,NR);centers=[];radii=[]
 for y in ys:
-    band = core[np.abs(core[:,1]-y) < (y_hi-y_lo)/NR]
-    if len(band)<5: band=core
-    c = np.array([band[:,0].mean(), y, band[:,2].mean()])
-    r = np.linalg.norm(band[:,[0,2]]-c[[0,2]],axis=1).max()
-    centers.append(c); radii.append(r)
-centers=np.array(centers); radii=np.array(radii)
-margin = height*0.024
-V=[]; N=[]; F=[]
-for i,(c,r) in enumerate(zip(centers,radii)):
-    rr = r+margin
-    for jj in range(SEG):
-        a=2*np.pi*jj/SEG
-        d=np.array([np.cos(a),0,np.sin(a)])
-        V.append(c+d*rr); N.append(d)
-V=np.array(V); N=np.array(N)
-for i in range(NR-1):
-    for jj in range(SEG):
-        a=i*SEG+jj; b=i*SEG+(jj+1)%SEG; c2=(i+1)*SEG+(jj+1)%SEG; d2=(i+1)*SEG+jj
-        F.append([a,b,c2]); F.append([a,c2,d2])
-F=np.array(F)
-# nearest torso-region body vert weights (avoid arm/leg weights -> spiked deformation)
-torso_mask = np.isin(domname, ['Torso','Abdomen','Body','Hips'])
-allv = wpos
-jnv = np.zeros((len(V),4),np.uint8); wnv=np.zeros((len(V),4),np.float32); vm=np.zeros_like(V); nmm=np.zeros_like(N)
-for k in range(len(V)):
-    d2 = ((allv-V[k])**2).sum(1)
-    d2[~torso_mask] = 1e18
-    ni = int(d2.argmin())
-    jnv[k]=jix[ni]; wnv[k]=wts[ni]
-    dom=int(jix[ni, wts[ni].argmax()])
-    Mi=np.linalg.inv(JG[dom])
-    vm[k]=(Mi@np.append(V[k],1.0))[:3]
-    nmm[k]=Mi[:3,:3]@N[k]
-nmm/=np.linalg.norm(nmm,axis=1,keepdims=True)+1e-12
-prim={
- 'attributes':{
-  'POSITION': add_accessor(js, binb, vm.astype(np.float32),'VEC3',34962),
-  'NORMAL': add_accessor(js, binb, nmm.astype(np.float32),'VEC3'),
-  'JOINTS_0': add_accessor(js, binb, jnv,'VEC4'),
-  'WEIGHTS_0': add_accessor(js, binb, wnv,'VEC4'),
- },
- 'indices': add_accessor(js, binb, F.astype(np.uint32).reshape(-1),'SCALAR',34963),
- 'material': MAT_JACKET,'mode':4,
-}
-prims.append(prim)
-print('jacket_lathe verts',len(V),'faces',len(F))
+    band=core[np.abs(core[:,1]-y)<(y_hi-y_lo)/NR]
+    if len(band)<5:band=core
+    c=np.array([0,y,band[:,2].mean()]);centers.append(c);radii.append(np.linalg.norm(band[:,[0,2]]-c[[0,2]],axis=1).max())
+centers=np.array(centers);radii=np.array(radii);margin=height*0.024
+# Clip garment boundaries through triangles, avoiding stair-step missing-face hems.
+def clip(poly,axis,bound,greater,space=0):
+    out=[]
+    for A,B in zip(poly,poly[1:]+poly[:1]):
+        da=(A[space][axis]-bound)*(1 if greater else -1);db=(B[space][axis]-bound)*(1 if greater else -1)
+        if da>=0:out.append(A)
+        if (da>=0)!=(db>=0):
+            t=da/(da-db);out.append(tuple(x*(1-t)+y*t for x,y in zip(A,B)))
+    return out
+V=[];N=[];J=[];W=[];F=[];WP=[]
+for f in idx[core_mask[idx].all(1)]:
+    poly=[]
+    for vi in f:
+        weights=np.zeros(len(jnames))
+        for j,w in zip(jix[vi],wts[vi]):weights[j]+=w
+        poly.append((wpos[vi],pos[vi],nrm[vi],weights))
+    poly=clip(clip(poly,2,0.0138,True,1),2,0.0195,False,1)
+    if len(poly)<3:continue
+    polygons=[poly]
+    if np.mean([v[0][2] for v in poly])>-0.29:
+        polygons=[clip(poly,0,height*0.055,True),clip(poly,0,-height*0.055,False)]
+    for poly in polygons:
+        if len(poly)<3:continue
+        base=len(V)
+        for wp,v,n,weights in poly:
+            jsort=np.argsort(weights)[-4:][::-1];ws=weights[jsort];ws/=ws.sum()
+            sc=np.cbrt(abs(np.linalg.det(JG[jsort[0]][:3,:3])))
+            V.append(v+n*(height*0.012/sc));N.append(n/np.linalg.norm(n));J.append(jsort);W.append(ws);WP.append(wp)
+        for k in range(1,len(poly)-1):F.append([base,base+k,base+k+1])
+V=np.array(V);N=np.array(N);J=np.array(J);W=np.array(W);WP=np.array(WP);F=np.array(F)
+attrs={}
+for key,data,typ in [('POSITION',V,'VEC3'),('NORMAL',N,'VEC3'),('JOINTS_0',J,'VEC4'),('WEIGHTS_0',W,'VEC4')]:
+    attrs[key]=add_accessor(js,binb,data.astype(np.uint8 if key=='JOINTS_0' else np.float32),typ,34962 if key=='POSITION' else None)
+prims.append({'attributes':attrs,'indices':add_accessor(js,binb,F.astype(np.uint32).reshape(-1),'SCALAR',34963),'material':MAT_JACKET,'mode':4})
+# Cyan piping is clipped to the garment's two exact front edges.
+sv=[];sn=[];sj=[];sw=[];sf=[]
+for f in F:
+    for aa,bb in zip(f,np.roll(f,-1)):
+        if abs(abs(WP[aa,0])-height*0.055)>0.0001 or abs(abs(WP[bb,0])-height*0.055)>0.0001:continue
+        if WP[aa,0]*WP[bb,0]<0 or np.mean(WP[[aa,bb],2])< -0.29:continue
+        cc=next(k for k in f if k not in [aa,bb]);base=len(sv)
+        for q,t in [(aa,0),(bb,0),(bb,0.08),(aa,0.08)]:
+            sv.append(V[q]*(1-t)+V[cc]*t+N[q]*0.000015);sn.append(N[q]);sj.append(J[q]);sw.append(W[q])
+        sf.extend([[base,base+1,base+2],[base,base+2,base+3]])
+if sv:
+    at={}
+    for key,data,typ in [('POSITION',sv,'VEC3'),('NORMAL',sn,'VEC3'),('JOINTS_0',sj,'VEC4'),('WEIGHTS_0',sw,'VEC4')]:
+        at[key]=add_accessor(js,binb,np.array(data,dtype=np.uint8 if key=='JOINTS_0' else np.float32),typ,34962 if key=='POSITION' else None)
+    prims.append({'attributes':at,'indices':add_accessor(js,binb,np.array(sf,np.uint32).reshape(-1),'SCALAR',34963),'material':MAT_TRIM,'mode':4})
+print('clipped jacket',len(V),'vertices',len(F),'faces')
 
 def skinned_prim(verts, normals, faces, ref_pos, mat_idx, tag, ref_mask=None, forced=None):
     """verts in world bind space; copy weights from nearest reference body vert
@@ -367,7 +388,7 @@ def skinned_prim(verts, normals, faces, ref_pos, mat_idx, tag, ref_mask=None, fo
             ni = int(d2.argmin())
             jn[k]=jix[ni]; wn[k]=wts[ni]
         dom=int(jn[k, wn[k].argmax()])
-        Mi=np.linalg.inv(JG[dom])
+        Mi=np.linalg.inv(np.sum(JG[jn[k]]*wn[k,:,None,None],axis=0))
         vm[k]=(Mi@np.append(verts[k],1.0))[:3]
         nmm[k]=Mi[:3,:3]@normals[k]
     nmm/=np.linalg.norm(nmm,axis=1,keepdims=True)+1e-12
@@ -385,7 +406,7 @@ def skinned_prim(verts, normals, faces, ref_pos, mat_idx, tag, ref_mask=None, fo
     print(tag,'verts',len(vm),'faces',len(faces))
 
 # collar + hem rings at shell ends
-for ci, tag in [(0,'hem'),(NR-1,'collar')]:
+for ci, tag in []:
     if tag=='collar':
         # hug the neck base instead of floating around the shoulder-wide torso top
         nmask = np.isin(domname, ['Neck'])
@@ -419,7 +440,7 @@ def uv_sphere(c, r, nu=10, nv=6):
     for i in range(nv):
         for j in range(nu):
             a=i*nu+j; b=i*nu+(j+1)%nu; c2=(i+1)*nu+(j+1)%nu; d2=(i+1)*nu+j
-            F.append([a,d2,c2]); F.append([a,c2,b])
+            F.append([a,c2,d2]); F.append([a,b,c2])
     return np.array(V),np.array(N),np.array(F)
 ipup = accessor(js, binb, p_pup['indices']).astype(int).reshape(-1,3)
 Vv=[]; Nn=[]; Ff=[]
@@ -456,14 +477,22 @@ print('catchlights', len(Vv), 'verts')
 # pendant on upper chest front
 ci = int(NR*0.62)
 c = centers[ci]; r=radii[ci]
-cxy = c + np.array([0,0,r+margin+height*0.010])
+cxy = c + np.array([0,0,r+margin+height*0.065])
 Vv,Nn,Ff = crescent(cxy, height*0.046, height*0.016, [0,0,1])
 # rigid charm: every pendant vert uses the weights of the single nearest body
 # vert, so the crescent never shears when the torso bends
 d2 = ((allv-cxy)**2).sum(1); d2[~torso_mask]=1e18
 ni = int(d2.argmin())
 Vr = np.tile(jix[ni], (len(Vv),1)); Wr = np.tile(wts[ni], (len(Vv),1))
-skinned_prim(Vv,Nn,Ff, allv, MAT_PEND, 'pendant', torso_mask, (Vr,Wr))
+rigid_prim(Vv,Nn,Ff, 'Torso', MAT_PEND, 'pendant')
+
+# Rounder cheeks, preserving skinning and topology.
+for p in prims:
+    vv=accessor(js,binb,p['attributes']['POSITION']).astype(np.float64).copy()
+    z=vv[:,2];x=vv[:,0]
+    cheek=np.exp(-((z-0.0208)/0.0034)**2)
+    vv[:,0]*=1+0.13*cheek
+    p['attributes']['POSITION']=add_accessor(js,binb,vv.astype(np.float32),'VEC3',34962)
 
 import os
 os.makedirs(os.path.dirname(DST), exist_ok=True)

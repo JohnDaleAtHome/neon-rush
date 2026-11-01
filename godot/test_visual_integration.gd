@@ -37,6 +37,19 @@ func run():
  assert(g.moons[0].scale.is_equal_approx(Vector3.ONE*1.55))
  assert(g.moons[1].scale.is_equal_approx(Vector3.ONE*0.75))
  assert(g.moons[2].scale.is_equal_approx(Vector3.ONE*0.50))
+ # Grouping remains periodic through the shared 145-unit scenery wrap.
+ var initial=[]
+ for prop in g.scene_props:initial.append(prop.position)
+ for cycle in range(6):
+  for prop in g.scene_props:
+   prop.position.z+=72.5
+   if prop.position.z>10.0:prop.position.z-=145.0
+  g.meadow_visual._process(0.0)
+  for prop in g.scene_props:
+   assert(prop.position.is_finite())
+   assert(prop.position.z<=10.0 and prop.position.z>=-135.001)
+ for i in range(g.scene_props.size()):
+  assert(is_equal_approx(g.scene_props[i].position.z,initial[i].z))
  var flower_vertices=0
  for i in range(34):
   var plant=g.scene_props[i]

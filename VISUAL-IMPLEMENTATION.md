@@ -245,3 +245,15 @@ not match the tracked long-fur/detail target. Final software comparison adds
 4.1%/3.1%submitted triangles at390/1280and is not device performance proof.
 See docs/V48-VISUAL-VALIDATION.md for exact checks, measured cost and remaining
 art/acceptance gaps. Publicv29 is unchanged; no deployment or acceptance.
+
+
+## v50 head/groom and costume reconstruction (WIP)
+Upper ears now use new closed curved volumes and proper front grids on the
+original three-joint weights, with small swept locks. Smaller muzzle/upper
+eyelids, quieter crown, longer jacket with welded hem boundary, cloth/circuit
+material, straps and wider scarf are one character candidate. All14animations
+and their bytes remain; world/HUD/gameplay are unchanged from v48. The solid
+ear locks, strong authored ear curls, simple costume and short grain fur still
+do not match the tracked flowing-fur concept. See docs/V50-VISUAL-VALIDATION.md
+for42pose/clean28suite/browser/recovery/cost evidence and honest limits. No
+final-art acceptance, deployment or physical-device performance claim.

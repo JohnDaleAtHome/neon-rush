@@ -28,6 +28,10 @@ func run():
  for side in g.side_planes:assert(not side.visible)
  assert(is_equal_approx(g.world_sun.light_energy,0.85))
  assert(g.animation_names.size()==14)
+ assert(is_equal_approx(g.env_world.environment.fog_sky_affect,0.0))
+ var chip=g.hud.get_theme_stylebox("normal")
+ assert(chip is StyleBoxFlat and chip.border_width_left==2)
+ assert(chip.bg_color.a<0.8)
  for moon in g.moons:assert(moon.material_override.shader.resource_path.ends_with("meadow_moon.gdshader"))
  assert(g.scene_props.size()==98)
  var flower_vertices=0

@@ -118,3 +118,22 @@ regression/visual fixtures, not natural-campaign or physical-device acceptance.
 Still procedural WIP: grass looks angular, horizon has a tonal strip, moons
 are less stark but remain detached, and final landscape/character art fidelity
 is not accepted. No deployment or final-art acceptance is implied.
+
+
+## v44 Meadow silhouette and horizon batch (WIP)
+Short grass uses tapered bent three-part blades rather than single triangles,
+with varied widths/lean and calmer colors. Each fern/grass mesh is2052vertices;
+total98,496. Dynamic bank anchoring and4.25unit corridor clearance remain.
+The lower Meadow sky now converges on a color-managed haze value shared with
+far geometry. Hills are broader, taller and depth-staggered; central hills
+recede to preserve the run corridor while side ridges have visible relief.
+There are still34hills/98props and no extra draw calls for grass. Character,
+gameplay, moon layout, other themes, asset binaries and sourcepack unchanged.
+
+All28headless suites pass, with finite hill/depth checks and updated grass
+budget/clearance checks. Clean import/Web export and actual390duck/1280scroll
+pixels were inspected with0pageerrors/QAundefined. The far field now has more
+shape but still reads as simple broad ridges/tonal layers. Grass is less
+triangular but remains stylized/sparse in places, moons remain detached and
+there is no final art, physical-device or natural-campaign acceptance claim.
+No deployment is included.

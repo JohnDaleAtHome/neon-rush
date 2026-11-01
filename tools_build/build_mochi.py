@@ -622,5 +622,75 @@ for p in js['meshes'][0]['primitives']:
    v[mask]=center+(v[mask]-center)*np.array([0.88,0.68,0.9])
   p['attributes']['POSITION']=add_accessor(js,binb,v.astype(np.float32),'VEC3',34962)
 
+
+# Larger concept-directed costume pass, still an approximation rather than final fur.
+# Shoulder shells and small back panels share original weighted body surfaces.
+shell_from_region(['UpperArm.L','UpperArm.R'],height*0.014,MAT_JACKET,'shoulder_panels')
+# Back scarf ribbons: rooted at the torso, trailing behind instead of a rigid ring.
+MAT_SCARF=len(mats);mats.append({'name':'Scarf_Navy','doubleSided':True,'pbrMetallicRoughness':{'baseColorFactor':[.035,.055,.10,1],'metallicFactor':0,'roughnessFactor':.8}})
+for side in [-1,1]:
+ vv=[];nn=[];ff=[]
+ for step in range(13):
+  t=step/12
+  center=np.array([side*(.08+t*.55),1.49+.10*np.sin(t*4.5),-.29-t*.65])
+  width=.07*(1-.35*t)
+  for edge in [-1,1]:vv.append(center+np.array([0,edge*width,0]));nn.append(np.array([0,0,1.]))
+ for step in range(12):
+  a=step*2;ff.extend([[a,a+1,a+3],[a,a+3,a+2]])
+ rigid_prim(np.array(vv),np.array(nn),np.array(ff),'Torso',MAT_SCARF,'scarf_ribbon')
+ # Narrow cyan seam follows the same ribbon edge.
+ edgev=[];edgen=[];edgef=[]
+ for step in range(13):
+  t=step/12;c=np.array([side*(.08+t*.55),1.49+.10*np.sin(t*4.5)+.07*(1-.35*t),-.286-t*.65])
+  for delta in [0,-.012]:edgev.append(c+np.array([0,delta,0]));edgen.append([0,0,1])
+ for step in range(12):
+  a=step*2;edgef.extend([[a,a+1,a+3],[a,a+3,a+2]])
+ rigid_prim(np.array(edgev),np.array(edgen),np.array(edgef),'Torso',MAT_TRIM,'scarf_seam')
+
+# Soft rectangular equipment pouches echo the concept without front rings.
+# Superellipsoid panels stay rigid to torso; scarf tails share that root.
+for center,radii,material,tag in [
+ ([0,1.43,-.51],[.30,.34,.12],MAT_JACKET,'backpack'),
+ ([-.28,1.34,.22],[.10,.13,.045],MAT_JACKET,'jacket_pouch'),
+ ([.28,1.34,.22],[.10,.13,.045],MAT_JACKET,'jacket_pouch'),
+ ([-.28,1.39,.266],[.075,.018,.012],MAT_MAGENTA,'pouch_trim'),
+ ([.28,1.39,.266],[.075,.018,.012],MAT_TRIM,'pouch_trim')]:
+ vv,nn,ff=uv_sphere(np.zeros(3),1.0,12,8)
+ # Rounded box silhouette instead of egg-like pods.
+ vv=np.sign(vv)*np.abs(vv)**.35
+ vv=vv*np.array(radii)+np.array(center)
+ # Recompute smoothed normals on the deformed surface.
+ nn=np.zeros_like(vv)
+ for face in ff:
+  normal=np.cross(vv[face[1]]-vv[face[0]],vv[face[2]]-vv[face[0]])
+  for vi in face:nn[vi]+=normal
+ nn/=np.maximum(np.linalg.norm(nn,axis=1,keepdims=True),1e-12)
+ rigid_prim(vv,nn,ff,'Torso',material,tag)
+# Geometry-only swept ear tips preserve animation channels and rest transforms.
+for primitive in prims:
+ v=accessor(js,binb,primitive['attributes']['POSITION']).astype(float)
+ ji=accessor(js,binb,primitive['attributes']['JOINTS_0']);ww=accessor(js,binb,primitive['attributes']['WEIGHTS_0'])
+ ear_weight=np.zeros(len(v))
+ for k in range(4):ear_weight+=ww[:,k]*np.array([jnames[int(q)].startswith('Ear') for q in ji[:,k]])
+ t=np.clip((v[:,2]-.025)/.009,0,1)*ear_weight
+ v[:,1]+=t*t*.0038
+ v[:,0]+=np.sign(v[:,0])*t*t*.0015
+ primitive['attributes']['POSITION']=add_accessor(js,binb,v.astype(np.float32),'VEC3',34962)
+
+
+# Oval eye silhouette and smaller pupil retain the proven front surface depth.
+for primitive in prims:
+ name=mats[primitive['material']]['name']
+ if name not in ['Eye_White','Eye_Black','Eye_Catch']:continue
+ v=accessor(js,binb,primitive['attributes']['POSITION']).astype(float)
+ for side in [-1,1]:
+  mask=v[:,0]*side>0
+  if not mask.any():continue
+  c=v[mask].mean(0)
+  v[mask,2]=c[2]+(v[mask,2]-c[2])*1.24
+  if name=='Eye_Black':
+   v[mask,0]=c[0]+(v[mask,0]-c[0])*.77
+   v[mask,2]=c[2]+(v[mask,2]-c[2])*.80
+ primitive['attributes']['POSITION']=add_accessor(js,binb,v.astype(np.float32),'VEC3',34962)
 save(DST, js, binb)
 print("wrote", DST, os.path.getsize(DST), "bytes;", len(js['accessors']), "accessors;", len(prims), "bunny prims")

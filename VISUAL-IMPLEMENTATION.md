@@ -68,3 +68,14 @@ exposure. The ground underlay uses the bank shader to avoid a diagonal colour
 wedge. See `godot/VISUAL-CHECKPOINT.md` for scope and remaining gates. This does
 not approve concept fidelity or propagation to other levels. Runtime review
 provenance and exact regression results accompany the source-exact build.
+
+## Mochi geometry cleanup - 1 November 2026
+
+After the reproducible v34 checkpoint, direct mesh inspection found reversed
+pupil winding and mistakenly deleted inner-ear components. v35 corrects both,
+removes misplaced collar/hem rings, builds a genuine side-opening crescent,
+separates pink nose/dark mouth/white belly from tintable ears, exposes turquoise
+irises, adds cheek/forelock tufts and replaces the lathe bib with a clipped
+short open jacket following the existing rig. All 14 animations remain.
+This is a low-poly concept-directed draft, not final character approval.
+The current Meadow/horizon and full-game acceptance gaps remain unchanged.

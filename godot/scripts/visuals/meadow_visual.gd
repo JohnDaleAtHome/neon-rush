@@ -8,7 +8,9 @@ extends Node3D
 ##   build_level_props(): after the existing clear + light check ->
 ##                    if meadow_visual and meadow_visual.build_props(self, index): return
 ##
-## The module owns only theme 0. It reads (never writes) main's fields via bind:
+## The module owns only theme 0. Through bind it reads scene state and updates
+## its theme materials, visibility and moon presentation. Main resets moon scales
+## and layout on leaving this theme. Shared fields:
 ## options, scene_props, camera, env_world, ground, side_planes, moons, moon_glows,
 ## player. Props it builds are appended to main's scene_props so the existing
 ## scroll / wrap / free logic in main is reused unchanged.
@@ -63,6 +65,7 @@ func apply(index: int) -> void:
 		if shadow: shadow.visible = false
 		_set_horizon_visible(false)
 		_restore_ambient()
+		game.layout_moons(game.get_viewport().get_visible_rect().size)
 		return
 	active = true
 	for side in game.side_planes: side.visible = false
@@ -101,7 +104,12 @@ func apply(index: int) -> void:
 		var moon_mat: ShaderMaterial = game.moons[i].material_override
 		moon_mat.shader = load("res://scripts/visuals/meadow_moon.gdshader")
 		moon_mat.set_shader_parameter("haze_color",MEADOW_FOG)
+		moon_mat.set_shader_parameter("camera_forward",-camera_ref.global_basis.z)
+		moon_mat.set_shader_parameter("camera_up",camera_ref.global_basis.y)
+		moon_mat.set_shader_parameter("camera_right",camera_ref.global_basis.x)
+		moon_mat.set_shader_parameter("vertical_tangent",tan(deg_to_rad(camera_ref.fov)/2.0))
 	_set_horizon_visible(true)
+	game.layout_moons(game.get_viewport().get_visible_rect().size)
 
 
 func _apply_terrain() -> void:
@@ -326,25 +334,31 @@ func _build_plants(main_node) -> void:
 					_append_fern_leaf(st,center,across*sign_x+direction*0.45+Vector3.UP*0.55,length,Color("3e725a"))
 			_append_fern_leaf(st,direction*reach*0.84+Vector3.UP*high*0.95,direction,0.18,Color("527f65"))
 		# Broad curved ground-cover leaves, clustered across the rolling banks.
-		for tuft in range(24):
+		for tuft in range(4):
 			var angle := prng.randf()*TAU
 			var radius := sqrt(prng.randf())*4.1
 			var base := Vector3(cos(angle)*radius,0,sin(angle)*radius)
 			for blade in range(3):
 				var turn := angle+blade*2.1
-				var across := Vector3(cos(turn),0,sin(turn))*prng.randf_range(0.045,0.095)
-				var bend := Vector3(sin(turn),0,cos(turn))*prng.randf_range(0.17,0.37)
+				var across := Vector3(cos(turn),0,sin(turn))*prng.randf_range(0.10,0.17)
+				var bend := Vector3(sin(turn),0,cos(turn))*prng.randf_range(0.25,0.48)
 				var height := prng.randf_range(0.08,0.21)
 				for section in range(3):
-					var points: Array[Vector3] = []
-					for q in [Vector2(section,-1),Vector2(section,1),Vector2(section+1,1),Vector2(section+1,-1)]:
-						var t: float = q.x/3.0
-						var width := pow(sin(t*PI),0.55)*0.95+0.08
-						points.append(base+bend*t+Vector3.UP*(sin(t*PI*0.7)*height)+across*width*q.y)
-					for k in [0,1,2,0,2,3]:
-						st.set_normal((Vector3.UP+across.normalized()*([-1.0,1.0,1.0,-1.0][k])*0.65-bend.normalized()*0.2).normalized())
-						st.set_color(Color(0.12,0.28,0.24,0.4) if blade%2==0 else Color(0.075,0.19,0.18,0.4))
-						st.add_vertex(points[k])
+					for arc in range(6):
+						var points: Array[Vector3] = []
+						var normals: Array[Vector3] = []
+						for q in [Vector2(section,arc),Vector2(section+1,arc),Vector2(section+1,arc+1),Vector2(section,arc+1)]:
+							var t: float = q.x/3.0
+							var angle_leaf: float = q.y*TAU/6.0
+							var width := pow(sin(t*PI),0.65)*0.95+0.015
+							var center := base+bend*t+Vector3.UP*sin(t*PI*0.7)*height
+							points.append(center+across*width*cos(angle_leaf)+Vector3.UP*width*sin(angle_leaf)*0.045)
+							normals.append((across.normalized()*cos(angle_leaf)*0.45+Vector3.UP*sin(angle_leaf)).normalized())
+						for k in [0,2,1,0,3,2]:
+							st.set_normal(normals[k])
+							st.set_color(Color(0.17,0.34,0.29,0.4) if blade%2==0 else Color(0.12,0.27,0.25,0.4))
+							st.add_vertex(points[k])
+
 		shrub.mesh = st.commit()
 		shrub.scale = Vector3.ONE*1.45
 		shrub.material_override = shrub_material
@@ -508,3 +522,15 @@ func _canopy_mesh(radius: float, seed_id: int) -> ArrayMesh:
 				st.set_normal(points[k].normalized())
 				st.add_vertex(points[k])
 	return st.commit()
+
+
+func layout_moons(size: Vector2) -> void:
+	if not active:return
+	# One dominant partly framed moon plus quiet distant companions, not a row.
+	var landscape := size.x>size.y
+	var locations := [Vector2(0.25,0.31),Vector2(0.82,0.29),Vector2(0.69,0.36)] if landscape else [Vector2(0.12,0.35),Vector2(0.84,0.31),Vector2(0.64,0.36)]
+	for i in range(game.moons.size()):
+		var point: Vector2 = locations[i]*size
+		point.y=maxf(244.0,point.y)
+		game.moons[i].position=camera_ref.project_position(point,60.0+i*15.0)
+		game.moons[i].scale=Vector3.ONE*[1.55,0.75,0.50][i]

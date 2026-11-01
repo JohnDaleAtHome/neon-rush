@@ -59,3 +59,12 @@ Coordinate proposed API/signature changes before applying them. New modules shou
 Return source patches/commits, asset licenses/provenance, inspected screenshots and a source-exact review build. Main coordinates commits, review publication and user summaries. No paid work, recurring wake loop, official replacement, gameplay rebalance or full-campaign completion claim is implied by this phase.
 
 Status at plan creation: requirements and plan prepared; parallel lanes being assigned; implementation not yet integrated. Preserve subsequent evidence in a dated progress section rather than retroactively treating this plan as a completion report.
+
+## Integrated checkpoint - 1 November 2026
+
+Character, Meadow and HUD modules are now combined for review. Shared integration
+also fixes Light-quality transitions, opaque popup panels and Meadow-only
+exposure. The ground underlay uses the bank shader to avoid a diagonal colour
+wedge. See `godot/VISUAL-CHECKPOINT.md` for scope and remaining gates. This does
+not approve concept fidelity or propagation to other levels. Runtime review
+provenance and exact regression results accompany the source-exact build.

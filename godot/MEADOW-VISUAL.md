@@ -37,3 +37,7 @@ The original34plant cards are replaced by vertex-colored solid mesh clumps, with
 Path fog/fade is now computed per fragment to avoid interpolating nonlinear depth fog across the plane triangles. The near path still has a visible tonal boundary from the texture/fade combination; this is not claimed fully solved.
 
 All28suites pass after fixing two initial typed-variable parse errors. Expanded integration checks solid flower meshes,vertex colors,finite coordinates,corridor placement and vertex budget. Fresh release Web actual390/1280scrolling/duck/bale+dew screenshots were inspected with zero page errors and no QA state. No physical-device performance or natural campaign acceptance is implied.
+
+## Path seam isolation
+
+A controlled constant-color path eliminated the moving near horizontal tonal boundary, identifying the repeated path texture as the cause rather than depth fade. The candidate now uses restrained world-space noise with scroll offset instead of the non-seamless repeating texture. Actual390/1280scroll/duck/hazard+dew pixels show the near band removed. Obsolete path/hidden-side texture uniforms and assignments are removed. Existing path.png remains recoverable but unused here. All28suites pass. This fixes the near path band only; distant tonal horizon, simple foliage/moons and character gaps remain. No device/natural-campaign acceptance is implied.

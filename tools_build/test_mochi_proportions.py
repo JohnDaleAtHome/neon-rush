@@ -29,3 +29,15 @@ for mesh in new['meshes']:
   indices=accessor(new,nb,p['indices']);assert indices.max()<len(v)
   weights=accessor(new,nb,p['attributes']['WEIGHTS_0']);assert np.allclose(weights.sum(1),1,atol=.001)
 print('PASS 14animation channels/bytes, inverse binds, four explicit rest scales, finite indexed geometry and normalized skin weights')
+
+materials=new['materials'];primitives=new['meshes'][0]['primitives']
+assert len(primitives)<30
+for p in primitives:
+ name=materials[p['material']]['name']
+ if name in ['Scarf_Navy','Scarf_Seam']:
+  uv=accessor(new,nb,p['attributes']['TEXCOORD_0']);assert np.isfinite(uv).all();assert np.isclose(uv[:,0].min(),0) and np.isclose(uv[:,0].max(),1)
+ if name in ['Eye_White','Eye_Black','Eye_Catch']:
+  vertices=accessor(new,nb,p['attributes']['POSITION'])
+  for side in [-1,1]:
+   q=vertices[vertices[:,0]*side>0];assert np.ptp(q[:,2])>np.ptp(q[:,0]);assert np.ptp(q[:,1])<.0017
+print('PASS batched materials, scarf root/tip UV and flattened oval eye bounds')

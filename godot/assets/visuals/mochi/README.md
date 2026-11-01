@@ -26,3 +26,7 @@ refines muzzle/eyelids, and adds longer cloth jacket/straps/scarf. Strong ear
 curls, solid-looking groom, simple costume and short fur grain remain gaps.
 See docs/V50-VISUAL-VALIDATION.md for current evidence and performance limits.
 Actual Godot/Web motion is the reference for deformation.
+
+v51 preserves authored cloth/scarf shader overrides through ordinary options;
+new regression covers tint/gold behavior. Modest eye/normal/groom refinements
+remain WIP. See docs/V51-VISUAL-VALIDATION.md for cost and acceptance limits.

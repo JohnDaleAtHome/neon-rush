@@ -29,7 +29,7 @@ var saved_ambient_color := Color.BLACK
 var saved_ambient_energy := 1.0
 var ambient_saved := false
 
-const MEADOW_FOG := Color("14352e")
+const MEADOW_FOG := Color("152b39")
 const MOON_GLOW_ALPHA := 0.14
 
 
@@ -239,7 +239,7 @@ func _build_horizon() -> void:
 			sphere.height = sphere.radius*1.55
 			sphere.radial_segments = 14
 			sphere.rings = 7
-			leaf.mesh = sphere
+			leaf.mesh = _canopy_mesh(sphere.radius,i*7+crown)
 			var angle := crown*2.4
 			var reach := height*(0.19 if crown<5 else 0.08)
 			leaf.position = Vector3(cos(angle)*reach,height*(0.58+0.055*crown),sin(angle)*reach)
@@ -254,7 +254,7 @@ func _bank_height(x: float,z: float) -> float:
 	var edge := smoothstep(4.0,12.0,absf(x))
 	var rear := 1.0-smoothstep(112.0,144.0,-z)
 	var outer := 1.0-smoothstep(44.0,53.8,absf(x))
-	return -0.14+edge*rear*outer*(1.4+0.75*sin(z*0.055+x*0.14)+0.45*sin(z*0.12-x*0.19))
+	return -0.14+edge*rear*outer*(2.4+1.35*sin(z*0.055+x*0.14)+0.80*sin(z*0.12-x*0.19))
 
 
 func _rolling_bank(side: float) -> ArrayMesh:
@@ -325,22 +325,26 @@ func _build_plants(main_node) -> void:
 				for sign_x in [-1.0,1.0]:
 					_append_fern_leaf(st,center,across*sign_x+direction*0.45+Vector3.UP*0.55,length,Color("3e725a"))
 			_append_fern_leaf(st,direction*reach*0.84+Vector3.UP*high*0.95,direction,0.18,Color("527f65"))
-		# Short grass fans fill the spaces around each fern without new draw calls.
-		for tuft in range(36):
+		# Broad curved ground-cover leaves, clustered across the rolling banks.
+		for tuft in range(24):
 			var angle := prng.randf()*TAU
-			var radius := sqrt(prng.randf())*2.5
+			var radius := sqrt(prng.randf())*4.1
 			var base := Vector3(cos(angle)*radius,0,sin(angle)*radius)
 			for blade in range(3):
 				var turn := angle+blade*2.1
-				var across := Vector3(cos(turn),0,sin(turn))*prng.randf_range(0.018,0.032)
-				var bend := Vector3(sin(turn),0,cos(turn))*prng.randf_range(0.10,0.22)
-				var height := prng.randf_range(0.16,0.38)
-				var middle := base+bend*0.23+Vector3.UP*height*0.66
-				var tip := base+bend+Vector3.UP*height
-				for v in [base-across,base+across,middle+across*0.65,base-across,middle+across*0.65,middle-across*0.65,middle-across*0.65,middle+across*0.65,tip]:
-					st.set_normal((Vector3.UP*0.75-bend.normalized()*0.25).normalized())
-					st.set_color(Color(0.23,0.37,0.25,0.4) if blade%2==0 else Color(0.18,0.30,0.21,0.4))
-					st.add_vertex(v)
+				var across := Vector3(cos(turn),0,sin(turn))*prng.randf_range(0.045,0.095)
+				var bend := Vector3(sin(turn),0,cos(turn))*prng.randf_range(0.17,0.37)
+				var height := prng.randf_range(0.08,0.21)
+				for section in range(3):
+					var points: Array[Vector3] = []
+					for q in [Vector2(section,-1),Vector2(section,1),Vector2(section+1,1),Vector2(section+1,-1)]:
+						var t: float = q.x/3.0
+						var width := pow(sin(t*PI),0.55)*0.95+0.08
+						points.append(base+bend*t+Vector3.UP*(sin(t*PI*0.7)*height)+across*width*q.y)
+					for k in [0,1,2,0,2,3]:
+						st.set_normal((Vector3.UP+across.normalized()*([-1.0,1.0,1.0,-1.0][k])*0.65-bend.normalized()*0.2).normalized())
+						st.set_color(Color(0.12,0.28,0.24,0.4) if blade%2==0 else Color(0.075,0.19,0.18,0.4))
+						st.add_vertex(points[k])
 		shrub.mesh = st.commit()
 		shrub.scale = Vector3.ONE*1.45
 		shrub.material_override = shrub_material
@@ -485,3 +489,22 @@ func _append_fern_leaf(st: SurfaceTool, base: Vector3, direction: Vector3, lengt
 			st.set_color(color)
 			st.set_normal(Vector3.UP)
 			st.add_vertex(points[k])
+
+
+func _canopy_mesh(radius: float, seed_id: int) -> ArrayMesh:
+	# Irregular layered foliage volumes rather than identical smooth ellipsoids.
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	for row in range(8):
+		for col in range(12):
+			var points: Array[Vector3] = []
+			for q in [Vector2(col,row),Vector2(col+1,row),Vector2(col+1,row+1),Vector2(col,row+1)]:
+				var phi: float = q.y*PI/8.0
+				var theta: float = q.x*TAU/12.0
+				var normal := Vector3(sin(phi)*cos(theta),cos(phi),sin(phi)*sin(theta))
+				var lobe := 1.0+0.09*sin(theta*5.0+seed_id)*sin(phi*4.0)+0.06*cos(phi*7.0+theta*3.0)
+				points.append(normal*radius*lobe*Vector3(1.0,0.78,1.0))
+			for k in [0,2,1,0,3,2]:
+				st.set_normal(points[k].normalized())
+				st.add_vertex(points[k])
+	return st.commit()

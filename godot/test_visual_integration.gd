@@ -25,6 +25,17 @@ func run():
  assert(is_equal_approx(g.world_sun.light_energy,0.85))
  assert(g.animation_names.size()==14)
  assert(g.scene_props.size()==98)
+ var flower_vertices=0
+ for i in range(34):
+  var plant=g.scene_props[i]
+  assert(plant.mesh is ArrayMesh)
+  assert(absf(plant.position.x)>4.8)
+  var arr=plant.mesh.surface_get_arrays(0)
+  assert(arr[Mesh.ARRAY_VERTEX].size()>500)
+  assert(arr[Mesh.ARRAY_COLOR].size()==arr[Mesh.ARRAY_VERTEX].size())
+  flower_vertices+=arr[Mesh.ARRAY_VERTEX].size()
+  for v in arr[Mesh.ARRAY_VERTEX]: assert(v.is_finite())
+ assert(flower_vertices<180000)
  for prop in g.scene_props:
   if prop.has_meta("bank_clearance"):
    prop.position.z = -110.0

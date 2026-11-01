@@ -257,3 +257,15 @@ ear locks, strong authored ear curls, simple costume and short grain fur still
 do not match the tracked flowing-fur concept. See docs/V50-VISUAL-VALIDATION.md
 for42pose/clean28suite/browser/recovery/cost evidence and honest limits. No
 final-art acceptance, deployment or physical-device performance claim.
+
+
+## v51 authored material integration fix and modest eye/groom WIP
+The shared tint function no longer erases unrelated cloth/scarf ShaderMaterial
+overrides. A regression fails on v50 and passes after the separately identified
+function change; intended ear tints and unlocked gold eyes remain functional.
+Gold stops multiplying cyan vertex colors to avoid a green result. Close-up
+real-game option fixtures and ordinary390/1280release pixels were inspected.
+Small almond-eye/radial-iris, normal-strength and groom-edge refinements remain
+generic WIP, not concept acceptance. All29clean suites and14clip byte checks
+pass. Software1280interval is7.4%worse with intended shaders retained; device
+performance remains open. See docs/V51-VISUAL-VALIDATION.md. No deploy.

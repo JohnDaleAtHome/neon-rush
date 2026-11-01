@@ -1,0 +1,234 @@
+[
+  {
+    "version": 45,
+    "w": 390,
+    "h": 844,
+    "rep": 0,
+    "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+    "frames": 16,
+    "raf": {
+      "mean": 390.60624999999993,
+      "p50": 383.3000000000011,
+      "p95": 483.3000000000011
+    },
+    "calls": {
+      "mean": 955,
+      "p50": 956,
+      "p95": 966
+    },
+    "triangles": {
+      "mean": 303762.25,
+      "p50": 303607,
+      "p95": 313653
+    },
+    "submissionCpuMs": {
+      "mean": 0.5000000000291038,
+      "p50": 0.3000000002793968,
+      "p95": 1.600000000325963
+    },
+    "errors": []
+  },
+  {
+    "version": 46,
+    "w": 390,
+    "h": 844,
+    "rep": 0,
+    "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+    "frames": 16,
+    "raf": {
+      "mean": 397.90000000000003,
+      "p50": 399.89999999999964,
+      "p95": 466.6999999999989
+    },
+    "calls": {
+      "mean": 871.5,
+      "p50": 872,
+      "p95": 882
+    },
+    "triangles": {
+      "mean": 295428,
+      "p50": 295029,
+      "p95": 308551
+    },
+    "submissionCpuMs": {
+      "mean": 0.4937499999650754,
+      "p50": 0.30000000004656613,
+      "p95": 2.300000000046566
+    },
+    "errors": []
+  },
+  {
+    "version": 46,
+    "w": 390,
+    "h": 844,
+    "rep": 1,
+    "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+    "frames": 16,
+    "raf": {
+      "mean": 398.9375,
+      "p50": 400,
+      "p95": 483.2000000000007
+    },
+    "calls": {
+      "mean": 871.375,
+      "p50": 872,
+      "p95": 882
+    },
+    "triangles": {
+      "mean": 295329,
+      "p50": 295029,
+      "p95": 308551
+    },
+    "submissionCpuMs": {
+      "mean": 0.43750000004365575,
+      "p50": 0.30000000004656613,
+      "p95": 1.7000000001862645
+    },
+    "errors": []
+  },
+  {
+    "version": 45,
+    "w": 390,
+    "h": 844,
+    "rep": 1,
+    "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+    "frames": 16,
+    "raf": {
+      "mean": 388.53125,
+      "p50": 383.39999999999964,
+      "p95": 449.90000000000146
+    },
+    "calls": {
+      "mean": 955,
+      "p50": 955,
+      "p95": 967
+    },
+    "triangles": {
+      "mean": 303774.25,
+      "p50": 303607,
+      "p95": 313653
+    },
+    "submissionCpuMs": {
+      "mean": 0.4499999999679858,
+      "p50": 0.2999999998137355,
+      "p95": 1.8999999999068677
+    },
+    "errors": []
+  },
+  {
+    "version": 45,
+    "w": 1280,
+    "h": 800,
+    "rep": 0,
+    "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+    "frames": 7,
+    "raf": {
+      "mean": 909.4857142857143,
+      "p50": 883.3999999999996,
+      "p95": 1033.3999999999996
+    },
+    "calls": {
+      "mean": 1245.857142857143,
+      "p50": 1247,
+      "p95": 1247
+    },
+    "triangles": {
+      "mean": 365419.5714285714,
+      "p50": 365729,
+      "p95": 365801
+    },
+    "submissionCpuMs": {
+      "mean": 0.8857142856411103,
+      "p50": 0.39999999990686774,
+      "p95": 2.599999999627471
+    },
+    "errors": []
+  },
+  {
+    "version": 46,
+    "w": 1280,
+    "h": 800,
+    "rep": 0,
+    "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+    "frames": 7,
+    "raf": {
+      "mean": 928.5285714285712,
+      "p50": 900,
+      "p95": 1033.300000000001
+    },
+    "calls": {
+      "mean": 1153.4285714285713,
+      "p50": 1154,
+      "p95": 1156
+    },
+    "triangles": {
+      "mean": 351517.28571428574,
+      "p50": 351405,
+      "p95": 352989
+    },
+    "submissionCpuMs": {
+      "mean": 0.42857142853816704,
+      "p50": 0.4000000001396984,
+      "p95": 0.8000000000465661
+    },
+    "errors": []
+  },
+  {
+    "version": 46,
+    "w": 1280,
+    "h": 800,
+    "rep": 1,
+    "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+    "frames": 7,
+    "raf": {
+      "mean": 930.9000000000002,
+      "p50": 916.7000000000007,
+      "p95": 983.3000000000011
+    },
+    "calls": {
+      "mean": 1153.4285714285713,
+      "p50": 1154,
+      "p95": 1156
+    },
+    "triangles": {
+      "mean": 351517.28571428574,
+      "p50": 351405,
+      "p95": 352989
+    },
+    "submissionCpuMs": {
+      "mean": 1.0428571427972722,
+      "p50": 0.8999999999068677,
+      "p95": 2.5999999998603016
+    },
+    "errors": []
+  },
+  {
+    "version": 45,
+    "w": 1280,
+    "h": 800,
+    "rep": 1,
+    "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+    "frames": 7,
+    "raf": {
+      "mean": 857.1,
+      "p50": 866.5999999999995,
+      "p95": 883.2999999999993
+    },
+    "calls": {
+      "mean": 1245.857142857143,
+      "p50": 1247,
+      "p95": 1247
+    },
+    "triangles": {
+      "mean": 365419.5714285714,
+      "p50": 365729,
+      "p95": 365801
+    },
+    "submissionCpuMs": {
+      "mean": 0.5857142857608518,
+      "p50": 0.49999999976716936,
+      "p95": 1.3999999999068677
+    },
+    "errors": []
+  }
+]

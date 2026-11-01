@@ -30,7 +30,7 @@ var saved_ambient_energy := 1.0
 var ambient_saved := false
 
 const MEADOW_FOG := Color("14352e")
-const MOON_GLOW_ALPHA := 0.30
+const MOON_GLOW_ALPHA := 0.14
 
 
 func bind(main_node) -> void:
@@ -85,7 +85,7 @@ func apply(index: int) -> void:
 	# Sky gradient tuned to the same teal-to-indigo ramp as the fog.
 	var sky := Sky.new()
 	var sky_material := ShaderMaterial.new()
-	sky_material.shader = load("res://scripts/sky.gdshader")
+	sky_material.shader = load("res://scripts/visuals/meadow_sky.gdshader")
 	sky_material.set_shader_parameter("camera_forward", -camera_ref.global_basis.z)
 	sky_material.set_shader_parameter("camera_up", camera_ref.global_basis.y)
 	sky_material.set_shader_parameter("vertical_tangent", tan(deg_to_rad(camera_ref.fov) / 2.0))
@@ -95,9 +95,12 @@ func apply(index: int) -> void:
 	environment.background_mode = Environment.BG_SKY
 	# Calmer path and banks: module terrain shader, same scroll contract.
 	_apply_terrain()
-	# Moons stay where layout_moons puts them; lift their glow into the scene.
+	# Preserve celestial layout and moon option; veil their high contrast in Meadow haze.
 	for i in range(game.moons.size()):
 		game.moon_glows[i].modulate.a = MOON_GLOW_ALPHA
+		var moon_mat: ShaderMaterial = game.moons[i].material_override
+		moon_mat.shader = load("res://scripts/visuals/meadow_moon.gdshader")
+		moon_mat.set_shader_parameter("haze_color",MEADOW_FOG)
 	_set_horizon_visible(true)
 
 
@@ -317,12 +320,40 @@ func _build_plants(main_node) -> void:
 				for sign_x in [-1.0,1.0]:
 					_append_fern_leaf(st,center,across*sign_x+direction*0.45+Vector3.UP*0.55,length,Color("3e725a"))
 			_append_fern_leaf(st,direction*reach*0.84+Vector3.UP*high*0.95,direction,0.18,Color("527f65"))
+		# Short grass fans fill the spaces around each fern without new draw calls.
+		for tuft in range(36):
+			var angle := prng.randf()*TAU
+			var radius := sqrt(prng.randf())*2.5
+			var base := Vector3(cos(angle)*radius,0,sin(angle)*radius)
+			for blade in range(3):
+				var turn := angle+blade*2.1
+				var across := Vector3(cos(turn),0,sin(turn))*0.045
+				var bend := Vector3(sin(turn),0,cos(turn))*0.10
+				var height := prng.randf_range(0.15,0.34)
+				var tip := base+bend+Vector3.UP*height
+				for v in [base-across,base+across,tip]:
+					st.set_normal(Vector3.UP)
+					st.set_color(Color(0.243,0.4,0.278,0.4) if blade%2==0 else Color(0.204,0.329,0.231,0.4))
+					st.add_vertex(v)
 		shrub.mesh = st.commit()
 		shrub.scale = Vector3.ONE*1.45
 		shrub.material_override = shrub_material
 		var side := -1 if i%2==0 else 1
 		shrub.position = Vector3(side*prng.randf_range(5.0,24.0),0,-4.0-i*2.9)
 		shrub.position.y = _bank_height(shrub.position.x,shrub.position.z)
+		# Anchor only the new short grass to sloped banks and protect the corridor.
+		var arrays := shrub.mesh.surface_get_arrays(0)
+		var vertices: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+		for k in range(1080,vertices.size()):
+			var v := vertices[k]
+			var world_x := shrub.position.x+v.x*1.45
+			world_x = maxf(4.25,world_x) if side>0 else minf(-4.25,world_x)
+			v.x = (world_x-shrub.position.x)/1.45
+			vertices[k] = v
+		arrays[Mesh.ARRAY_VERTEX] = vertices
+		var grounded_mesh := ArrayMesh.new()
+		grounded_mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES,arrays)
+		shrub.mesh = grounded_mesh
 		shrub.set_meta("bank_clearance",0.0)
 		main_node.add_child(shrub)
 		main_node.scene_props.append(shrub)

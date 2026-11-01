@@ -108,3 +108,15 @@ Dark wrist cuffs with narrow magenta piping are clipped from the forearm mesh
 and preserve its skin weights, rather than floating rigid rings. This is a
 small costume increment, not final concept fidelity; fingers, eyes, silhouette,
 fur surface and most costume details remain simplified. No mechanic changes.
+
+
+## v41 batched character refinement (WIP)
+Layered shorter cheek tufts and a swept forelock replace the large three-spike
+cheeks; lower-arm root scale is now0.69/0.73/0.69, with descendant fingers and
+cuffs following the rig. Smaller pink nose, smaller jade-green crescent with
+less emission, cyan boot edge/ankle strips and a narrow magenta jacket hem
+bring the palette/costume closer to the tracked concept. Animation channels,
+inverse binds and hierarchy remain original. Eye recess experiments were
+rejected after three-quarter pixels showed face occlusion; accepted eye
+geometry remains v39/v40. This is still a generic low-poly approximation,
+not final fur/costume, swept-ear silhouette, or accepted concept fidelity.

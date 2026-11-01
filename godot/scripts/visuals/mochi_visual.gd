@@ -50,7 +50,7 @@ static func _enhance(node: Node) -> void:
 					fiber.noise = noise
 					m.normal_enabled = true
 					m.normal_texture = fiber
-					m.normal_scale = 0.22
+					m.normal_scale = 0.065
 					m.rim_enabled = true
 					m.rim = 0.12
 					m.rim_tint = 0.25

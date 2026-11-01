@@ -120,3 +120,16 @@ inverse binds and hierarchy remain original. Eye recess experiments were
 rejected after three-quarter pixels showed face occlusion; accepted eye
 geometry remains v39/v40. This is still a generic low-poly approximation,
 not final fur/costume, swept-ear silhouette, or accepted concept fidelity.
+
+
+## v42 Meadow foliage/atmosphere batch (WIP)
+Branched trees use overlapping varied crowns rather than three tall blobs.
+Paired leaflets replace the nine angular fern blades;48ferns total51,840
+vertices. A shared opaque foliage shader adds restrained wind and the same
+fragment-depth fog ramp as the banks to flowers/ferns/tree crowns. Scene prop
+counts/scroll wrapping, bank height following, light-mode cleanup and other
+themes stay unchanged. This is stylized procedural WIP, not final landscape
+art: the distant tonal horizon strip, simple trunks, detached moons and
+limited ground cover remain. No gameplay, character, asset binary or deploy
+changes. Real-device performance and natural campaign/art acceptance remain
+open; desktop/mobile browser fixtures are only visual/regression evidence.

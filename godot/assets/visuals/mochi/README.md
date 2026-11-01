@@ -1,5 +1,9 @@
 # Mochi WIP character asset
 
+Run `python3 godot/fetch-assets.py` from repository root before importing.
+The exact GLB is recovered offline from trackedASCII sourcepackchunks with
+SHA256verification, not stored as a native binary Git blob.
+
 `mochi.glb` is derived from the Quaternius Bunny (Ultimate Monsters), CC0.
 Original source: https://poly.pizza/m/irZjWFARyl
 License: https://creativecommons.org/publicdomain/zero/1.0/

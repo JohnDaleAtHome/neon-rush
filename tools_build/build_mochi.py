@@ -718,17 +718,17 @@ for side in [-1,1]:
  ear_prim(side,True)
  # Short tapering swept locks break the outer ear silhouette, weighted to its rig.
  for step in range(6):
-  t0=.25+step*.105;vv=[];nn=[];jj=[];ww=[];ff=[]
+  t0=.28+step*.105;vv=[];nn=[];jj=[];ww=[];ff=[]
   c0=ear_center(t0,side);tan=ear_center(t0+.001,side)-ear_center(t0-.001,side);tan/=np.linalg.norm(tan)
   across=np.cross(tan,[0,1,0]);across/=np.linalg.norm(across);depth=np.cross(tan,across)
   width=.00165*np.sin(np.pi*(t0*.94+.04))**.65+.00004
   outward=across*side
   base=c0+outward*width*.80
   for row in range(8):
-   u=row/7;center=base+tan*.0022*u+outward*.00055*np.sin(u*np.pi*.75)+np.array([0,.0005,0])*u*u
+   u=row/7;center=base+tan*.0020*u+outward*.00032*np.sin(u*np.pi*.75)+np.array([0,.0005,0])*u*u
    for col in range(8):
     angle=col*2*np.pi/8;normal=outward*np.cos(angle)+depth*np.sin(angle)
-    vv.append(center+outward*np.cos(angle)*(.00045*(1-u)**.8+.000004)+depth*np.sin(angle)*(.00014*(1-u)+.000004));nn.append(normal)
+    vv.append(center+outward*np.cos(angle)*(.00038*(1-u)**.8+.000004)+depth*np.sin(angle)*(.00014*(1-u)+.000004));nn.append(normal)
     blend=min(1,t0+u*.12)*2;e1=jnames.index('Ear1.'+('L' if side>0 else 'R'));jj.append([e1,e1+1,e1+2,0]);ww.append([max(0,1-blend),1-abs(blend-1),max(0,blend-1),0])
   for row in range(7):
    for col in range(8):
@@ -813,7 +813,7 @@ for primitive in prims:
   for ring in range(6):
    radius=ring/5
    for k in range(48):
-    angle=k*2*np.pi/48;x=cx+np.cos(angle)*rx*radius;z=cz+np.sin(angle)*rz*radius
+    angle=k*2*np.pi/48;x=cx+np.cos(angle)*rx*radius;z=cz+np.sin(angle)*abs(np.sin(angle))**.22*rz*radius+side*(x-cx)*.13
     y=face_depth(x,z)-offset-(1-radius*radius)*.00004
     vv.append([x,y,z]);normal=np.array([side*.45,-1,.05]);normal/=np.linalg.norm(normal);nn.append(normal)
     vi=int(np.sum((pos0-[x,y,z])**2,axis=1).argmin());jj.append(jix0[vi]);ww.append(wts0[vi])
@@ -833,7 +833,7 @@ for side in [-1,1]:
   t=k*2*np.pi/48
   for size in [1.0,1.06]:
    x=side*.00365+np.cos(t)*.00122*size*.98
-   z=.02275+np.sin(t)*.00162*size
+   z=.02275+np.sin(t)*abs(np.sin(t))**.22*.00162*size+side*(x-side*.00365)*.13
    vv.append([x,face_depth(x,z)-.00022,z]);nn.append([side*.45,-1,0])
  for k in range(48):
   a=k*2;b=((k+1)%48)*2;ff.extend([[a,b,a+1],[a+1,b,b+1]])
@@ -872,8 +872,10 @@ for primitive in prims:
  for q in v:
   side=1 if q[0]>0 else -1
   radial=np.sqrt(((q[0]-side*.00365)/.00122)**2+((q[2]-.02275)/.00162)**2)
-  brightness=.60+.40*(1-radial)
-  colors.append([brightness*.9,brightness, min(1.0,brightness*1.12),1])
+  angle=np.arctan2((q[2]-.02275)/.00162,(q[0]-side*.00365)/.00122)
+  fibers=.035*np.sin(angle*37)+.020*np.cos(angle*71+radial*9)
+  brightness=np.clip(.83-.33*radial+fibers,.28,1)
+  colors.append([brightness*.48,brightness, min(1.0,brightness*1.30),1])
  primitive['attributes']['COLOR_0']=add_accessor(js,binb,np.array(colors,np.float32),'VEC4')
 # Broad curved jacket lapels and a cross-body belt are torso-bound costume forms.
 for side in [-1,1]:

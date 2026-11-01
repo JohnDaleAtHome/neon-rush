@@ -13,7 +13,7 @@ for a,b in zip(old['nodes'],new['nodes']):
  if a!=b:
   changed.append(a['name'])
   assert {k:v for k,v in a.items() if k!='scale'}=={k:v for k,v in b.items() if k!='scale'}
-  factor=[.96,.74,.96] if a['name'].startswith('Ear1.') else [.78]*3
+  factor=[.96,.74,.96] if a['name'].startswith('Ear1.') else [.69,.73,.69]
   assert np.allclose(b['scale'],np.array(a['scale'])*factor)
 assert set(changed)=={'Ear1.L','Ear1.R','LowerArm.L','LowerArm.R'}
 for a,b in zip(old['animations'],new['animations']):

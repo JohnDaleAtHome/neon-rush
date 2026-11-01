@@ -88,3 +88,15 @@ The post-v35 local candidate replaces tiny berms/flat ridge quads with rolling b
 ## Solid Meadow foliage increment - 1 November 2026
 
 After v36,the34flat plant cards are replaced by single-mesh solid flower/reed clumps with stems/leaves and vertex colors. No new binary assets or shared gameplay code change. Path nonlinear fog/fade is calculated per fragment rather than per vertex. Expanded integration and all28suites pass;actual portrait/desktop scrolling,duck and bale/dew pixels inspected. The path still has a tonal seam and the distant horizon remains a strip. This is incremental WIP,not landscape-art approval or physical-device acceptance.
+
+
+## v39 character expression/proportion checkpoint (WIP)
+The generator now replaces the pinched V-shaped mouth with a small curved smile,
+reduces eye projection/width, shortens ear root scales and reduces lower-arm
+branches uniformly to0.78. Finger descendants follow those branch transforms.
+All14animation channels and inverse bind matrices are unchanged; four named
+rest-node scales intentionally differ, so original node JSON equality is no
+longer claimed. This is exploratory concept-directed work, not accepted final
+art. Bulky fingers, simple fur, jacket detail and round eye forms remain.
+42native snapshots sample14animations at10/50/90percent; native fixtures do not
+replace actual gameplay, natural campaign, physical-device or human acceptance.

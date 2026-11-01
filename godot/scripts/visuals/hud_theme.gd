@@ -37,7 +37,7 @@ const BTN_BORDER := Color(0.28, 0.42, 0.72, 0.55)
 const PRIMARY_BG := Color(0.085, 0.270, 0.440, 0.96)
 const PRIMARY_BG_HOVER := Color(0.125, 0.370, 0.585, 0.98)
 const PRIMARY_BG_PRESSED := Color(0.055, 0.185, 0.310, 0.98)
-const PAD_BG := Color(0.045, 0.070, 0.150, 0.52)
+const PAD_BG := Color(0.025, 0.045, 0.105, 0.66)
 const PAD_BG_HOVER := Color(0.090, 0.140, 0.280, 0.66)
 const PAD_BG_PRESSED := Color(0.140, 0.330, 0.470, 0.78)
 const PAD_BORDER := Color(0.40, 0.85, 0.98, 0.35)
@@ -100,9 +100,9 @@ static func style_primary(btn: Button) -> void:
 
 static func style_pad(btn: Button) -> void:
 	_apply_button(btn,
-		_flat(PAD_BG, PAD_BORDER, 1, 12),
-		_flat(PAD_BG_HOVER, ACCENT_SOFT_BORDER(), 1, 12),
-		_flat(PAD_BG_PRESSED, ACCENT, 1, 12))
+		_flat(PAD_BG, PAD_BORDER, 1, 5),
+		_flat(PAD_BG_HOVER, ACCENT_SOFT_BORDER(), 1, 5),
+		_flat(PAD_BG_PRESSED, ACCENT, 1, 5))
 
 
 static func style_small_ghost(btn: Button) -> void:
@@ -113,7 +113,15 @@ static func style_small_ghost(btn: Button) -> void:
 
 
 static func style_hud(label: Label) -> void:
-	_label(label, Color("d8ecff"), 4)
+	_label(label, Color("d8ecff"), 2)
+	# Content-sized telemetry chip, never a full-width gameplay mask.
+	var chip := _flat(Color(0.025,0.045,0.105,0.72),Color(0.30,0.76,0.83,0.7),0,5)
+	chip.border_width_left = 2
+	chip.content_margin_left = 10
+	chip.content_margin_right = 10
+	chip.content_margin_top = 5
+	chip.content_margin_bottom = 5
+	label.add_theme_stylebox_override("normal",chip)
 
 
 static func style_title(label: Label) -> void:

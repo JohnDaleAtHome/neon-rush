@@ -11,7 +11,7 @@ against manifest.json before writing any file. It then runs the original
 checksum-verified network recovery for28baseline assets. To restore only the
 new visual assets offline, run `python3 godot/restore-visual-assets.py`.
 
-Chunks are ordered00.b64 through11.b64. The JSON archive carries relative asset
+Chunks are ordered00.b64 through12.b64. The JSON archive carries relative asset
 paths, byte counts, checksums and base64data. The decoder checks the manifest,
 blocks path traversal and writes atomically after all entries validate.
 

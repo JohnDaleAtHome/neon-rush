@@ -174,3 +174,27 @@ shape but still reads as simple broad ridges/tonal layers. Grass is less
 triangular but remains stylized/sparse in places, moons remain detached and
 there is no final art, physical-device or natural-campaign acceptance claim.
 No deployment is included.
+
+## v45 holistic composition pass (WIP)
+Compared character, world and HUD together against the tracked Mochi concept.
+Weighted shoulder shells extend the dark jacket; soft rectangular front
+pouches and a small back equipment panel add costume structure. Two navy
+scarf tails with cyan seams trail behind from the torso. Geometry-only swept
+ear tips and oval eyes keep the original skeleton, inverse binds and all14
+animation channels/sampler bytes. Floating ear-fur spike experiments and egg-
+shaped pouches were rejected after native pixels. No final fur likeness is
+claimed: eyes still protrude, costume is simple and scarf tails are rigid,
+not simulated cloth. Builder and offline visual sourcepack contain exact bytes.
+
+Layered indigo cloud wisps replace the nearly flat Meadow sky; sky fog mixing
+is disabled so these remain visible. Eight near trees move into the side
+framing with varied canopy tones. A subdued blue-navy path ties into the sky.
+HUD text sits on a compact navy translucent chip with cyan side rule; touch
+pads use matching smaller corners. Hitboxes, control layout, game mechanics,
+three-moon layout and public deployments are unchanged. Meadow is still early
+procedural art: simple crowns/ridges, angular sparse grass and detached moons.
+
+Validation includes all28headless suites, exact rig/animation-byte checks,
+42native animation samples, clean import/export and actual browser pixels.
+These are regression fixtures, not natural L5/L6/reunion play, physical-device,
+audio, human-fun or final-art acceptance. Publicv29 stays frozen.

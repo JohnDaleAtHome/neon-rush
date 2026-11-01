@@ -104,19 +104,8 @@ func apply(index: int) -> void:
 func _apply_terrain() -> void:
 	var ground_mat := ShaderMaterial.new()
 	ground_mat.shader = load("res://scripts/visuals/meadow_terrain.gdshader")
-	ground_mat.set_shader_parameter("terrain_texture", load(ASSET_DIR + "path.png"))
-	ground_mat.set_shader_parameter("terrain_tint", Color.WHITE)
-	ground_mat.set_shader_parameter("uv_scale", Vector2(1.0, 6.0))
 	ground_mat.set_shader_parameter("fog_color", MEADOW_FOG)
 	game.ground.material_override = ground_mat
-	for side in game.side_planes:
-		var side_mat := ShaderMaterial.new()
-		side_mat.shader = load("res://scripts/visuals/meadow_terrain.gdshader")
-		side_mat.set_shader_parameter("terrain_texture", load(ASSET_DIR + "meadow_side.png"))
-		side_mat.set_shader_parameter("terrain_tint", Color.WHITE)
-		side_mat.set_shader_parameter("uv_scale", Vector2(5.0, 20.0))
-		side_mat.set_shader_parameter("fog_color", MEADOW_FOG)
-		side.material_override = side_mat
 
 
 func _restore_ambient() -> void:

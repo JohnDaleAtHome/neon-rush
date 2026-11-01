@@ -234,3 +234,14 @@ native42poses/scarf and multisize browser pixels pass regression checks.
 Software-rendered means are1.5% worse at390 and3.4% better at1280 thanv46, with
 fewer submitted triangles. No physical-device speed claim or deployment. See
 [validation](docs/V47-VISUAL-VALIDATION.md) for evidence and limits.
+
+## v48 grouped scene and plush-surface checkpoint
+
+A whole-scene WIP pass combines grouped Meadow drifts, readable slate joints,
+varied canopy proportions, swept ears, coat lapels and higher boots. One clipped
+fur shell softens white contours without changing animation bytes. Long groom
+ribbons and extra shell layers were rejected on pixels/cost. This still does
+not match the tracked long-fur/detail target. Final software comparison adds
+4.1%/3.1%submitted triangles at390/1280and is not device performance proof.
+See docs/V48-VISUAL-VALIDATION.md for exact checks, measured cost and remaining
+art/acceptance gaps. Publicv29 is unchanged; no deployment or acceptance.

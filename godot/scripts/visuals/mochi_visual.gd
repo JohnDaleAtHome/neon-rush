@@ -11,7 +11,7 @@ class_name MochiVisual
 ## dark boots, and a glowing crescent moon pendant (all skinned to the existing
 ## skeleton, so they deform with every animation).
 ##
-## Contract (agreed with integration owner):
+## Integration API:
 ##   var bunny: Node3D = MochiVisual.create()   # then scale 0.55, add to player
 ## create() returns null and pushes an error if the asset cannot be loaded -
 ## no silent fallback to the legacy rabbit, so a broken asset cannot pass review.
@@ -38,13 +38,30 @@ static func _enhance(node: Node) -> void:
 					# soft fur: matte finish, subtle luminous edge, no metal
 					m.albedo_color = Color("e0e6ef") if String(m.resource_name) in ["Bunny_Main", "Belly_Fur"] else m.albedo_color
 					m.metallic = 0.0
-					m.roughness = 0.85
+					m.roughness = 0.9
+					var fiber := NoiseTexture2D.new()
+					fiber.width = 128
+					fiber.height = 128
+					fiber.as_normal_map = true
+					fiber.bump_strength = 1.0
+					var noise := FastNoiseLite.new()
+					noise.seed = 4611
+					noise.frequency = 0.32
+					fiber.noise = noise
+					m.normal_enabled = true
+					m.normal_texture = fiber
+					m.normal_scale = 0.22
 					m.rim_enabled = true
 					m.rim = 0.12
 					m.rim_tint = 0.25
 					m.emission_enabled = true
 					m.emission = Color(0.55, 0.75, 0.9)
 					m.emission_energy_multiplier = 0.0
+				"Scarf_Navy", "Scarf_Seam":
+					var scarf := ShaderMaterial.new()
+					scarf.shader = load("res://scripts/visuals/mochi_scarf.gdshader")
+					scarf.set_shader_parameter("seam",String(m.resource_name)=="Scarf_Seam")
+					mi.set_surface_override_material(i,scarf)
 				"Eye_White":
 					# cyan glow; gold unlock still recolors albedo via apply_bunny_tint
 					m.emission_enabled = true

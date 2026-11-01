@@ -218,3 +218,19 @@ comparison reduces submitted draws/triangles but has2.3%/5.3% worse mean frame
 intervals at390/1280. This is not physical-device performance proof. See
 [validation](docs/V46-VISUAL-VALIDATION.md) for counts, method and limitations.
 No public deployment or final-art/campaign acceptance is claimed.
+
+## v47 composition pass (WIP)
+
+Face-conforming eye grids and quieter short cheek fringe replace raised lenses.
+Rounded volume leaves retain the114048vertex cover budget. Meadow-only moon
+framing is asymmetric, with ray-aligned cloud/horizon haze and scale restoration
+on leaving the theme. HUD and gameplay remain unchanged. The larger comb-like
+fur and higher-cost four-section leaf candidates were rejected after pixels and
+measurements. Generic smooth character, sparse repeated vegetation and faceted
+crowns remain gaps against the tracked concept, not accepted final art.
+
+All28recovered-source suites, exact builder/rig/sampler checks,39binary recovery,
+native42poses/scarf and multisize browser pixels pass regression checks.
+Software-rendered means are1.5% worse at390 and3.4% better at1280 thanv46, with
+fewer submitted triangles. No physical-device speed claim or deployment. See
+[validation](docs/V47-VISUAL-VALIDATION.md) for evidence and limits.

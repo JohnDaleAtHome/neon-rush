@@ -80,7 +80,7 @@ cuffs following the rig. Smaller pink nose, smaller jade-green crescent with
 less emission, cyan boot edge/ankle strips and a narrow magenta jacket hem
 bring the palette/costume closer to the tracked concept. Animation channels,
 inverse binds and hierarchy remain original. Eye recess experiments were
-rejected after three-quarter pixels showed face occlusion; accepted eye
+rejected after three-quarter pixels showed face occlusion; retained eye
 geometry remains v39/v40. This is still a generic low-poly approximation,
 not final fur/costume, swept-ear silhouette, or accepted concept fidelity.
 
@@ -96,3 +96,25 @@ art: the distant tonal horizon strip, simple trunks, detached moons and
 limited ground cover remain. No gameplay, character, asset binary or deploy
 changes. Real-device performance and natural campaign/art acceptance remain
 open; desktop/mobile browser fixtures are only visual/regression evidence.
+
+
+## v43 Meadow ground cover and atmosphere batch (WIP)
+Short grass fans surround the48fern meshes without adding props/draw calls;
+each combined fern/grass mesh is1404vertices,67,392total. Grass x positions
+stay outside4.25world units from the lane center. An opaque vertex-color tag
+lets the foliage shader reanchor grass to the bank at its current world
+position, including scroll/wrap, rather than baking one terrain height.
+Banks use a slightly lighter varied green palette. Meadow-only moon material
+reduces relief/contrast with teal haze and lower glow; the established three
+moon layout and Show moons option remain. A separate Meadow sky shader adds
+very quiet broken wisps while retaining the gradient and objective legibility.
+Main gameplay, character, binaries, sourcepack and other themes are unchanged.
+Light-mode/other-theme cleanup retains the base moon shader.
+
+Actual release390duck/1280scroll pixels were inspected after correcting grass
+that initially intruded into the corridor. All28headless suites, clean import
+and Web export pass; browser reported0pageerrors and QAundefined. These are
+regression/visual fixtures, not natural-campaign or physical-device acceptance.
+Still procedural WIP: grass looks angular, horizon has a tonal strip, moons
+are less stark but remain detached, and final landscape/character art fidelity
+is not accepted. No deployment or final-art acceptance is implied.

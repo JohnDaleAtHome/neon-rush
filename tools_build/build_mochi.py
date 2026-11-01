@@ -628,6 +628,7 @@ for p in js['meshes'][0]['primitives']:
 shell_from_region(['UpperArm.L','UpperArm.R'],height*0.014,MAT_JACKET,'shoulder_panels')
 # Back scarf ribbons: rooted at the torso, trailing behind instead of a rigid ring.
 MAT_SCARF=len(mats);mats.append({'name':'Scarf_Navy','doubleSided':True,'pbrMetallicRoughness':{'baseColorFactor':[.035,.055,.10,1],'metallicFactor':0,'roughnessFactor':.8}})
+MAT_SCARF_SEAM=len(mats);mats.append({'name':'Scarf_Seam','doubleSided':True,'pbrMetallicRoughness':{'baseColorFactor':[.13,.9,1,1],'roughnessFactor':.6}})
 for side in [-1,1]:
  vv=[];nn=[];ff=[]
  for step in range(13):
@@ -638,6 +639,7 @@ for side in [-1,1]:
  for step in range(12):
   a=step*2;ff.extend([[a,a+1,a+3],[a,a+3,a+2]])
  rigid_prim(np.array(vv),np.array(nn),np.array(ff),'Torso',MAT_SCARF,'scarf_ribbon')
+ prims[-1]['attributes']['TEXCOORD_0']=add_accessor(js,binb,np.array([[step/12,edge] for step in range(13) for edge in [0,1]],np.float32),'VEC2')
  # Narrow cyan seam follows the same ribbon edge.
  edgev=[];edgen=[];edgef=[]
  for step in range(13):
@@ -645,7 +647,8 @@ for side in [-1,1]:
   for delta in [0,-.012]:edgev.append(c+np.array([0,delta,0]));edgen.append([0,0,1])
  for step in range(12):
   a=step*2;edgef.extend([[a,a+1,a+3],[a,a+3,a+2]])
- rigid_prim(np.array(edgev),np.array(edgen),np.array(edgef),'Torso',MAT_TRIM,'scarf_seam')
+ rigid_prim(np.array(edgev),np.array(edgen),np.array(edgef),'Torso',MAT_SCARF_SEAM,'scarf_seam')
+ prims[-1]['attributes']['TEXCOORD_0']=add_accessor(js,binb,np.array([[step/12,edge] for step in range(13) for edge in [0,1]],np.float32),'VEC2')
 
 # Soft rectangular equipment pouches echo the concept without front rings.
 # Superellipsoid panels stay rigid to torso; scarf tails share that root.
@@ -692,5 +695,75 @@ for primitive in prims:
    v[mask,0]=c[0]+(v[mask,0]-c[0])*.77
    v[mask,2]=c[2]+(v[mask,2]-c[2])*.80
  primitive['attributes']['POSITION']=add_accessor(js,binb,v.astype(np.float32),'VEC3',34962)
+# Flatten the eye assembly into layered oval lenses instead of separate eyeballs.
+for primitive in prims:
+ name=mats[primitive['material']]['name']
+ if name not in ['Eye_White','Eye_Black','Eye_Catch']:continue
+ v=accessor(js,binb,primitive['attributes']['POSITION']).astype(float)
+ for side in [-1,1]:
+  mask=v[:,0]*side>0
+  if not mask.any():continue
+  c=v[mask].mean(0);ext=np.max(np.abs(v[mask]-c),axis=0)
+  if name=='Eye_White':
+   v[mask,0]=side*.0040+(v[mask,0]-c[0])*.00122/ext[0]
+   v[mask,2]=.02275+(v[mask,2]-c[2])*.00162/ext[2]
+   v[mask,1]=-.00425+(v[mask,1]-c[1])*.00016/ext[1]+(np.abs(v[mask,0])-.0040)*.50
+  elif name=='Eye_Black':
+   v[mask,0]=side*.0040+(v[mask,0]-c[0])*.00066/ext[0]
+   v[mask,2]=.0227+(v[mask,2]-c[2])*.00116/ext[2]
+   v[mask,1]=-.00444+(v[mask,1]-c[1])*.000065/ext[1]+(np.abs(v[mask,0])-.0040)*.50
+  else:
+   v[mask,0]=side*.00377+(v[mask,0]-c[0])*.00023/ext[0]
+   v[mask,2]=.02330+(v[mask,2]-c[2])*.00031/ext[2]
+   v[mask,1]=-.00454+(v[mask,1]-c[1])*.000025/ext[1]+(np.abs(v[mask,0])-.0040)*.50
+ primitive['attributes']['POSITION']=add_accessor(js,binb,v.astype(np.float32),'VEC3',34962)
+# Dark fitted eyelid rims sit at the oval edge, not around a protruding sphere.
+MAT_LID=len(mats);mats.append({'name':'Eye_Liner','doubleSided':True,'pbrMetallicRoughness':{'baseColorFactor':[.035,.045,.07,1],'roughnessFactor':.85}})
+for side in [-1,1]:
+ vv=[];nn=[];ff=[]
+ for k in range(48):
+  t=k*2*np.pi/48
+  for size in [1.0,1.12]:
+   x=side*.0040+np.cos(t)*.00122*size
+   vv.append([x,-.00432+(abs(x)-.0040)*.50,.02275+np.sin(t)*.00162*size]);nn.append([side*.45,-1,0])
+ for k in range(48):
+  a=k*2;b=((k+1)%48)*2;ff.extend([[a,b,a+1],[a+1,b,b+1]])
+ v=np.array(vv);n=np.array(nn);ni=int(np.sum((pos0-v.mean(0))**2,axis=1).argmin());prim={'attributes':{},'material':MAT_LID,'mode':4}
+ for key,data,typ in [('POSITION',v,'VEC3'),('NORMAL',n,'VEC3'),('JOINTS_0',np.tile(jix0[ni],(len(v),1)).astype(np.uint8),'VEC4'),('WEIGHTS_0',np.tile(wts0[ni],(len(v),1)).astype(np.float32),'VEC4')]:
+  prim['attributes'][key]=add_accessor(js,binb,np.asarray(data,dtype=np.uint8 if key=='JOINTS_0' else np.float32),typ,34962 if key=='POSITION' else None)
+ prim['indices']=add_accessor(js,binb,np.array(ff,np.uint32).reshape(-1),'SCALAR',34963);prims.append(prim)
+# Attached head-only fur. Exclude raised hands in the same mesh-height band.
+fur_rng=np.random.default_rng(4611)
+dom0=np.array(jnames)[jix0[np.arange(len(pos0)),wts0.argmax(1)]]
+possible=np.where((pos0[:,2]>.020)&(pos0[:,2]<.0275)&(np.abs(pos0[:,0])<.0065)&(pos0[:,1]>-.0010)&np.isin(dom0,['Head','Ear1.L','Ear1.R']))[0]
+fur_rng.shuffle(possible);selected=[]
+for vi in possible:
+ c=pos0[vi]
+ if any(np.linalg.norm(c-pos0[q])<.00055 for q in selected):continue
+ selected.append(vi)
+ if len(selected)>=55:break
+for vi in selected:
+ normal=nrm0[vi]/max(np.linalg.norm(nrm0[vi]),1e-9)
+ direction=normal*.4+np.array([np.sign(pos0[vi,0])*.12,.6,.2])
+ fur_tuft(pos0[vi]-normal*.00012,direction,.00024,float(fur_rng.uniform(.00024,.00042)))
+# Batch accessory/fur primitives by material and attribute layout. Preserve skin data.
+groups={}
+for primitive in prims:
+ key=(primitive['material'],tuple(sorted(primitive['attributes'])))
+ groups.setdefault(key,[]).append(primitive)
+batched=[]
+for (material,keys),items in groups.items():
+ if len(items)==1:batched.append(items[0]);continue
+ merged={key:[] for key in keys};faces=[];offset=0
+ for item in items:
+  for key in keys:merged[key].append(accessor(js,binb,item['attributes'][key]))
+  faces.append(accessor(js,binb,item['indices']).reshape(-1)+offset)
+  offset+=len(merged['POSITION'][-1])
+ attributes={}
+ for key in keys:
+  data=np.concatenate(merged[key]);typ={'POSITION':'VEC3','NORMAL':'VEC3','JOINTS_0':'VEC4','WEIGHTS_0':'VEC4','TEXCOORD_0':'VEC2'}[key]
+  attributes[key]=add_accessor(js,binb,data.astype(np.uint8 if key=='JOINTS_0' else np.float32),typ,34962 if key=='POSITION' else None)
+ batched.append({'attributes':attributes,'indices':add_accessor(js,binb,np.concatenate(faces).astype(np.uint32),'SCALAR',34963),'material':material,'mode':4})
+prims[:]=batched
 save(DST, js, binb)
 print("wrote", DST, os.path.getsize(DST), "bytes;", len(js['accessors']), "accessors;", len(prims), "bunny prims")

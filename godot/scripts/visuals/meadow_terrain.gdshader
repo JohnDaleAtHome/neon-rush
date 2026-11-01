@@ -17,7 +17,7 @@ void fragment(){
  float far_fade = 1.0-smoothstep(46.0,112.0,view_depth);
  vec2 moving_point=world_point.xz+vec2(0.0,scroll*25.0);
  float grain=noise(moving_point*7.0)*0.7+noise(moving_point*1.1)*0.3;
- vec3 surface=mix(vec3(0.018,0.035,0.031),vec3(0.021,0.040,0.035),grain);
+ vec3 surface=mix(vec3(0.022,0.030,0.052),vec3(0.029,0.043,0.065),grain);
  ALBEDO = surface*(1.0-fog_amount);
  EMISSION = fog_color*fog_amount;
  ROUGHNESS = 0.95;

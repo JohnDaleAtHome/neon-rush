@@ -11,9 +11,9 @@ void sky(){
  vec3 base = texture(sky_gradient,vec2(0.5,clamp(y,0.0,1.0))).rgb;
  // Layered indigo night and broad cloud wisps echo the character concept palette.
  vec3 night=mix(vec3(0.022,0.026,0.065),vec3(0.058,0.075,0.13),clamp(y*2.0,0.0,1.0));
- vec2 p=vec2(EYEDIR.x*6.5,y*17.0+sin(EYEDIR.x*5.0));
+ vec2 p=vec2(EYEDIR.x*7.0,y*12.0+sin(EYEDIR.x*4.0));
  float cloud=noise(p)*0.62+noise(p*2.0)*0.26+noise(p*4.0)*0.12;
  float veil=smoothstep(0.46,0.76,cloud)*smoothstep(0.10,0.25,y)*(1.0-smoothstep(0.36,0.46,y));
- vec3 clouded=mix(night,vec3(0.115,0.14,0.23),veil*0.5);
+ vec3 clouded=mix(night,vec3(0.115,0.14,0.23),veil*0.8);
  COLOR=mix(clouded,haze_color,smoothstep(0.30,0.43,y));
 }

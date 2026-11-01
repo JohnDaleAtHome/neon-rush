@@ -79,3 +79,7 @@ irises, adds cheek/forelock tufts and replaces the lathe bib with a clipped
 short open jacket following the existing rig. All 14 animations remain.
 This is a low-poly concept-directed draft, not final character approval.
 The current Meadow/horizon and full-game acceptance gaps remain unchanged.
+
+## Meadow geometry increment - 1 November 2026
+
+The post-v35 local candidate replaces tiny berms/flat ridge quads with rolling bank meshes, overlapping 3D hills, groves and fern clusters. World-space bank color removes broad texture-induced diagonal bands. Bank edges taper to the underlay; terrain-bound props track the shaped bank while scrolling. Original side planes restore in Light mode and other themes. No gameplay/main-script changes are part of this increment. All 28 suites pass, with actual portrait/desktop scrolling and hazard/dew pixels inspected. See `godot/MEADOW-VISUAL.md` for exact evidence and remaining horizon, art and device gaps. This is an incremental WIP checkpoint, not concept fidelity or campaign art acceptance.

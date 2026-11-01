@@ -20,6 +20,9 @@ The game still supports its costume tint and gold-eye unlock material names.
 The checked-in builder reproduces the GLB byte-for-byte from its original
 base asset (verified during integration).
 
-This is not a finished match to the concept: eye artifacts/expression, black inner ears, cyan mouth spot, fluffy silhouette
-and pendant readability remain acceptance gaps. Actual Godot/Web motion is
-the reference for deformation, not a separate software-rendered preview.
+This remains a generic WIP approximation, not a finished match to the concept.
+v50 replaces upper ears with curved volumes/front grids and small swept locks,
+refines muzzle/eyelids, and adds longer cloth jacket/straps/scarf. Strong ear
+curls, solid-looking groom, simple costume and short fur grain remain gaps.
+See docs/V50-VISUAL-VALIDATION.md for current evidence and performance limits.
+Actual Godot/Web motion is the reference for deformation.

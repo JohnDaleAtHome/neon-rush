@@ -492,14 +492,20 @@ print('catchlights', len(Vv), 'verts')
 # pendant on upper chest front
 ci = int(NR*0.62)
 c = centers[ci]; r=radii[ci]
-cxy = c + np.array([0,0,r+margin+height*0.065])
+cxy = c + np.array([0,-.10,.22-c[2]])
 Vv,Nn,Ff = crescent(cxy, height*0.034, height*0.010, [0,0,1])
-# rigid charm: every pendant vert uses the weights of the single nearest body
-# vert, so the crescent never shears when the torso bends
-d2 = ((allv-cxy)**2).sum(1); d2[~torso_mask]=1e18
-ni = int(d2.argmin())
-Vr = np.tile(jix[ni], (len(Vv),1)); Wr = np.tile(wts[ni], (len(Vv),1))
+# Rigid Torso binding keeps the charm intact when the body bends.
 rigid_prim(Vv,Nn,Ff, 'Torso', MAT_PEND, 'pendant')
+# A visible necklace cord anchors the charm to the collar instead of floating.
+for side in [-1,1]:
+ vv=[];nn=[];ff=[]
+ for row in range(9):
+  t=row/8;c=np.array([side*.18*(1-t),1.65*(1-t)+(cxy[1]+.055)*t,.22*(1-t)+.215*t])
+  for edge in [-1,1]:vv.append(c+[edge*.010,0,0]);nn.append([0,0,1])
+ for row in range(8):
+  a=row*2;ff.extend([[a,a+1,a+3],[a,a+3,a+2]])
+ rigid_prim(np.array(vv),np.array(nn),np.array(ff),'Torso',MAT_JACKET,'necklace_cord')
+
 
 # Rounder cheeks, preserving skinning and topology.
 for p in prims:

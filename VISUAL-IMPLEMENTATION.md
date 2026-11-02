@@ -269,3 +269,11 @@ Small almond-eye/radial-iris, normal-strength and groom-edge refinements remain
 generic WIP, not concept acceptance. All29clean suites and14clip byte checks
 pass. Software1280interval is7.4%worse with intended shaders retained; device
 performance remains open. See docs/V51-VISUAL-VALIDATION.md. No deploy.
+
+## v54 bounded pendant/costume checkpoint proposal
+
+Side-view review exposed a floating pendant; v54 moves it close to the chest,
+adds its cord and small authored jacket badge/zipper/panel details. It preserves
+v51 face/ear geometry and gameplay. Full concept fidelity remains open; rejected
+ear studies are not promoted. See docs/V54-VISUAL-VALIDATION.md for recovery,
+regression, sampled-motion and software-rendering evidence and limits.

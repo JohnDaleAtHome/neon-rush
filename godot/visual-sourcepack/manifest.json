@@ -31,9 +31,13 @@
     "bytes": 970,
     "sha256": "1e0cedb38a5732e02a866e2a310e76f0d68c860ddc4f143a36d94baed4fd5db3"
   },
+  "mochi/iris_detail.png": {
+    "bytes": 110465,
+    "sha256": "ec366077e9185ec556763a2242a656bd0d0158fc9c0dab12787027fcc5866139"
+  },
   "mochi/mochi.glb": {
-    "bytes": 2223128,
-    "sha256": "694426148aeb6362663d80b030f38abc647b5c785e64378fbf557003d5c45059"
+    "bytes": 2218520,
+    "sha256": "38107e3081d596c8aafcc7b63722780430a2e89b2991ec249ad0b8ff70ec27d1"
   },
   "mochi/mochi_jacket_badge.png": {
     "bytes": 7196,

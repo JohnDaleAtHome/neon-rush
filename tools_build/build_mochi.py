@@ -11,6 +11,8 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SRC = os.path.join(ROOT, 'godot/assets/bunny.glb')
 DST = os.path.join(ROOT, 'godot/assets/visuals/mochi/mochi.glb')
 
+import runpy
+runpy.run_path(os.path.join(ROOT,"tools_build/build_iris.py"))
 js, binb = load(SRC)
 G = globals_(js)
 nodes = js['nodes']
@@ -871,18 +873,15 @@ for side in [-1,1]:
 for step in range(3):
  x=(step-1)*.0007
  groom_lock([x,-.0001,.0260-abs(x)*.12],[x*50,1,.08],.0027+(step%2)*.0002,.0012,.00020)
-# Cyan irises have a darker edge and lighter inner ring, not a uniform blue sticker.
+# Texture-space radial iris detail does not depend on coarse mesh rings.
 for primitive in prims:
  if mats[primitive['material']]['name']!='Eye_White':continue
- v=accessor(js,binb,primitive['attributes']['POSITION']).astype(float);colors=[]
+ v=accessor(js,binb,primitive['attributes']['POSITION']).astype(float);uv=[]
  for q in v:
   side=1 if q[0]>0 else -1
-  radial=np.sqrt(((q[0]-side*.00365)/.00122)**2+((q[2]-.02275)/.00162)**2)
-  angle=np.arctan2((q[2]-.02275)/.00162,(q[0]-side*.00365)/.00122)
-  fibers=.035*np.sin(angle*37)+.020*np.cos(angle*71+radial*9)
-  brightness=np.clip(.83-.33*radial+fibers,.28,1)
-  colors.append([brightness*.48,brightness, min(1.0,brightness*1.30),1])
- primitive['attributes']['COLOR_0']=add_accessor(js,binb,np.array(colors,np.float32),'VEC4')
+  uv.append([.5+(q[0]-side*.00365)/(.00122*2),.5-(q[2]-.02275-side*(q[0]-side*.00365)*.13)/(.00162*2)])
+ primitive['attributes'].pop('COLOR_0',None)
+ primitive['attributes']['TEXCOORD_0']=add_accessor(js,binb,np.array(uv,np.float32),'VEC2')
 # Broad curved jacket lapels and a cross-body belt are torso-bound costume forms.
 for side in [-1,1]:
  vv=[];nn=[];ff=[]

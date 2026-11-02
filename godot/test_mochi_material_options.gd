@@ -20,6 +20,10 @@ func verify(color,gold):
   var x=shader_materials[key];var current=x[0].get_surface_override_material(x[1])
   check(current is ShaderMaterial,"shader type "+x[3])
   check(current==x[2],"shader identity "+x[3])
+  if x[3]=="Bunny_Jacket" and current is ShaderMaterial:
+   var badge=current.get_shader_parameter("badge_texture")
+   check(badge is Texture2D,"badge texture bound")
+   if badge is Texture2D:check(badge.resource_path=="res://assets/visuals/mochi/mochi_jacket_badge.png","authored badge survives options")
  for key in tinted:
   var x=tinted[key];var current=x[0].get_surface_override_material(x[1])
   check(current is StandardMaterial3D,"tint material "+x[2])

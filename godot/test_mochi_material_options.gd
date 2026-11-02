@@ -31,6 +31,8 @@ func verify(color,gold):
    var expected=Color(color) if x[2]=="Bunny_Secondary" else Color("ffdc78") if gold else x[0].mesh.surface_get_material(x[1]).albedo_color
    check(current.albedo_color.is_equal_approx(expected),"tint value "+x[2])
    if x[2]=="Eye_White":
+    check(current.albedo_texture is Texture2D,"iris texture bound")
+    if current.albedo_texture is Texture2D:check(current.albedo_texture.resource_path=="res://assets/visuals/mochi/iris_detail.png","iris texture survives tint and gold")
     check(current.vertex_color_use_as_albedo==not gold,"gold does not multiply cyan iris colors")
 func run():
  var g=load("res://scenes/main.tscn").instantiate();root.add_child(g);await process_frame;g.set_process(false)

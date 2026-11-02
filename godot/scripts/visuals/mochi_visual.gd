@@ -79,6 +79,9 @@ static func _enhance(node: Node) -> void:
 				"Eye_White":
 					# cyan glow; gold unlock still recolors albedo via apply_bunny_tint
 					m.vertex_color_use_as_albedo = true
+					m.albedo_texture=load("res://assets/visuals/mochi/iris_detail.png")
+					m.albedo_color=Color(.30,.90,1.0)
+					m.texture_filter=BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
 					m.emission_enabled = true
 					m.emission = Color(0.25, 0.85, 0.95)
 					m.emission_energy_multiplier = 0.18

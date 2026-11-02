@@ -41,3 +41,18 @@ for p in primitives:
   for side in [-1,1]:
    q=vertices[vertices[:,0]*side>0];assert np.ptp(q[:,2])>np.ptp(q[:,0]);assert np.ptp(q[:,1])<.0017
 print('PASS batched materials, scarf root/tip UV and flattened oval eye bounds')
+
+# Crescent stays by the torso, rather than the old far-forward z~.8 placement.
+from glbutil import globals_
+G=globals_(new);skin=new['skins'][0]
+ibm=accessor(new,nb,skin['inverseBindMatrices']).reshape(-1,4,4).transpose(0,2,1)
+jg=np.stack([G[n]@ibm[k] for k,n in enumerate(skin['joints'])])
+pendants=[p for p in primitives if materials[p['material']]['name']=='Pendant_Glow']
+assert len(pendants)==1
+p=pendants[0];a=p['attributes'];v=accessor(new,nb,a['POSITION']);ix=accessor(new,nb,a['JOINTS_0']);w=accessor(new,nb,a['WEIGHTS_0'])
+vh=np.c_[v,np.ones(len(v))]
+world=sum(np.einsum('nij,nj->ni',jg[ix[:,k]],vh)*w[:,k,None] for k in range(4))[:,:3]
+assert world[:,2].min()>.19 and world[:,2].max()<.25
+assert world[:,1].min()>1.20 and world[:,1].max()<1.46
+assert np.all(ix[:,0]==[new['nodes'][n].get('name') for n in skin['joints']].index('Torso')) and np.allclose(w[:,0],1)
+print('PASS pendant rests near chest and remains rigidly attached to Torso')

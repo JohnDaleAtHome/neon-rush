@@ -32,8 +32,12 @@
     "sha256": "1e0cedb38a5732e02a866e2a310e76f0d68c860ddc4f143a36d94baed4fd5db3"
   },
   "mochi/mochi.glb": {
-    "bytes": 2215428,
-    "sha256": "237011a0eb639b59e9ccbec50988eac1f9de56c24512983165f709c1c558f763"
+    "bytes": 2223128,
+    "sha256": "694426148aeb6362663d80b030f38abc647b5c785e64378fbf557003d5c45059"
+  },
+  "mochi/mochi_jacket_badge.png": {
+    "bytes": 7196,
+    "sha256": "ccd10c9a2c502bf7d2844ba3fd9060b7acc94865b416ae00d44d9930b82864c7"
   },
   "ui/moon_chip.png": {
     "bytes": 2184,

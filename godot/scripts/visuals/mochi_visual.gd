@@ -69,6 +69,7 @@ static func _enhance(node: Node) -> void:
 				"Bunny_Jacket":
 					var cloth := ShaderMaterial.new()
 					cloth.shader = load("res://scripts/visuals/mochi_jacket.gdshader")
+					cloth.set_shader_parameter("badge_texture",load("res://assets/visuals/mochi/mochi_jacket_badge.png"))
 					mi.set_surface_override_material(i, cloth)
 				"Scarf_Navy", "Scarf_Seam":
 					var scarf := ShaderMaterial.new()

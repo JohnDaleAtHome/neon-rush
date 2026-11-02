@@ -30,3 +30,8 @@ Actual Godot/Web motion is the reference for deformation.
 v51 preserves authored cloth/scarf shader overrides through ordinary options;
 new regression covers tint/gold behavior. Modest eye/normal/groom refinements
 remain WIP. See docs/V51-VISUAL-VALIDATION.md for cost and acceptance limits.
+
+v54 brings the pendant close to the chest and adds its cord plus an original
+jacket badge/zipper/panel details. It leaves v51 face/ears unresolved. The new
+badge PNG is included in the offline visual sourcepack. See
+ docs/V54-VISUAL-VALIDATION.md for bounded evidence and performance limits.

@@ -26,12 +26,13 @@ var shadow_mat: StandardMaterial3D
 var horizon_layers: Array[MeshInstance3D] = []
 var horizon_root := Node3D.new()
 var active := false
+var import_materials: Dictionary = {}
 var rolling_banks: Array[MeshInstance3D] = []
 var saved_ambient_color := Color.BLACK
 var saved_ambient_energy := 1.0
 var ambient_saved := false
 
-const MEADOW_FOG := Color("152b39")
+const MEADOW_FOG := Color("244752")
 const MOON_GLOW_ALPHA := 0.14
 
 
@@ -62,6 +63,7 @@ func apply(index: int) -> void:
 	if index != THEME_INDEX or light:
 		active = false
 		for side in game.side_planes: side.visible = true
+		for edge in game.track_edges: edge.visible = true
 		if shadow: shadow.visible = false
 		_set_horizon_visible(false)
 		_restore_ambient()
@@ -69,6 +71,7 @@ func apply(index: int) -> void:
 		return
 	active = true
 	for side in game.side_planes: side.visible = false
+	for edge in game.track_edges: edge.visible = false
 	var environment: Environment = game.env_world.environment
 	# Atmosphere: coordinated fog and sky so the horizon reads as one scene.
 	environment.fog_enabled = true
@@ -83,8 +86,8 @@ func apply(index: int) -> void:
 		saved_ambient_color = environment.ambient_light_color
 		saved_ambient_energy = environment.ambient_light_energy
 		ambient_saved = true
-	environment.ambient_light_color = Color("a8b0e8")
-	environment.ambient_light_energy = 0.45
+	environment.ambient_light_color = Color("c5d8ef")
+	environment.ambient_light_energy = 0.72
 	# Sky gradient tuned to the same teal-to-indigo ramp as the fog.
 	var sky := Sky.new()
 	var sky_material := ShaderMaterial.new()
@@ -176,93 +179,203 @@ func _build_horizon() -> void:
 	var hrng := RandomNumberGenerator.new()
 	hrng.seed = 230011
 	for layer in range(2):
-		for i in range(17):
+		for i in range(11):
 			var hill := MeshInstance3D.new()
 			var mesh := SphereMesh.new()
 			mesh.radius = 1.0
 			mesh.height = 2.0
-			mesh.radial_segments = 20
-			mesh.rings = 10
+			mesh.radial_segments = 7
+			mesh.rings = 4
 			hill.mesh = mesh
-			hill.scale = Vector3(hrng.randf_range(22,38),hrng.randf_range(7,17),hrng.randf_range(24,40))
-			var hill_x := -210.0+i*26.0+hrng.randf_range(-6,6)
-			var center_recede := (1.0-smoothstep(25.0,90.0,absf(hill_x)))*40.0
+			hill.scale = Vector3(hrng.randf_range(22,38),hrng.randf_range(12,26),hrng.randf_range(24,40))
+			var hill_x := -190.0+i*38.0+hrng.randf_range(-6,6)
+			var center_recede := (1.0-smoothstep(25.0,90.0,absf(hill_x)))*85.0
 			hill.position = Vector3(hill_x,-4.0,-105.0-layer*45.0-center_recede+hrng.randf_range(-12,12))
 			var hm := ShaderMaterial.new()
-			hm.shader = load("res://scripts/visuals/meadow_bank.gdshader")
+			hm.shader = load("res://scripts/visuals/meadow_ridge.gdshader")
 			hm.set_shader_parameter("grass_low",Vector3(0.04,0.10,0.065))
 			hm.set_shader_parameter("grass_high",Vector3(0.06,0.14,0.09))
-			hm.set_shader_parameter("fog_color",MEADOW_FOG)
+			hm.set_shader_parameter("ridge_color",Vector3(0.055,0.13,0.17) if layer==0 else Vector3(0.10,0.19,0.23))
 			hill.material_override = hm
 			horizon_root.add_child(hill)
 			horizon_layers.append(hill)
-	# Overlapping moonlit groves give the skyline depth and varied organic crowns.
-	var grove_rng := RandomNumberGenerator.new()
-	grove_rng.seed = 771203
-	var leaf_mats: Array[ShaderMaterial] = []
-	for col in [Color("2a5549"),Color("21453e"),Color("3b6352")]:
-		var lm := ShaderMaterial.new()
-		lm.shader = load("res://scripts/visuals/meadow_foliage.gdshader")
-		lm.set_shader_parameter("base_color",Vector3(col.r,col.g,col.b))
-		lm.set_shader_parameter("fog_color",MEADOW_FOG)
-		leaf_mats.append(lm)
-	var bark := StandardMaterial3D.new()
-	bark.albedo_color = Color("263337")
-	for i in range(36):
+	# Reference study: grouped foliage, rocky side landforms and a quiet central vista.
+	# Actual CC0 Quaternius meshes replace the old primitive crown trees.
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 771203
+	for i in range(20):
 		var side := -1.0 if i%2==0 else 1.0
-		var x := side*grove_rng.randf_range(15.0,48.0)
-		var z := grove_rng.randf_range(-125.0,-52.0)
-		if i<8:
-			x=side*grove_rng.randf_range(13.0,22.0)
-			z= -26.0-float(i)*6.0
-		var height := grove_rng.randf_range(5.0,10.0)
-		var tree := Node3D.new()
-		tree.position = Vector3(x,_bank_height(x,z),z)
-		var trunk := MeshInstance3D.new()
-		var cylinder := CylinderMesh.new()
-		cylinder.top_radius = 0.14
-		cylinder.bottom_radius = 0.35
-		cylinder.height = height*0.7
-		cylinder.radial_segments = 9
-		trunk.mesh = cylinder
-		trunk.position.y = height*0.35
-		trunk.material_override = bark
-		tree.add_child(trunk)
-		for branch in range(3):
-			var twig := MeshInstance3D.new()
-			var branch_mesh := CylinderMesh.new()
-			branch_mesh.top_radius = 0.045
-			branch_mesh.bottom_radius = 0.14
-			branch_mesh.height = height*0.30
-			branch_mesh.radial_segments = 6
-			twig.mesh = branch_mesh
-			twig.position = Vector3(0,height*(0.42+branch*0.09),0)
-			twig.rotation = Vector3(0,branch*2.1,0.7 if branch%2==0 else -0.7)
-			twig.material_override = bark
-			tree.add_child(twig)
-		for crown in range(7):
-			var leaf := MeshInstance3D.new()
-			var sphere := SphereMesh.new()
-			sphere.radius = height*grove_rng.randf_range(0.20,0.28)
-			sphere.height = sphere.radius*1.55
-			sphere.radial_segments = 14
-			sphere.rings = 7
-			leaf.mesh = _canopy_mesh(sphere.radius,i*7+crown)
-			var angle := crown*2.4
-			var reach := height*(0.19 if crown<5 else 0.08)
-			leaf.position = Vector3(cos(angle)*reach,height*(0.60+0.055*crown),sin(angle)*reach)
-			leaf.rotation.y = angle
-			leaf.scale = Vector3(1.12+float((i+crown)%3)*0.10,0.95+float(crown%3)*0.11,0.90)
-			leaf.material_override = leaf_mats[(i+crown)%leaf_mats.size()]
-			tree.add_child(leaf)
+		var z: float = [-26,-31,-52,-60,-67,-73,-94,-105,-110,-120,-128,-133,-34,-42,-62,-70,-88,-93,-112,-120][i]+rng.randf_range(-3,3)
+		var x := side*(12.0+rng.randf_range(0,18)+float(i%3)*3.0)+sin(i*2.7)*4.0
+		var name: String = ["CommonTree_3","CommonTree_3","CommonTree_5"][i%3]
+		var tree = load("res://assets/visuals/nature_cc0/"+name+".gltf").instantiate()
+		tree.position=Vector3(x,_bank_height(x,z),z)
+		tree.scale=Vector3.ONE*rng.randf_range(1.0,2.0)
+		tree.rotation.y=rng.randf_range(-PI,PI)
+		_tint_import(tree,Color("82baa6"))
 		horizon_root.add_child(tree)
+	for i in range(14):
+		var side := -1.0 if i%2==0 else 1.0
+		var z := -18.0-float(i/2)*17.0
+		var x := side*(10.0+rng.randf_range(0,23))
+		var name: String = ["Rock_Medium_1","Rock_Medium_2","Rock_Medium_3"][i%3]
+		var rock = load("res://assets/visuals/nature_cc0/"+name+".gltf").instantiate()
+		rock.position=Vector3(x,_bank_height(x,z)-0.3,z)
+		rock.scale=Vector3(2.0,1.6,1.8)*rng.randf_range(0.8,1.6)
+		rock.rotation.y=rng.randf_range(-PI,PI)
+		_tint_import(rock,Color("7a9eab"))
+		horizon_root.add_child(rock)
+	for i in range(12):
+		var side := -1.0 if i%2==0 else 1.0
+		var z := -12.0-float(i/2)*19.0+rng.randf_range(-5,5)
+		var x := side*(8.0+rng.randf_range(0,19))
+		var bush = load("res://assets/visuals/nature_cc0/Bush_Common.gltf").instantiate()
+		bush.position=Vector3(x,_bank_height(x,z),z)
+		bush.scale=Vector3.ONE*rng.randf_range(1.0,1.8)
+		_tint_import(bush,Color("88b69d"))
+		horizon_root.add_child(bush)
+
+	# Large asymmetrical landforms, grouped as foreground frames rather than rows.
+	for spec in [[-24.0,-42.0,7.0,4.2,4.5],[29.0,-65.0,8.0,6.0,5.0],[-37.0,-94.0,10.0,8.0,6.0]]:
+		var cliff=load("res://assets/visuals/nature_cc0/Rock_Medium_2.gltf").instantiate()
+		cliff.position=Vector3(spec[0],_bank_height(spec[0],spec[1])-0.8,spec[1])
+		_size_import(cliff,Vector3(spec[2],spec[3],spec[4]))
+		cliff.rotation.y=0.4
+		_tint_import(cliff,Color("78999f"))
+		horizon_root.add_child(cliff)
+
+	# Reference-informed focal grouping: one old moon-dew tree on a rocky shoulder.
+	# This is scenery, not a replacement objective, gate or bridge-piece reward.
+	var landmark=load("res://assets/visuals/nature_cc0/CommonTree_3.gltf").instantiate()
+	landmark.position=Vector3(-6.0,4.0,-175.0)
+	landmark.scale=Vector3.ONE
+	_size_import(landmark,Vector3(36.0,40.0,30.0))
+	landmark.rotation.y=0.7
+	_tint_import(landmark,Color("a0bec3"))
+	_landmark_haze(landmark)
+	horizon_root.add_child(landmark)
+	landmark.set_meta("distant_landmark",true)
+	var knoll=MeshInstance3D.new()
+	var knoll_mesh=SphereMesh.new()
+	knoll_mesh.radius=1.0;knoll_mesh.height=2.0;knoll_mesh.radial_segments=24;knoll_mesh.rings=12
+	knoll.mesh=knoll_mesh;knoll.position=Vector3(-6.0,-3.5,-175.0);knoll.scale=Vector3(28.0,8.0,22.0)
+	var knoll_mat=ShaderMaterial.new();knoll_mat.shader=load("res://scripts/visuals/meadow_ridge.gdshader")
+	knoll_mat.set_shader_parameter("ridge_color",Vector3(0.08,0.19,0.20));knoll.material_override=knoll_mat
+	horizon_root.add_child(knoll)
+	# Offset ridge spines turn the uniform rolling banks into a shallow valley.
+	# One opaque surface each; no alpha layers or extra collider work.
+	for side in [-1.0,1.0]:
+		var ridge=MeshInstance3D.new()
+		var st=SurfaceTool.new();st.begin(Mesh.PRIMITIVE_TRIANGLES)
+		var pts=[]
+		for i in range(10):
+			var z=-35.0-i*15.0
+			var crest=15.0+sin(i*1.83+side)*4.0+(8.0 if i in [3,6] else 0.0)
+			pts.append([Vector3(side*22.0,-2.0,z),Vector3(side*(33.0+sin(i)*4.0),crest,z),Vector3(side*57.0,-0.2,z)])
+		for i in range(9):
+			for j in range(2):
+				for point in [pts[i][j],pts[i+1][j+1],pts[i+1][j],pts[i][j],pts[i][j+1],pts[i+1][j+1]]:
+					st.add_vertex(point)
+		st.generate_normals();ridge.mesh=st.commit()
+		var rm=ShaderMaterial.new();rm.shader=load("res://scripts/visuals/meadow_ridge.gdshader")
+		rm.set_shader_parameter("ridge_color",Vector3(0.12,0.23,0.24));ridge.material_override=rm
+		horizon_root.add_child(ridge)
+	for spec in [[-39.0,-138.0,27.0,30.0,22.0],[39.0,-150.0,30.0,25.0,25.0]]:
+		var stone=load("res://assets/visuals/nature_cc0/Rock_Medium_1.gltf").instantiate()
+		stone.position=Vector3(spec[0],_bank_height(spec[0],spec[1])-0.7,spec[1])
+		stone.scale=Vector3.ONE
+		_size_import(stone,Vector3(spec[2],spec[3],spec[4]))
+		stone.rotation.y=0.3
+		_tint_import(stone,Color("8aa1a6"))
+		horizon_root.add_child(stone)
+
+	for model in horizon_root.get_children():
+		if model.scene_file_path.begins_with("res://assets/visuals/nature_cc0/"):
+			var box=_import_bounds(model,Transform3D.IDENTITY)
+			var bottom=INF
+			var world_box=model.transform*box
+			for corner in range(8):bottom=minf(bottom,(model.transform*box.get_endpoint(corner)).y)
+			var support=INF
+			for sample in range(9):
+				var px=world_box.position.x+world_box.size.x*float(sample%3)/2.0
+				var pz=world_box.position.z+world_box.size.z*float(sample/3)/2.0
+				support=minf(support,_bank_height(px,pz))
+			var rock="Rock" in model.scene_file_path
+			model.position.y+=(4.0 if model.has_meta("distant_landmark") else support if rock else _bank_height(model.position.x,model.position.z))-bottom-(0.3 if rock else 0.15)
+
+	# Distant tree silhouettes use authored model renders, keeping the same layout
+	# and visual density without processing every leaf triangle at tiny screen size.
+	var replacements=[]
+	for model in horizon_root.get_children():
+		if model.scene_file_path.contains("CommonTree") and model.position.z < -68.0 and not model.has_meta("distant_landmark"):
+			replacements.append(model)
+	for model in replacements:
+		var box=model.transform*_import_bounds(model,Transform3D.IDENTITY)
+		var name=model.scene_file_path.get_file().get_basename()
+		var size=9.8022 if name=="CommonTree_3" else 7.28649
+		var plane=MeshInstance3D.new();var quad=QuadMesh.new()
+		quad.size=Vector2.ONE*size*model.scale.y;plane.mesh=quad
+		plane.position=Vector3(box.get_center().x,box.get_center().y,model.position.z)
+		var material=ShaderMaterial.new();material.shader=load("res://scripts/visuals/nature_impostor.gdshader")
+		material.set_shader_parameter("tree_texture",load("res://assets/visuals/nature_cc0/"+name+"_impostor.png"));plane.material_override=material
+		plane.set_meta("tree_impostor",true);plane.set_meta("source_bounds",box);horizon_root.add_child(plane)
+		horizon_root.remove_child(model);model.queue_free()
+
+func _landmark_haze(node:Node)->void:
+	if node is MeshInstance3D:
+		for i in range(node.mesh.get_surface_count()):
+			var mat=node.get_surface_override_material(i).duplicate()
+			mat.set_shader_parameter("fog_end",340.0)
+			mat.set_shader_parameter("tint",Vector3(0.52,0.72,0.63) if mat.get_shader_parameter("foliage") else Vector3(0.65,0.73,0.68))
+			node.set_surface_override_material(i,mat)
+	for child in node.get_children():_landmark_haze(child)
+
+func _import_bounds(node:Node,base:Transform3D) -> AABB:
+	var result=AABB()
+	var found=false
+	for child in node.get_children():
+		var transform:Transform3D=base*child.transform if child is Node3D else base
+		if child is MeshInstance3D:
+			var box: AABB=transform*child.get_aabb()
+			result=result.merge(box) if found else box
+			found=true
+		var nested=_import_bounds(child,transform)
+		if nested.size.length()>0:
+			result=result.merge(nested) if found else nested
+			found=true
+	return result
+
+func _size_import(node:Node3D,target:Vector3)->void:
+	var box=_import_bounds(node,Transform3D.IDENTITY)
+	node.scale=target/box.size
+
+func _tint_import(node: Node, tint: Color) -> void:
+	if node is MeshInstance3D:
+		for i in range(node.mesh.get_surface_count()):
+			var mat = node.mesh.surface_get_material(i)
+			if mat is StandardMaterial3D:
+				var key: String = mat.albedo_texture.resource_path+str(tint)
+				if import_materials.has(key):
+					node.set_surface_override_material(i,import_materials[key])
+					continue
+				var copy = ShaderMaterial.new()
+				copy.shader=load("res://scripts/visuals/nature_moonlit.gdshader" if "Leaves" in mat.resource_name else "res://scripts/visuals/nature_opaque.gdshader")
+				copy.set_shader_parameter("base_texture",mat.albedo_texture)
+				var is_leaf: bool = "Leaves" in mat.resource_name
+				copy.set_shader_parameter("foliage",is_leaf)
+				copy.set_shader_parameter("tint",Vector3(0.16,0.44,0.34) if is_leaf else Vector3(tint.r,tint.g,tint.b))
+				import_materials[key]=copy
+				node.set_surface_override_material(i,copy)
+	for child in node.get_children():_tint_import(child,tint)
 
 
 func _bank_height(x: float,z: float) -> float:
 	var edge := smoothstep(4.0,12.0,absf(x))
 	var rear := 1.0-smoothstep(112.0,144.0,-z)
 	var outer := 1.0-smoothstep(44.0,53.8,absf(x))
-	return -0.14+edge*rear*outer*(2.4+1.35*sin(z*0.055+x*0.14)+0.80*sin(z*0.12-x*0.19))
+	var shoulder=16.0+sin(z*0.045)*3.0+(2.0 if x>0 else 0.0)
+	var terrace=smoothstep(shoulder,shoulder+3.0,absf(x))*(7.0+3.0*sin(z*0.025))
+	return -0.14+rear*outer*terrace+edge*rear*outer*(2.4+1.35*sin(z*0.055+x*0.14)+0.80*sin(z*0.12-x*0.19)+smoothstep(12.0,28.0,absf(x))*(2.0+4.5*exp(-pow((z+48.0)/28.0,2.0))+2.0*sin(z*0.045+x*0.08)))
 
 
 func _rolling_bank(side: float) -> ArrayMesh:
@@ -305,7 +418,7 @@ func _build_plants(main_node) -> void:
 		plant.mesh = _flower_clump(i%3,prng)
 		plant.material_override = flower_material
 		var drift := int(i/4)
-		plant.position = Vector3(side*(6.0+float(i%2)*2.0+prng.randf()),0,-8.0-float(drift)*15.5-float(i%4)*0.7)
+		plant.position = Vector3(side*(6.0+float(i%4)*2.0+prng.randf()*2.0),0,-8.0-float(drift)*15.5-float(i%4)*0.7)
 		plant.set_meta("bank_clearance",0.0)
 		plant.position.y = _bank_height(plant.position.x,plant.position.z)
 		plant.rotation.y = prng.randf_range(-PI,PI)
@@ -360,7 +473,7 @@ func _build_plants(main_node) -> void:
 		var side := -1 if i%2==0 else 1
 		var drift := int(i/6)
 		var tier := i%6
-		shrub.position = Vector3(side*(6.2+float(tier%3)*1.5+sin(drift*1.7)*0.6),0,-5.0-float(drift)*17.0-float(tier/3)*4.0-prng.randf()*4.0)
+		shrub.position = Vector3(side*(6.2+float(tier%3)*5.0+sin(drift*1.7)*1.8),0,-5.0-float(drift)*17.0-float(tier/3)*4.0-prng.randf()*4.0)
 		shrub.position.y = _bank_height(shrub.position.x,shrub.position.z)
 		# Anchor only the new short grass to sloped banks and protect the corridor.
 		var arrays := shrub.mesh.surface_get_arrays(0)

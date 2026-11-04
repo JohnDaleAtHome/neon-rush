@@ -25,7 +25,9 @@ void fragment(){
  float seam=smoothstep(0.465,0.495,max(joint.x,joint.y));
  float slab_tone=hash(floor(slab));
  vec3 surface=mix(vec3(0.035,0.060,0.085),vec3(0.11,0.15,0.18),grain*0.28+slab_tone*0.55);
- surface*=1.0-seam*0.65;
+ surface*=1.0-seam*0.55;
+ float moss=smoothstep(2.85+noise(moving_point*0.65)*0.40,3.58,abs(world_point.x));
+ surface=mix(surface,vec3(0.045,0.105,0.08)*(0.75+grain*0.5),moss);
  // Soft shoulder glow stays at the physical edge, outside all three lanes.
  float shoulder=exp(-pow((abs(world_point.x)-3.65)*3.0,2.0));
  surface+=vec3(0.012,0.05,0.055)*shoulder;

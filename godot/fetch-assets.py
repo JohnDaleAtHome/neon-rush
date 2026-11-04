@@ -23,3 +23,6 @@ for rel,entry in manifest.items():
 # Apply the validated Meadow code and CC0 assets last, after baseline recovery.
 runpy.run_path(str(ROOT/'meadow-sourcepack'/'restore.py'),run_name='__main__')
 print('All baseline and Meadow assets are exact. Open project.godot in Godot 4.7.2.')
+
+# Original generated path material; checksum-verified offline recovery.
+runpy.run_path(str(ROOT / "tools" / "restore_path.py"), run_name="__main__")

@@ -1830,6 +1830,8 @@ func build_level_props(index: int):
     var crater = TorusMesh.new()
     crater.inner_radius = mesh.radius * 0.65
     crater.outer_radius = mesh.radius
+    crater.rings = 24
+    crater.ring_segments = 12
     rock.mesh = crater
     rock.scale.y = 0.24
     rock.position.y = 0.025
@@ -1846,6 +1848,8 @@ func build_level_props(index: int):
    var mesh = TorusMesh.new()
    mesh.inner_radius = 0.7
    mesh.outer_radius = 0.85
+   mesh.rings = 24
+   mesh.ring_segments = 12
    ring.mesh = mesh
    ring.position = at
    ring.material_override = material(Color("a8dbe3"))

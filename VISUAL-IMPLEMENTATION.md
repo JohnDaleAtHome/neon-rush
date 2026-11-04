@@ -277,3 +277,7 @@ adds its cord and small authored jacket badge/zipper/panel details. It preserves
 v51 face/ear geometry and gameplay. Full concept fidelity remains open; rejected
 ear studies are not promoted. See docs/V54-VISUAL-VALIDATION.md for recovery,
 regression, sampled-motion and software-rendering evidence and limits.
+
+## Decorative scenery geometry, 2026-11-04
+
+Reduced only the Sand crater and Sea ring TorusMesh tessellation to24rings/12segments. Kept dimensions, materials, placement and gameplay unchanged. Small close-up faceting is visible; normal gameplay silhouettes retain their shape. This change does not address character fidelity. See docs/DECORATIVE-TORUS-LOD-VALIDATION.md for test-renderer timings and limitations. Public checkpoint remains v84 until separately authorized deployment.

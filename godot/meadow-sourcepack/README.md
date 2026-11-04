@@ -15,3 +15,7 @@ This command restores baseline assets, then calls meadow-sourcepack/restore.py t
 Then open godot/project.godot with Godot4.7.2 or export Web. Full checks:32test scripts pass; synthetic campaign8911steps0deaths; Web390x844/1280x800/laterphone checked,0pageerrors. See restored docs/MEADOW-VALLEY-VALIDATION.md and docs/ENVIRONMENT-REFERENCE-STUDY.md for exact scope and performance caveats.
 
 The tracked fetch-assets.py activates this checkpoint after baseline recovery. The sourcepack includes both code and assets to apply them together, rather than leaving a half-integrated project. Raw tracked runtime files remain the baseline until recovery is run. No deployment is implied.
+
+## Source visibility follow-up
+
+The validated runtime code, tests, study, validation and bake script are now also tracked as normal files. restore.py still validates every archived file but only writes godot/assets paths, so recovery does not overwrite later source fixes. The archived code is historical recovery evidence, not an automatic rollback. The new asset subset is offline and hash checked.

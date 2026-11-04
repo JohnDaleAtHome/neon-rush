@@ -175,6 +175,20 @@ func _build_horizon() -> void:
 		bank.material_override = mat
 		horizon_root.add_child(bank)
 		rolling_banks.append(bank)
+	# Low foothills connect the open clearing to the distant silhouette.
+	for side in [-1.0,1.0]:
+		var land=MeshInstance3D.new();var st=SurfaceTool.new();st.begin(Mesh.PRIMITIVE_TRIANGLES)
+		for row in range(30):
+			for col in range(24):
+				var points=[]
+				for q in [Vector2(col,row),Vector2(col+1,row),Vector2(col+1,row+1),Vector2(col,row+1)]:
+					var x=side*(42.0+q.x*6.5);var z=18.0-q.y*8.0
+					var rise=smoothstep(42.0,85.0,absf(x))*smoothstep(-20.0,75.0,-z)
+					var y=-0.14+rise*(5.0+3.0*sin(x*0.045+z*0.025)+2.0*sin(z*0.06))
+					points.append(Vector3(x,y,z))
+				for k in ([0,2,1,0,3,2] if side>0 else [0,1,2,0,2,3]):st.add_vertex(points[k])
+		st.generate_normals();land.mesh=st.commit();var mat=ShaderMaterial.new();mat.shader=load("res://scripts/visuals/meadow_bank.gdshader");mat.set_shader_parameter("fog_color",MEADOW_FOG);land.material_override=mat;horizon_root.add_child(land)
+
 	# Three-dimensional overlapping hills, not a vertical skyline strip.
 	var hrng := RandomNumberGenerator.new()
 	hrng.seed = 230011
@@ -199,14 +213,20 @@ func _build_horizon() -> void:
 			hill.material_override = hm
 			horizon_root.add_child(hill)
 			horizon_layers.append(hill)
+	# A staggered left foothill line closes the flat underlay horizon without
+	# rebuilding a full-height trough around the player.
+	for spec in [[-66.0,-78.0,35.0,8.0,24.0],[-95.0,-112.0,45.0,12.0,28.0],[-34.0,-110.0,20.0,6.0,22.0],[71.0,-121.0,38.0,10.0,30.0]]:
+		var hill=MeshInstance3D.new();var mesh=SphereMesh.new();mesh.radius=1.0;mesh.height=2.0;mesh.radial_segments=9;mesh.rings=5
+		hill.mesh=mesh;hill.scale=Vector3(spec[2],spec[3],spec[4]);hill.position=Vector3(spec[0],-4.0,spec[1])
+		var material=ShaderMaterial.new();material.shader=load("res://scripts/visuals/meadow_ridge.gdshader");material.set_shader_parameter("ridge_color",Vector3(0.055,0.16,0.17));hill.material_override=material;horizon_root.add_child(hill)
 	# Reference study: grouped foliage, rocky side landforms and a quiet central vista.
 	# Actual CC0 Quaternius meshes replace the old primitive crown trees.
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 771203
 	for i in range(20):
 		var side := -1.0 if i%2==0 else 1.0
-		var z: float = [-26,-31,-52,-60,-67,-73,-94,-105,-110,-120,-128,-133,-34,-42,-62,-70,-88,-93,-112,-120][i]+rng.randf_range(-3,3)
-		var x := side*(12.0+rng.randf_range(0,18)+float(i%3)*3.0)+sin(i*2.7)*4.0
+		var z: float = [-24,-39,-51,-68,-72,-88,-99,-110,-118,-130,-135,-139,-28,-45,-57,-75,-91,-102,-114,-124][i]+rng.randf_range(-3,3)
+		var x := side*(15.0+rng.randf_range(0,15)+float(i%3)*3.0)+sin(i*2.7)*4.0
 		var name: String = ["CommonTree_3","CommonTree_3","CommonTree_5"][i%3]
 		var tree = load("res://assets/visuals/nature_cc0/"+name+".gltf").instantiate()
 		tree.position=Vector3(x,_bank_height(x,z),z)
@@ -235,14 +255,11 @@ func _build_horizon() -> void:
 		_tint_import(bush,Color("88b69d"))
 		horizon_root.add_child(bush)
 
-	# Large asymmetrical landforms, grouped as foreground frames rather than rows.
-	for spec in [[-24.0,-42.0,7.0,4.2,4.5],[29.0,-65.0,8.0,6.0,5.0],[-37.0,-94.0,10.0,8.0,6.0]]:
-		var cliff=load("res://assets/visuals/nature_cc0/Rock_Medium_2.gltf").instantiate()
-		cliff.position=Vector3(spec[0],_bank_height(spec[0],spec[1])-0.8,spec[1])
-		_size_import(cliff,Vector3(spec[2],spec[3],spec[4]))
-		cliff.rotation.y=0.4
-		_tint_import(cliff,Color("78999f"))
-		horizon_root.add_child(cliff)
+	# Asymmetric broken bluff. Low inner contact, clustered mass on the right.
+	for spec in [[13,-28,14,5.5,18],[20,-42,22,9,24],[31,-58,28,15,28],[15,-70,15,7,22],[30,-92,25,12,26],[-19,-67,15,6,18],[-30,-84,22,10,24],[-40,-105,25,14,24]]:
+		var cliff=load("res://assets/visuals/nature_cc0/Rock_Medium_"+str(1+int(abs(spec[1]))%3)+".gltf").instantiate()
+		cliff.position=Vector3(spec[0],0,spec[1]);_size_import(cliff,Vector3(spec[2],spec[3],spec[4]));cliff.rotation.y=0.18*sin(float(spec[1]))
+		_tint_import(cliff,Color("91abc0"));cliff.set_meta("clearing_bluff",true);horizon_root.add_child(cliff)
 
 	# Reference-informed focal grouping: one old moon-dew tree on a rocky shoulder.
 	# This is scenery, not a replacement objective, gate or bridge-piece reward.
@@ -262,24 +279,6 @@ func _build_horizon() -> void:
 	var knoll_mat=ShaderMaterial.new();knoll_mat.shader=load("res://scripts/visuals/meadow_ridge.gdshader")
 	knoll_mat.set_shader_parameter("ridge_color",Vector3(0.08,0.19,0.20));knoll.material_override=knoll_mat
 	horizon_root.add_child(knoll)
-	# Offset ridge spines turn the uniform rolling banks into a shallow valley.
-	# One opaque surface each; no alpha layers or extra collider work.
-	for side in [-1.0,1.0]:
-		var ridge=MeshInstance3D.new()
-		var st=SurfaceTool.new();st.begin(Mesh.PRIMITIVE_TRIANGLES)
-		var pts=[]
-		for i in range(10):
-			var z=-35.0-i*15.0
-			var crest=15.0+sin(i*1.83+side)*4.0+(8.0 if i in [3,6] else 0.0)
-			pts.append([Vector3(side*22.0,-2.0,z),Vector3(side*(33.0+sin(i)*4.0),crest,z),Vector3(side*57.0,-0.2,z)])
-		for i in range(9):
-			for j in range(2):
-				for point in [pts[i][j],pts[i+1][j+1],pts[i+1][j],pts[i][j],pts[i][j+1],pts[i+1][j+1]]:
-					st.add_vertex(point)
-		st.generate_normals();ridge.mesh=st.commit()
-		var rm=ShaderMaterial.new();rm.shader=load("res://scripts/visuals/meadow_ridge.gdshader")
-		rm.set_shader_parameter("ridge_color",Vector3(0.12,0.23,0.24));ridge.material_override=rm
-		horizon_root.add_child(ridge)
 	for spec in [[-39.0,-138.0,27.0,30.0,22.0],[39.0,-150.0,30.0,25.0,25.0]]:
 		var stone=load("res://assets/visuals/nature_cc0/Rock_Medium_1.gltf").instantiate()
 		stone.position=Vector3(spec[0],_bank_height(spec[0],spec[1])-0.7,spec[1])
@@ -302,6 +301,10 @@ func _build_horizon() -> void:
 				support=minf(support,_bank_height(px,pz))
 			var rock="Rock" in model.scene_file_path
 			model.position.y+=(4.0 if model.has_meta("distant_landmark") else support if rock else _bank_height(model.position.x,model.position.z))-bottom-(0.3 if rock else 0.15)
+			if model.has_meta("clearing_bluff"):
+				model.position.y=0
+				model.position.y=_bank_height(signf(model.position.x)*5.5,model.position.z)-(model.transform*box).position.y-2.2
+
 
 	# Distant tree silhouettes use authored model renders, keeping the same layout
 	# and visual density without processing every leaf triangle at tiny screen size.
@@ -370,13 +373,14 @@ func _tint_import(node: Node, tint: Color) -> void:
 
 
 func _bank_height(x: float,z: float) -> float:
-	var edge := smoothstep(4.0,12.0,absf(x))
-	var rear := 1.0-smoothstep(112.0,144.0,-z)
-	var outer := 1.0-smoothstep(44.0,53.8,absf(x))
-	var shoulder=16.0+sin(z*0.045)*3.0+(2.0 if x>0 else 0.0)
-	var terrace=smoothstep(shoulder,shoulder+3.0,absf(x))*(7.0+3.0*sin(z*0.025))
-	return -0.14+rear*outer*terrace+edge*rear*outer*(2.4+1.35*sin(z*0.055+x*0.14)+0.80*sin(z*0.12-x*0.19)+smoothstep(12.0,28.0,absf(x))*(2.0+4.5*exp(-pow((z+48.0)/28.0,2.0))+2.0*sin(z*0.045+x*0.08)))
-
+	var edge=smoothstep(4.0,12.0,absf(x))
+	var rear=1.0-smoothstep(112.0,144.0,-z)
+	var outer=1.0-smoothstep(44.0,53.8,absf(x))
+	var low=0.65+0.45*sin(z*0.06+x*0.10)
+	var bluff=0.0
+	if x>0:
+		bluff=3.0*exp(-pow((x-23.0)/16.0,2.0)-pow((z+54.0)/48.0,2.0))
+	return -0.14+edge*rear*outer*(low+bluff)
 
 func _rolling_bank(side: float) -> ArrayMesh:
 	var st := SurfaceTool.new()
@@ -418,7 +422,7 @@ func _build_plants(main_node) -> void:
 		plant.mesh = _flower_clump(i%3,prng)
 		plant.material_override = flower_material
 		var drift := int(i/4)
-		plant.position = Vector3(side*(6.0+float(i%4)*2.0+prng.randf()*2.0),0,-8.0-float(drift)*15.5-float(i%4)*0.7)
+		plant.position = Vector3(side*(6.0+float(i%4)*2.7+prng.randf()*2.0),0,-8.0-float(drift)*15.5-float(i%4)*0.7)
 		plant.set_meta("bank_clearance",0.0)
 		plant.position.y = _bank_height(plant.position.x,plant.position.z)
 		plant.rotation.y = prng.randf_range(-PI,PI)
@@ -638,9 +642,14 @@ func layout_moons(size: Vector2) -> void:
 	if not active:return
 	# One dominant partly framed moon plus quiet distant companions, not a row.
 	var landscape := size.x>size.y
-	var locations := [Vector2(0.25,0.31),Vector2(0.82,0.29),Vector2(0.69,0.36)] if landscape else [Vector2(0.12,0.35),Vector2(0.84,0.31),Vector2(0.64,0.36)]
+	var locations := [Vector2(0.25,0.31),Vector2(0.84,0.31),Vector2(0.73,0.35)] if landscape else [Vector2(0.12,0.30),Vector2(0.84,0.31),Vector2(0.70,0.35)]
 	for i in range(game.moons.size()):
 		var point: Vector2 = locations[i]*size
 		point.y=maxf(244.0,point.y)
-		game.moons[i].position=camera_ref.project_position(point,60.0+i*15.0)
-		game.moons[i].scale=Vector3.ONE*[1.55,0.75,0.50][i]
+		var depth := 60.0+i*15.0
+		game.moons[i].scale=Vector3.ONE*[0.88,0.42,0.28][i]
+		var provisional := camera_ref.project_position(point,depth)
+		var radius:float=game.moons[i].mesh.radius*game.moons[i].scale.x
+		var projected_top := camera_ref.unproject_position(provisional+camera_ref.global_basis.y*radius)
+		point.y=maxf(point.y,225.0+point.y-projected_top.y)
+		game.moons[i].position=camera_ref.project_position(point,depth)

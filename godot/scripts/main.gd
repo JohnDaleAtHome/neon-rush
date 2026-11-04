@@ -109,6 +109,7 @@ var fire_time = 0.0
 var pending_advance = false
 var rng = RandomNumberGenerator.new()
 var meadow_visual
+var sea_visual
 var dunes_visual
 var world_sun: DirectionalLight3D
 var visual_world_index := 0
@@ -201,6 +202,9 @@ func _ready():
  dunes_visual=load("res://scripts/visuals/dunes_visual.gd").new()
  add_child(dunes_visual)
  dunes_visual.bind(self)
+ sea_visual=load("res://scripts/visuals/sea_visual.gd").new()
+ add_child(sea_visual)
+ sea_visual.bind(self)
  var layer = CanvasLayer.new()
  add_child(layer)
  var root = Control.new()
@@ -889,6 +893,7 @@ func apply_world(index: int):
  sky_stars.visible = options.stars and not options.light
  if meadow_visual: meadow_visual.apply(index)
  if dunes_visual: dunes_visual.apply(index)
+ if sea_visual: sea_visual.apply(index)
 
 func terrain_material(source: StandardMaterial3D, fog_color: Color) -> ShaderMaterial:
  var result = ShaderMaterial.new()

@@ -7,13 +7,12 @@ uniform float sway = 0.035;
 varying vec3 world_point;
 varying float view_depth;
 float bank_height(float x,float z){
- float edge=smoothstep(4.0,12.0,abs(x));
- float rear=1.0-smoothstep(112.0,144.0,-z);
- float outer=1.0-smoothstep(44.0,53.8,abs(x));
- float shoulder=16.0+sin(z*0.045)*3.0+(x>0.0?2.0:0.0);
- float terrace=smoothstep(shoulder,shoulder+3.0,abs(x))*(7.0+3.0*sin(z*0.025));
- return -0.14+rear*outer*terrace+edge*rear*outer*(2.4+1.35*sin(z*0.055+x*0.14)+0.80*sin(z*0.12-x*0.19)+smoothstep(12.0,28.0,abs(x))*(2.0+4.5*exp(-pow((z+48.0)/28.0,2.0))+2.0*sin(z*0.045+x*0.08)));
+ float edge=smoothstep(4.0,12.0,abs(x));float rear=1.0-smoothstep(112.0,144.0,-z);float outer=1.0-smoothstep(44.0,53.8,abs(x));
+ float low=0.65+0.45*sin(z*0.06+x*0.10);float bluff=0.0;
+ if(x>0.0){bluff=3.0*exp(-pow((x-23.0)/16.0,2.0)-pow((z+54.0)/48.0,2.0));}
+ return -0.14+edge*rear*outer*(low+bluff);
 }
+
 void vertex(){
  vec3 world=(MODEL_MATRIX*vec4(VERTEX,1.0)).xyz;
  float weight=clamp(VERTEX.y+0.15,0.0,1.0);

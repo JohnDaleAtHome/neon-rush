@@ -8,6 +8,9 @@ func run():
  var original=[]
  for e in g.track_edges:original.append(e.material_override)
  g.level=3;g.apply_world(3)
+ var current_sky=g.env_world.environment.sky
+ g.sea_visual.apply(3)
+ check(g.env_world.environment.sky==current_sky,"Sea reuses main sky resource instead of replacing it")
  check(g.sea_visual.active,"Sea active")
  check(g.sea_visual.landscape.get_child_count()==9,"2water6rock1surf")
  check(g.ground.material_override.shader.resource_path.ends_with("sea_water.gdshader"),"path material")

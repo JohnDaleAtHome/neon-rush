@@ -1323,6 +1323,9 @@ func encounter_sphere(parent: Node3D, at: Vector3, size: Vector3, tint: Color) -
  return part
 
 func show_story_encounter(which: int):
+ # A stopped collection/kindness beat is not an active hazard scene.
+ # Crossing/retry already clears these run entities before gameplay resumes.
+ for item in entities:item.hide()
  if which not in [2,3,4]: return
  player.hide()
  dimmer.color.a = 0.35

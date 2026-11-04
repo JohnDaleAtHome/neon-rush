@@ -42,6 +42,8 @@ func bind(main_node)->void:
  var mat=ShaderMaterial.new();mat.shader=load("res://scripts/visuals/grove_ground.gdshader")
  for side in [-1.0,1.0]:
   var bank=MeshInstance3D.new();bank.mesh=_bank(side);bank.material_override=mat;landscape.add_child(bank)
+ var understory=MeshInstance3D.new();understory.name="AmberUnderstory";understory.mesh=_understory()
+ var under_mat=ShaderMaterial.new();under_mat.shader=load("res://scripts/visuals/grove_understory.gdshader");understory.material_override=under_mat;landscape.add_child(understory)
  landscape.visible=false
 func apply(index:int)->void:
  active=index==2 and not game.options.get("light",false);landscape.visible=active
@@ -102,3 +104,52 @@ func _bounds(node:Node,base:Transform3D)->AABB:
   var nested=_bounds(child,transform)
   if nested.size.length()>0:result=result.merge(nested) if found else nested;found=true
  return result
+
+func _understory()->ArrayMesh:
+ var st=SurfaceTool.new();st.begin(Mesh.PRIMITIVE_TRIANGLES)
+ var rng=RandomNumberGenerator.new();rng.seed=210511
+ # Clusters with gaps, not a corridor of evenly spaced blades.
+ for clump in range(44):
+  var side=-1.0 if clump%2==0 else 1.0
+  var cx=side*(5.1+float((clump*7)%9)*1.1)
+  var cz=12.0-float(clump)*5.6
+  if clump>=32:
+   cx=side*(5.2+float(clump%3)*0.8);cz=4.0-float(clump-32)*2.8
+  for blade in range(22 if clump>=32 else 12):
+   var x=cx+rng.randf_range(-1.0,1.0);var z=cz+rng.randf_range(-2.4,2.4)
+   x=side*maxf(absf(x),4.35)
+   var y=_height(x,z)+0.03;var h=rng.randf_range(0.30,0.85)
+   var w=rng.randf_range(0.025,0.055);var angle=rng.randf()*TAU;var offset=Vector3(cos(angle)*w,0,sin(angle)*w)
+   var base=Vector3(x,y,z);var bend=Vector3(sin(angle),0,cos(angle))*rng.randf_range(0.12,0.30)
+   var tip=base+bend+Vector3(0,h,0)
+   var middle=base+bend*0.28+Vector3(0,h*0.62,0)
+   var color=Color("665128").lerp(Color("8f7137"),rng.randf())
+   for v in [base-offset,base+offset,middle+offset*0.6,base-offset,middle+offset*0.6,middle-offset*0.6,middle-offset*0.6,middle+offset*0.6,tip]:st.set_color(color);st.add_vertex(v)
+  for frond in range(2 if clump>=32 else 0):
+   var angle=float(frond)*TAU/5.0+float(clump)*1.7
+   var direction=Vector3(cos(angle),0,sin(angle));var across=Vector3(-sin(angle),0,cos(angle))
+   var center_base=Vector3(cx,_height(cx,cz)+0.03,cz)
+   for pair in range(4):
+    var t=0.18+float(pair)*0.20
+    var center=center_base+direction*1.15*t+Vector3.UP*0.95*sin(t*PI*0.7)
+    var length=(1.0-t)*0.42+0.08
+    for sign_x in [-1.0,1.0]:_leaf(st,center,across*sign_x+direction*0.45+Vector3.UP*0.55,length,Color("68582e"))
+   _leaf(st,center_base+direction*0.98+Vector3.UP*0.9,direction,0.32,Color("8b7339"))
+  for leaf in range(10 if clump>=32 else 4):
+   var x=cx+rng.randf_range(-1.4,1.4);var z=cz+rng.randf_range(-3.0,3.0);x=side*maxf(absf(x),4.35)
+   var y=_height(x,z)+0.035;var l=rng.randf_range(0.10,0.30);var angle=rng.randf()*TAU
+   var axis=Vector3(cos(angle),0,sin(angle))*l;var cross=Vector3(-axis.z,0,axis.x)*0.45;var center=Vector3(x,y,z)
+   var color=Color("6d4321").lerp(Color("a56c32"),rng.randf())
+   for v in [center-axis,center+cross,center+axis,center-axis,center+axis,center-cross]:st.set_color(color);st.add_vertex(v)
+ st.generate_normals();return st.commit()
+# End of clustered understory geometry.
+
+func _leaf(st:SurfaceTool,base:Vector3,direction:Vector3,length:float,color:Color)->void:
+ var forward=direction.normalized();var across=Vector3(-forward.z,0,forward.x)
+ for section in range(3):
+  var points=[]
+  for q in [Vector2(section,-1),Vector2(section,1),Vector2(section+1,1),Vector2(section+1,-1)]:
+   var t=q.x/3.0;var width=sin(t*PI)*length*0.30
+   points.append(base+forward*length*t+across*width*q.y+Vector3.UP*sin(t*PI)*0.035)
+  for k in [0,2,1,0,3,2]:st.set_color(color);st.add_vertex(points[k])
+# End of dimensional fern leaves.

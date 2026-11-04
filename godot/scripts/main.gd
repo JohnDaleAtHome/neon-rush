@@ -976,7 +976,7 @@ func begin_unlock():
  for item in entities: item.queue_free()
  entities.clear()
  if gate: gate.queue_free()
- gate = box(Vector3(5.7, 0.2, 0.4), Vector3(0, 2.3, -18), Color("aaffcc"))
+ gate = build_crossing_bridge()
  message.text = ["MOON DEW lights the launch pad. Hop toward the Silver Moon.", "SILVER LANTERN reveals Chang'e's footprints.", "CINNAMON BLOSSOM opens Wu Gang's gate.", "TIDE PEARL calms the waves. Hazards move slower.", "ECLIPSE KEY opens the palace and weakens the Guardian."][level]
  speed = 7 if level == 3 else 12
  if level == 1:
@@ -984,11 +984,22 @@ func begin_unlock():
    var foot = box(Vector3(0.16, 0.02, 0.3), Vector3(0.2 if i%2 else -0.2, 0.04, -i * 2 - 2), Color("ffeebb"))
    footprints.append(foot)
 
+func build_crossing_bridge() -> Node3D:
+ var bridge=Node3D.new();bridge.name="MoonBridgeCrossing";add_child(bridge)
+ bridge.set_meta("scenic_bridge",true)
+ var st=SurfaceTool.new();st.begin(Mesh.PRIMITIVE_TRIANGLES)
+ # Original temporary side rails: all geometry stays outside the playable lanes.
+ for side in [-1.0,1.0]:
+  for spec in [[Vector3(0.14,0.14,105),Vector3(side*3.8,0.18,-42)], [Vector3(0.11,0.11,105),Vector3(side*3.8,1.05,-42)]]:
+   var mesh=BoxMesh.new();mesh.size=spec[0];st.append_from(mesh,0,Transform3D(Basis.IDENTITY,spec[1]))
+  for i in range(18):
+   var mesh=BoxMesh.new();mesh.size=Vector3(0.12,0.9,0.12)
+   st.append_from(mesh,0,Transform3D(Basis.IDENTITY,Vector3(side*3.8,0.61,8.0-float(i)*6.0)))
+ var rails=MeshInstance3D.new();rails.mesh=st.commit();rails.material_override=material(Color("8bc7c7"),true);bridge.add_child(rails)
+ return bridge
+
 func update_unlock(dt: float):
  unlock_time += dt
- if gate:
-  gate.position.z += speed * dt
-  gate.position.y += dt * 0.5
  if level == 0 and unlock_time > 1.4 and unlock_time - dt <= 1.4: velocity = 13
  velocity -= 19 * dt
  height = maxf(0, height + velocity * dt)

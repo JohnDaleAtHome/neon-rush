@@ -9,6 +9,10 @@ func run():
  check(g.palace_visual.active,"palace active")
  check(g.ground.material_override.shader.resource_path.ends_with("palace_stone.gdshader"),"path material")
  for side in g.side_planes:check(not side.visible,"base sides hidden")
+ var gate=g.palace_visual.landscape.get_node("MoonlightGate")
+ check(gate.get_child_count()<=10,"bounded gate material batches")
+ check(gate.get_meta("light_count")==5,"five scenic lights")
+ check(gate.position.z<-130.0,"destination remains distant")
  inspect(g.palace_visual.landscape)
  for dim in [Vector2i(390,844),Vector2i(1280,800),Vector2i(360,640),Vector2i(844,500)]:
   root.size=dim;await process_frame;g.layout_moons(dim)
@@ -34,6 +38,6 @@ func inspect(node:Node):
    for v in node.mesh.surface_get_arrays(surface)[Mesh.ARRAY_VERTEX]:
     var w=node.global_transform*v
     check(w.is_finite(),"finite geometry")
-    check(absf(w.x)>=3.65,"scenery outside lanes")
+    check(absf(w.x)>=3.65 or (w.z < -130.0 and w.y>9.0),"scenery outside lanes or distant overhead gate")
  for child in node.get_children():inspect(child)
 # End of palace regression test.

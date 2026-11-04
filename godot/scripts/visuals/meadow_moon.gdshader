@@ -12,7 +12,7 @@ float noise(vec2 p){vec2 i=floor(p);vec2 f=fract(p);f=f*f*(3.0-2.0*f);return mix
 void fragment(){
  float h = texture(lunar_height, UV).r;
  float relief = clamp((h - 0.12) * 1.6, 0.0, 1.0);
- vec3 lunar = moon_tint.rgb * mix(0.36,0.78,relief);
+ vec3 lunar = moon_tint.rgb * mix(0.56,0.88,relief);
  vec2 ndc=(SCREEN_UV-0.5)*vec2(2.0,-2.0);
  float aspect=VIEWPORT_SIZE.x/VIEWPORT_SIZE.y;
  vec3 ray=normalize(camera_forward+camera_right*ndc.x*vertical_tangent*aspect+camera_up*ndc.y*vertical_tangent);
@@ -24,7 +24,7 @@ void fragment(){
  vec3 atmosphere=mix(vec3(0.022,0.026,0.065),vec3(0.058,0.075,0.13),clamp(y*2.0,0.0,1.0));
  atmosphere=mix(atmosphere,vec3(0.115,0.14,0.23),cover*0.8);
  atmosphere=mix(atmosphere,haze_color,smoothstep(0.30,0.43,y));
- ALBEDO = mix(lunar*0.48,atmosphere,0.38+cover*0.48+limb*0.12);
+ ALBEDO = mix(lunar*0.86,atmosphere,0.36+cover*0.42+limb*0.12);
  ALPHA = (1.0-limb*0.32)*(1.0-cover*0.28);
  ROUGHNESS = 0.95;
  EMISSION = vec3(0.0);

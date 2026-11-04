@@ -16,11 +16,11 @@ void vertex(){
 void fragment(){
  vec2 p=world_position.xz;
  float waves=sin(p.x*0.13+p.y*0.055+(TIME*float(animate))*0.65)*0.5+sin(p.x*0.07-p.y*0.09-(TIME*float(animate))*0.4)*0.3;
- float ripple=sin(p.y*0.65+p.x*0.19+(TIME*float(animate))*0.6+sin(p.x*0.27))*0.5+sin(p.x*0.4-p.y*0.23-(TIME*float(animate))*0.35)*0.25;
- float ribbons=smoothstep(0.56,0.70,ripple)*smoothstep(4.0,9.0,abs(p.x));
- float foam=smoothstep(0.48,0.68,waves)*smoothstep(8.0,16.0,abs(p.x));
+ float crest=sin(p.y*0.48+sin(p.x*0.055+p.y*0.025)*1.1+TIME*float(animate)*0.45);
+ float broken=smoothstep(-0.20,0.30,sin(p.x*0.23+p.y*0.09)+sin(p.x*0.06-p.y*0.13)*0.5);
+ float ribbons=smoothstep(0.92,0.99,crest)*broken*smoothstep(4.0,9.0,abs(p.x));
  vec3 water=mix(vec3(0.018,0.070,0.105),vec3(0.055,0.19,0.23),waves*0.5+0.5);
- water=mix(water,vec3(0.15,0.33,0.38),foam*0.40+ribbons*0.65);
+ water=mix(water,vec3(0.15,0.33,0.38),ribbons*0.45);
  if(path_surface){water=mix(vec3(0.045,0.10,0.14),vec3(0.07,0.16,0.19),sin(p.y*0.08+p.x*0.1)*0.15+0.5);}
  water=mix(water,vec3(0.045,0.115,0.16),smoothstep(70.0,250.0,-p.y)*0.8);
  ALBEDO=water;ROUGHNESS=0.55;SPECULAR=0.35;

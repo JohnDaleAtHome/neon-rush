@@ -20,4 +20,6 @@ for rel,entry in manifest.items():
     temp.write_bytes(data)
     temp.replace(dest)
     print('downloaded and verified',rel)
-print('All',len(manifest),'assets are exact. Open project.godot in Godot 4.7.2.')
+# Apply the validated Meadow code and CC0 assets last, after baseline recovery.
+runpy.run_path(str(ROOT/'meadow-sourcepack'/'restore.py'),run_name='__main__')
+print('All baseline and Meadow assets are exact. Open project.godot in Godot 4.7.2.')

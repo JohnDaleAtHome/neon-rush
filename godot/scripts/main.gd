@@ -109,6 +109,7 @@ var fire_time = 0.0
 var pending_advance = false
 var rng = RandomNumberGenerator.new()
 var meadow_visual
+var comet_visual
 var sea_visual
 var dunes_visual
 var world_sun: DirectionalLight3D
@@ -205,6 +206,9 @@ func _ready():
  sea_visual=load("res://scripts/visuals/sea_visual.gd").new()
  add_child(sea_visual)
  sea_visual.bind(self)
+ comet_visual=load("res://scripts/visuals/comet_visual.gd").new()
+ add_child(comet_visual)
+ comet_visual.bind(self)
  var layer = CanvasLayer.new()
  add_child(layer)
  var root = Control.new()
@@ -894,6 +898,7 @@ func apply_world(index: int):
  if meadow_visual: meadow_visual.apply(index)
  if dunes_visual: dunes_visual.apply(index)
  if sea_visual: sea_visual.apply(index)
+ if comet_visual: comet_visual.apply(index)
 
 func terrain_material(source: StandardMaterial3D, fog_color: Color) -> ShaderMaterial:
  var result = ShaderMaterial.new()
@@ -1948,6 +1953,7 @@ func layout_moons(size: Vector2):
   moons[i].position = camera.project_position(Vector2(size.x*fraction,pixel_y),60.0+i*15.0)
 
  if meadow_visual and meadow_visual.active: meadow_visual.layout_moons(size)
+ if comet_visual and comet_visual.active: comet_visual.layout_moons(size)
 
 func configure_window():
  var physical = get_window().size

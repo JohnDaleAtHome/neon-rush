@@ -10,7 +10,9 @@ float bank_height(float x,float z){
  float edge=smoothstep(4.0,12.0,abs(x));
  float rear=1.0-smoothstep(112.0,144.0,-z);
  float outer=1.0-smoothstep(44.0,53.8,abs(x));
- return -0.14+edge*rear*outer*(2.4+1.35*sin(z*0.055+x*0.14)+0.80*sin(z*0.12-x*0.19));
+ float shoulder=16.0+sin(z*0.045)*3.0+(x>0.0?2.0:0.0);
+ float terrace=smoothstep(shoulder,shoulder+3.0,abs(x))*(7.0+3.0*sin(z*0.025));
+ return -0.14+rear*outer*terrace+edge*rear*outer*(2.4+1.35*sin(z*0.055+x*0.14)+0.80*sin(z*0.12-x*0.19)+smoothstep(12.0,28.0,abs(x))*(2.0+4.5*exp(-pow((z+48.0)/28.0,2.0))+2.0*sin(z*0.045+x*0.08)));
 }
 void vertex(){
  vec3 world=(MODEL_MATRIX*vec4(VERTEX,1.0)).xyz;

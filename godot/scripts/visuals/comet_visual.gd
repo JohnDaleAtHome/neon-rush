@@ -20,6 +20,13 @@ func bind(main_node)->void:
   var chip=load("res://assets/visuals/nature_cc0/Rock_Medium_"+str(1+i%3)+".gltf").instantiate();landscape.add_child(chip)
   chip.scale=Vector3(0.65+float(i%3)*0.4,0.8+float(i%2)*0.6,0.8+float(i%3)*0.2)
   chip.position=Vector3(side*(11.0+float(i%4)*4.0),-1.5+float(i%3)*1.2,-20.0-i*13.0);chip.rotation=Vector3(i*0.6,i*1.7,i*0.3);_rock_material(chip)
+ var st=SurfaceTool.new();st.begin(Mesh.PRIMITIVE_TRIANGLES)
+ for spec in [[-14.0,-48.0,4.0,5.0], [20.0,-82.0,5.2,7.0],[-24.0,-123.0,7.0,10.0],[31.0,-162.0,9.0,13.0],[-42.0,-199.0,11.0,17.0],[55.0,-239.0,13.0,20.0]]:
+  var pos=Vector3(spec[0],-1.1,spec[1])
+  _fracture(st,pos,spec[2],spec[3])
+  _fracture(st,pos+Vector3(signf(spec[0])*spec[2]*0.8,0,spec[2]*0.9),spec[2]*0.7,spec[3]*0.62)
+  _fracture(st,pos+Vector3(-signf(spec[0])*spec[2]*0.55,0,-spec[2]*1.1),spec[2]*0.55,spec[3]*0.8)
+ var cliffs=MeshInstance3D.new();cliffs.name="CometFractures";cliffs.mesh=st.commit();var cliff_mat=ShaderMaterial.new();cliff_mat.shader=mat.shader;cliff_mat.set_shader_parameter("cliff_surface",true);cliffs.material_override=cliff_mat;landscape.add_child(cliffs)
  landscape.visible=false
 func apply(index:int)->void:
  active=index==4 and not game.options.get("light",false);landscape.visible=active
@@ -71,3 +78,18 @@ func layout_moons(size:Vector2)->void:
   game.moons[i].scale=Vector3.ONE*[0.48,0.30,0.20][i]
   game.moons[i].position=game.camera.project_position(point,depth)
 # End of Comet visual study.
+
+func _fracture(st:SurfaceTool,at:Vector3,width:float,height:float)->void:
+ var low=[];var high=[]
+ for i in range(6):
+  var angle=float(i)/6.0*TAU
+  low.append(at+Vector3(cos(angle)*width,-2.0,sin(angle)*width*0.65))
+  high.append(at+Vector3(cos(angle)*width*0.34+signf(at.x)*height*0.22,height*(0.65+0.35*sin(i*2.3+at.z)),sin(angle)*width*0.32))
+ var tip=at+Vector3(signf(at.x)*height*0.22,height*0.98,0)
+ for i in range(6):
+  var j=(i+1)%6
+  var a:Vector3=low[i];var b:Vector3=low[j];var c:Vector3=high[j];var d:Vector3=high[i]
+  var normal=(c-a).cross(b-a).normalized()
+  for v in [a,c,b,a,d,c]:st.set_normal(normal);st.add_vertex(v)
+  normal=(high[i]-tip).cross(high[j]-tip).normalized()
+  for v in [tip,high[i],high[j]]:st.set_normal(normal);st.add_vertex(v)

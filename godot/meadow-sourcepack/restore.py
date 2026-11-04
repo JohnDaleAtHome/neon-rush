@@ -16,8 +16,10 @@ for rel,encoded in items.items():
  if len(data)!=expected['bytes'] or hashlib.sha256(data).hexdigest()!=expected['sha256']:raise SystemExit('Checkpoint validation failed: '+rel+'; no files written')
  validated.append((rel,data))
 for rel,data in validated:
+ if not rel.startswith('godot/assets/'):
+  continue
  dest=ROOT/rel;dest.parent.mkdir(parents=True,exist_ok=True)
  if dest.is_file() and dest.read_bytes()==data:continue
  temp=dest.with_name(dest.name+'.tmp');temp.write_bytes(data);temp.replace(dest)
  print('restored',rel)
-print('All',len(validated),'Meadow checkpoint files are exact.')
+print('All',len(validated),'packed files validated; Meadow assets restored. Tracked source files are preserved.')

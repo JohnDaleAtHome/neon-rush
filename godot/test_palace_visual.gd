@@ -7,6 +7,7 @@ func run():
  var g=load("res://scenes/main.tscn").instantiate();root.add_child(g);await process_frame;g.set_process(false)
  g.mode="story";g.level=5;g.running=true;g.apply_world(5);g.apply_options()
  check(g.palace_visual.active,"palace active")
+ for i in range(3):check(g.palace_visual.landscape.get_child(i).get_child_count()<=10,"bounded pavilion material batches")
  check(g.ground.material_override.shader.resource_path.ends_with("palace_stone.gdshader"),"path material")
  for side in g.side_planes:check(not side.visible,"base sides hidden")
  var gate=g.palace_visual.landscape.get_node("MoonlightGate")
@@ -17,6 +18,8 @@ func run():
  for dim in [Vector2i(390,844),Vector2i(1280,800),Vector2i(360,640),Vector2i(844,500)]:
   root.size=dim;await process_frame;g.layout_moons(dim)
   check(absf(g.palace_visual.landscape.get_child(0).position.x)>=16.0,"pavilion lateral placement")
+  if dim.x>dim.y and dim.y>=650:
+   check(g.palace_visual.landscape.get_child(0).position.x < -28.0,"wide pavilion clears moon group")
   if dim.x>dim.y and dim.y<650:
    check(g.palace_visual.landscape.get_child(0).position.x < -26.0,"landscape clears central cue")
    var horizon=g.camera.unproject_position(Vector3(0,0,-250)).y

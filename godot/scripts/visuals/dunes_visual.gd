@@ -45,12 +45,25 @@ func bind(main_node)->void:
      points.append(Vector3(x,height(x,z)+lift,z))
     for k in [0,2,1,0,3,2]:st.add_vertex(points[k])
   st.generate_normals();rim.mesh=st.commit();var mat=ShaderMaterial.new();mat.shader=load("res://scripts/visuals/dunes_sand.gdshader");mat.set_shader_parameter("sand_texture",load("res://assets/textures/ground_sand.png"));rim.material_override=mat;landscape.add_child(rim)
- for i in range(18):
-  var side=-1.0 if i%2==0 else 1.0;var x=side*(10.0+float(i%4)*6.0);var z=-20.0-i*8.0
-  var rock=load("res://assets/visuals/nature_cc0/Rock_Medium_"+str(1+i%3)+".gltf").instantiate()
-  rock.scale=Vector3.ONE*(0.35+float(i%3)*0.18);rock.rotation.y=i*1.7
-  rock.position=Vector3(x,height(x,z)-0.25,z)
-  _rock_material(rock);landscape.add_child(rock)
+ # Ejecta gathers in unequal trails at slope bases, not evenly spaced rows.
+ var stones=SurfaceTool.new();stones.begin(Mesh.PRIMITIVE_TRIANGLES)
+ var templates=[]
+ for i in range(3):templates.append(load("res://assets/visuals/nature_cc0/Rock_Medium_"+str(i+1)+".gltf").instantiate())
+ for i in range(96):
+  var group=i/16;var k=i%16
+  var centers=[Vector2(-7.0,-5),Vector2(8.5,-19),Vector2(-10.0,-39),Vector2(12.5,-65),Vector2(-17.0,-99),Vector2(22.0,-141)]
+  var center:Vector2=centers[group]
+  var x=center.x+sin(i*2.399)*float(1+k%4)*0.4
+  var z=center.y+cos(i*1.71)*float(2+k%7)*1.1
+  var size=(0.22+float((i*7)%9)*0.065)*(2.0 if k>2 else 1.3)
+  var basis=Basis.from_euler(Vector3(i*0.16,i*1.7,i*0.09)).scaled(Vector3(size,size*0.8,size*1.1))
+  var transform=Transform3D(basis,Vector3(x,height(x,z)+0.12,z))
+  if k<2:_append_stone(templates[i%3],transform,stones)
+  else:_pebble(stones,transform,i)
+ for node in templates:node.free()
+ var ejecta=MeshInstance3D.new();ejecta.name="DuneEjecta";ejecta.mesh=stones.commit()
+ var gravel=ShaderMaterial.new();gravel.shader=load("res://scripts/visuals/dunes_sand.gdshader");gravel.set_shader_parameter("sand_texture",load("res://assets/textures/ground_sand.png"));gravel.set_shader_parameter("is_rock",true)
+ ejecta.material_override=gravel;landscape.add_child(ejecta)
  landscape.visible=false
 func height(x:float,z:float)->float:
  var side=signf(x);var ax=absf(x)
@@ -75,3 +88,28 @@ func _rock_material(node:Node)->void:
   var mat=ShaderMaterial.new();mat.shader=load("res://scripts/visuals/dunes_sand.gdshader");mat.set_shader_parameter("sand_texture",load("res://assets/textures/ground_sand.png"))
   node.material_override=mat
  for child in node.get_children():_rock_material(child)
+
+func _append_stone(node:Node3D,transform:Transform3D,st:SurfaceTool)->void:
+ var at=transform*node.transform
+ if node is MeshInstance3D:
+  for surface in range(node.mesh.get_surface_count()):
+   var arrays=node.mesh.surface_get_arrays(surface)
+   var vertices=arrays[Mesh.ARRAY_VERTEX];var normals=arrays[Mesh.ARRAY_NORMAL];var indices=arrays[Mesh.ARRAY_INDEX]
+   for i in range(indices.size() if indices!=null and indices.size()>0 else vertices.size()):
+    var j=indices[i] if indices!=null and indices.size()>0 else i
+    st.set_normal((at.basis*normals[j]).normalized());st.add_vertex(at*vertices[j])
+ for child in node.get_children():
+  if child is Node3D:_append_stone(child,at,st)
+
+func _pebble(st:SurfaceTool,at:Transform3D,index:int)->void:
+ var ring=[]
+ for i in range(5):
+  var angle=float(i)/5.0*TAU
+  ring.append(Vector3(cos(angle)*(0.8+0.1*sin(index+i)),0.0,sin(angle)))
+ var top=Vector3(0.1,0.65,0.05);var bottom=Vector3(0,-0.35,0)
+ for i in range(5):
+  var j=(i+1)%5
+  for tri in [[top,ring[i],ring[j]],[bottom,ring[j],ring[i]]]:
+   var a:Vector3=at*tri[0];var b:Vector3=at*tri[1];var c:Vector3=at*tri[2]
+   var normal=(c-a).cross(b-a).normalized()
+   for v in [a,b,c]:st.set_normal(normal);st.add_vertex(v)

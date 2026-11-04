@@ -1,0 +1,146 @@
+{
+  "docs/ENVIRONMENT-REFERENCE-STUDY.md": {
+    "bytes": 8480,
+    "sha256": "f39d20599638148610b1303afa47575613354f76be1e8df788d827be50a35702"
+  },
+  "docs/MEADOW-VALLEY-VALIDATION.md": {
+    "bytes": 2751,
+    "sha256": "2fca890b4231336749dab4e18945e937724834959da9d9c50a7beaed6d04b735"
+  },
+  "godot/test_visual_integration.gd": {
+    "bytes": 5207,
+    "sha256": "9fac23baa99323938555ee9cc8e84453e9684b799342c99051911e4731c1f888"
+  },
+  "godot/test_reference_environment.gd": {
+    "bytes": 2379,
+    "sha256": "f2b0dc59075ff7d03a46797d131fd0b9104dad4d736d3b54d300fd8ad8cfc051"
+  },
+  "godot/assets/visuals/nature_cc0/Bush_Common.gltf": {
+    "bytes": 2101,
+    "sha256": "77811fca92610cb254713d3d49d5029ab6cf13050c3afb61aa942786a7b2ca90"
+  },
+  "godot/assets/visuals/nature_cc0/CommonTree_3_impostor.png": {
+    "bytes": 53163,
+    "sha256": "82b288c3edb20db7bd11a7214eda9fa33319588429073c8a6a265ebed8a96889"
+  },
+  "godot/assets/visuals/nature_cc0/CommonTree_5_impostor.png": {
+    "bytes": 54013,
+    "sha256": "e57f5e57730fab1818e776a289bc5dfc19a28df7cb1975c2716f737a31ca2901"
+  },
+  "godot/assets/visuals/nature_cc0/CommonTree_5.gltf": {
+    "bytes": 3860,
+    "sha256": "fb7061f2bf9fe850870b056431f8f66cd8fdeb443c90695c5efbcf1fe6876d53"
+  },
+  "godot/assets/visuals/nature_cc0/Bark_NormalTree.png": {
+    "bytes": 247621,
+    "sha256": "157c7571d3a3c04dbb30476c607caf73a89d96ec2ed0b6b30886c8063c249ce3"
+  },
+  "godot/assets/visuals/nature_cc0/Leaves_NormalTree_C.png": {
+    "bytes": 66655,
+    "sha256": "47a8dbd4127a07d90ee36a6df3324f57b50b71a4a7721c63fc80237c7065af2b"
+  },
+  "godot/assets/visuals/nature_cc0/Rock_Medium_1.gltf": {
+    "bytes": 1831,
+    "sha256": "5d1ab1fa03218f4a908728ed0eabe6486344a7e4f510b0d3d6f837fd1d011bd8"
+  },
+  "godot/assets/visuals/nature_cc0/LICENSE.txt": {
+    "bytes": 852,
+    "sha256": "120710e542c3ebaf83856c4eb55b4a1e680593b39302eba7fdc5d942dfe78c58"
+  },
+  "godot/assets/visuals/nature_cc0/Rock_Medium_2.gltf": {
+    "bytes": 1825,
+    "sha256": "fac2d05a05f2d0d2098de59c09b58f42cc875c9caca4fd4c4bd57f3d36e7b12e"
+  },
+  "godot/assets/visuals/nature_cc0/Rock_Medium_3.gltf": {
+    "bytes": 1832,
+    "sha256": "9a575b911372cf91693aa3a56aea8137ec2251c2b99fb34a31272ee64503047f"
+  },
+  "godot/assets/visuals/nature_cc0/CommonTree_5.bin": {
+    "bytes": 252996,
+    "sha256": "0e617612d50e6bb2ca3c64338383f8938ce9e04d55b548ff11cec7a7b7d8f072"
+  },
+  "godot/assets/visuals/nature_cc0/Rock_Medium_1.bin": {
+    "bytes": 13284,
+    "sha256": "ea79527d4c2b3bdb7a28bf589bf0c1fd96d192a4d0738636753911dd58681e99"
+  },
+  "godot/assets/visuals/nature_cc0/CommonTree_3.gltf": {
+    "bytes": 3864,
+    "sha256": "17c6537aa8042bb7255fbb501bf7aeb2b6db87c16766f794f9c37be3ce70c976"
+  },
+  "godot/assets/visuals/nature_cc0/CommonTree_1.gltf": {
+    "bytes": 3869,
+    "sha256": "b51cdea6545edb51d102dd6c27caafe62aa75e3c328ac8f9039f4e7bfd690bfa"
+  },
+  "godot/assets/visuals/nature_cc0/Leaves_TwistedTree_C.png": {
+    "bytes": 48542,
+    "sha256": "a370f9bb1f31d6f7c70667239ceb7b46a627f48248f5bd28fb95ab5f11ea9936"
+  },
+  "godot/assets/visuals/nature_cc0/Bush_Common.bin": {
+    "bytes": 91800,
+    "sha256": "a5e1a773c8ba78fd9c05a8b342131eba4879302a8fddd2c5186cab9ee1ef4966"
+  },
+  "godot/assets/visuals/nature_cc0/CommonTree_1.bin": {
+    "bytes": 491576,
+    "sha256": "9dd689e84e1aa2f5b08db8def591254d582783c73737af54ba0d89b3e549c3ae"
+  },
+  "godot/assets/visuals/nature_cc0/Bark_NormalTree_Normal.png": {
+    "bytes": 287765,
+    "sha256": "87b8be307c1cc6a92231e8791a83ba674f1a60e8b9e1f7c8184537b2b5e0bddc"
+  },
+  "godot/assets/visuals/nature_cc0/Rock_Medium_2.bin": {
+    "bytes": 9432,
+    "sha256": "76b60bf8349f71abdb0ed462b3223d93c2dcabdfb5754bc132e18b021cc6c805"
+  },
+  "godot/assets/visuals/nature_cc0/Rock_Medium_3.bin": {
+    "bytes": 20124,
+    "sha256": "63f94bce2d3fb3fe25b2d6c843a828b1bec76855dbaac93fcf5d43582309caad"
+  },
+  "godot/assets/visuals/nature_cc0/CommonTree_3.bin": {
+    "bytes": 296984,
+    "sha256": "24541f46fd9553e2389aba15575f2697009226e82118ed76868284114fd12b49"
+  },
+  "godot/assets/visuals/nature_cc0/Rocks_Diffuse.png": {
+    "bytes": 311965,
+    "sha256": "d51e0e3b46a38a71779dfbfffdf6a7f11bc0f565e27b3f098f2f67cf0b55436c"
+  },
+  "godot/scripts/main.gd": {
+    "bytes": 81150,
+    "sha256": "ed8089f86bce6acf4b3b4b8f2dcada4f2dc6c3b510162b937163fb7091d3c85a"
+  },
+  "godot/scripts/visuals/meadow_bank.gdshader": {
+    "bytes": 1313,
+    "sha256": "f4550e82a3d61377dc7b4d8f977c2da0e117d892cd0df49056832083b82eedb5"
+  },
+  "godot/scripts/visuals/nature_opaque.gdshader": {
+    "bytes": 759,
+    "sha256": "76826a213c615b8c70ad92f1aff8a84ac68631e8bac206c0741b91afc10332f7"
+  },
+  "godot/scripts/visuals/meadow_ridge.gdshader": {
+    "bytes": 467,
+    "sha256": "0b8401150f929ed7414e70646b478e74fd0d118503506d177b56bba2f59174c2"
+  },
+  "godot/scripts/visuals/meadow_terrain.gdshader": {
+    "bytes": 1809,
+    "sha256": "499b3b2f1ad6edbd9241df68aa6459a56892c3053eb640707bc3c3a4bd3e35f2"
+  },
+  "godot/scripts/visuals/nature_impostor.gdshader": {
+    "bytes": 450,
+    "sha256": "1ac61bef8533314fd3695be9ff17635d3faf21c3004a3dc50143bddc4ee52e3e"
+  },
+  "godot/scripts/visuals/meadow_sky.gdshader": {
+    "bytes": 1347,
+    "sha256": "ad413ac5109dd0b98c7696945c7bf0e2e83f71ad302610415730c50fccdc226d"
+  },
+  "godot/scripts/visuals/meadow_visual.gd": {
+    "bytes": 28839,
+    "sha256": "c840f0288fe98b9a21a2dd508cf78594e8395e732896da859bad4c93f4357135"
+  },
+  "godot/scripts/visuals/nature_moonlit.gdshader": {
+    "bytes": 804,
+    "sha256": "cadf7d4fe27fc9c48877331f1c0759df745990d85d87657938c2738b68d73812"
+  },
+  "tools_build/bake_tree_impostors.gd": {
+    "bytes": 1147,
+    "sha256": "03408ff719cbc792ed18b6c46425cb311ab914af00b3a3a9bcf10a23f9d01a52"
+  }
+      }

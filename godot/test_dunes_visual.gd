@@ -18,7 +18,11 @@ func run():
  g.mode="story";g.level=1;g.start_level();g.apply_world(1);await process_frame
  var d=g.dunes_visual
  assert(d.active and d.landscape.visible)
- assert(d.landscape.get_child_count()==27)
+ assert(d.landscape.get_child_count()==10)
+ var ejecta=d.landscape.get_node("DuneEjecta")
+ assert(ejecta.mesh.get_surface_count()==1)
+ assert(ejecta.material_override.get_shader_parameter("is_rock"))
+ assert(ejecta.mesh.get_faces().size()>96*12)
  inspect(d.landscape)
  for x in [-200.0,-25.0,-3.6,3.6,25.0,200.0]:
   for z in [-200.0,-100.0,0.0]:assert(is_finite(d.height(x,z)))
@@ -40,5 +44,5 @@ func run():
  for size in [Vector2i(390,844),Vector2i(1280,800),Vector2i(360,640),Vector2i(844,500)]:
   root.size=size;await process_frame;g.adapt_layout();await process_frame
   for moon in g.moons:assert(moon.visible)
- print("PASS Silver Dunes scenery bounds,27scenicnodes,30unchangedprops,Light/world restoration,fouraspects")
+ print("PASS Silver Dunes scenery bounds,10scenicnodes,30unchangedprops,Light/world restoration,fouraspects")
  quit()

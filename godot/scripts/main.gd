@@ -1873,6 +1873,8 @@ func build_level_props(index: int):
    var globe = SphereMesh.new()
    globe.radius = 0.38
    globe.height = 0.70
+   globe.radial_segments = 24
+   globe.rings = 12
    lantern.mesh = globe
    lantern.position = at+Vector3(0,3.3,0)
    lantern.material_override = material(Color("ffd98a"),true)

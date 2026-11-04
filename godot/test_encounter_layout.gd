@@ -8,9 +8,13 @@ func run():
  g.mode = "story"
  g.level = 3
  g.start_level()
+ var hazard=g.box(Vector3.ONE,Vector3(0,0,-3),Color.WHITE)
+ hazard.set_meta("kind","low");g.entities.append(hazard)
  g.pending_advance = true
  g.show_beat("Storm Sea","Wake a friend with a kind word.","SPEAK KINDLY TO THE TURTLE")
  g.show_story_encounter(3)
+ assert(not hazard.visible)
+ assert(g.entities.has(hazard))
  assert(not g.player.visible)
  assert(not g.fresh_button.visible and not g.sound_button.visible and not g.options_button.visible and not g.stats_button.visible)
  for size in [Vector2(390,819),Vector2(1280,800),Vector2(844,390)]:
@@ -24,13 +28,21 @@ func run():
  assert(not g.controls.visible)
  for moon in g.moons: assert(moon.visible)
  assert(g.player.visible and g.story_props.is_empty() and g.unlock)
+ assert(g.entities.is_empty())
  g.options.stars = false
  g.pending_advance = true
  g.show_beat("Piece","Cross","CONTINUE")
  g.begin_unlock()
  for moon in g.moons: assert(not moon.visible)
  assert(not g.controls.visible)
+ for stage in range(5):
+  g.level=stage;g.start_level()
+  var prop=g.box(Vector3.ONE,Vector3(0,0,-3),Color.WHITE)
+  prop.set_meta("kind","low");g.entities.append(prop)
+  g.show_story_encounter(stage)
+  assert(not prop.visible)
  g.start_level()
+ assert(g.entities.is_empty())
  g.toggle_pause()
  assert(g.sound_button.visible and g.options_button.visible and g.stats_button.visible)
  g.return_menu()

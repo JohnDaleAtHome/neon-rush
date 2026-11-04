@@ -27,7 +27,7 @@ func apply(index:int)->void:
   return
  water_material.set_shader_parameter("animate",not game.options.get("motion",false))
  landscape.get_node("StackSurf").material_override.set_shader_parameter("animate",not game.options.get("motion",false))
- var sky=Sky.new();var sky_mat=ShaderMaterial.new();sky_mat.shader=load("res://scripts/visuals/sea_sky.gdshader")
+ var sky=game.env_world.environment.sky;var sky_mat=ShaderMaterial.new();sky_mat.shader=load("res://scripts/visuals/sea_sky.gdshader")
  sky_mat.set_shader_parameter("camera_forward",-game.camera.global_basis.z);sky_mat.set_shader_parameter("camera_up",game.camera.global_basis.y);sky_mat.set_shader_parameter("vertical_tangent",tan(deg_to_rad(game.camera.fov)/2.0));sky.sky_material=sky_mat;game.env_world.environment.sky=sky
  game.env_world.environment.fog_light_color=Color("102c3e")
  game.env_world.environment.fog_depth_begin=25.0

@@ -23,6 +23,14 @@ void fragment(){
  water=mix(water,vec3(0.15,0.33,0.38),ribbons*0.45);
  if(path_surface){water=mix(vec3(0.045,0.10,0.14),vec3(0.07,0.16,0.19),sin(p.y*0.08+p.x*0.1)*0.15+0.5);}
  water=mix(water,vec3(0.045,0.115,0.16),smoothstep(70.0,250.0,-p.y)*0.8);
+ if(!path_surface){
+  float sweep=p.x+14.0+sin(p.y*0.022)*7.0;
+  float glint=exp(-sweep*sweep/(80.0+max(-p.y,0.0)*0.4));
+  float drift=TIME*float(animate)*0.18;
+  float facets=smoothstep(0.55,0.95,sin(p.y*1.8+sin(p.x*0.7)+drift));
+  facets*=smoothstep(-0.1,0.6,sin(p.x*1.5+p.y*0.6)+sin(p.x*0.5-p.y*0.8)*0.5);
+  water+=vec3(0.13,0.19,0.21)*glint*facets*(1.0-smoothstep(100.0,280.0,-p.y));
+ }
  ALBEDO=water;ROUGHNESS=0.55;SPECULAR=0.35;
  EMISSION=water*0.30;
 }

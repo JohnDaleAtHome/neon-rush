@@ -16,7 +16,9 @@ func run():
   g.layout_moons(size)
   for moon in g.moons:
    var screen = g.camera.unproject_position(moon.position)
-   assert(screen.y > 235)
+   if size.x>size.y and size.y<650:
+    assert(screen.y < g.camera.unproject_position(Vector3(0,0,-250)).y)
+   else: assert(screen.y > 235)
  assert(g.scenery.get_child_count() == 16)
  for tree in g.scenery.get_children():
   assert(absf(tree.position.x) >= 6.5)

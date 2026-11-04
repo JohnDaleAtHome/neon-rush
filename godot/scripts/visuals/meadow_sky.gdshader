@@ -1,6 +1,6 @@
 shader_type sky;
 uniform sampler2D sky_gradient : source_color, filter_linear, repeat_disable;
-uniform vec3 haze_color : source_color = vec3(0.078431,0.207843,0.180392);
+uniform vec3 haze_color : source_color = vec3(0.141,0.278,0.322);
 uniform vec3 camera_forward = vec3(0.0,0.0,-1.0);
 uniform vec3 camera_up = vec3(0.0,1.0,0.0);
 uniform float vertical_tangent = 0.7;
@@ -10,10 +10,12 @@ void sky(){
  float y = 0.5 - 0.5 * dot(EYEDIR,camera_up) / max(0.01,dot(EYEDIR,camera_forward)) / vertical_tangent;
  vec3 base = texture(sky_gradient,vec2(0.5,clamp(y,0.0,1.0))).rgb;
  // Layered indigo night and broad cloud wisps echo the character concept palette.
- vec3 night=mix(vec3(0.022,0.026,0.065),vec3(0.058,0.075,0.13),clamp(y*2.0,0.0,1.0));
+ vec3 night=mix(vec3(0.035,0.045,0.10),vec3(0.10,0.16,0.24),clamp(y*2.0,0.0,1.0));
  vec2 p=vec2(EYEDIR.x*7.0,y*12.0+sin(EYEDIR.x*4.0));
  float cloud=noise(p)*0.62+noise(p*2.0)*0.26+noise(p*4.0)*0.12;
  float veil=smoothstep(0.46,0.76,cloud)*smoothstep(0.10,0.25,y)*(1.0-smoothstep(0.36,0.46,y));
  vec3 clouded=mix(night,vec3(0.115,0.14,0.23),veil*0.8);
- COLOR=mix(clouded,haze_color,smoothstep(0.30,0.43,y));
+ vec3 atmosphere=mix(clouded,haze_color,smoothstep(0.23,0.48,y));
+ float dawn=pow(max(0.0,dot(EYEDIR,normalize(vec3(-0.035,0.13,-1.0)))),80.0);
+ COLOR=atmosphere+vec3(0.085,0.12,0.10)*dawn;
 }

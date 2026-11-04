@@ -109,6 +109,7 @@ var fire_time = 0.0
 var pending_advance = false
 var rng = RandomNumberGenerator.new()
 var meadow_visual
+var palace_visual
 var grove_visual
 var comet_visual
 var sea_visual
@@ -213,6 +214,9 @@ func _ready():
  grove_visual=load("res://scripts/visuals/grove_visual.gd").new()
  add_child(grove_visual)
  grove_visual.bind(self)
+ palace_visual=load("res://scripts/visuals/palace_visual.gd").new()
+ add_child(palace_visual)
+ palace_visual.bind(self)
  var layer = CanvasLayer.new()
  add_child(layer)
  var root = Control.new()
@@ -904,6 +908,7 @@ func apply_world(index: int):
  if sea_visual: sea_visual.apply(index)
  if comet_visual: comet_visual.apply(index)
  if grove_visual: grove_visual.apply(index)
+ if palace_visual: palace_visual.apply(index)
 
 func terrain_material(source: StandardMaterial3D, fog_color: Color) -> ShaderMaterial:
  var result = ShaderMaterial.new()
@@ -1960,6 +1965,7 @@ func layout_moons(size: Vector2):
  if meadow_visual and meadow_visual.active: meadow_visual.layout_moons(size)
  if comet_visual and comet_visual.active: comet_visual.layout_moons(size)
  if grove_visual and grove_visual.active: grove_visual.layout_moons(size)
+ if palace_visual and palace_visual.active: palace_visual.layout_moons(size)
 
 func configure_window():
  var physical = get_window().size

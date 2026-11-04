@@ -20,6 +20,16 @@ func bind(main_node)->void:
   for tier in range(2):
    var roof=MeshInstance3D.new();roof.mesh=_roof(6.0-float(tier)*1.4,4.8-float(tier)*1.2,5.3+float(tier)*2.1);roof.material_override=_material(Color("253249"));roof.material_override.cull_mode=BaseMaterial3D.CULL_DISABLED;pavilion.add_child(roof)
   _box(pavilion,Vector3(0.45,1.0,0.45),Vector3(0,8.7,0),Color("c9b47c"))
+  # Sparse original stepped bracket arms and painted eave bands.
+  for x in [-3.6,3.6]:
+   for z in [-2.7,2.7]:
+    _box(pavilion,Vector3(1.25,0.22,0.7),Vector3(x,4.85,z),Color("6a8d91"))
+    _box(pavilion,Vector3(0.65,0.24,1.15),Vector3(x,5.08,z),Color("c2ae78"))
+  for z in [-3.0,3.0]:
+   _box(pavilion,Vector3(8.0,0.14,0.39),Vector3(0,5.38,z),Color("6a8d91"))
+   for x in [-2.4,0.0,2.4]:
+    _box(pavilion,Vector3(0.4,0.28,0.42),Vector3(x,5.17,z),Color("c2ae78"))
+  _batch_gate(pavilion)
  # Side terraces and low balustrades leave the central lane sight line open.
  for side in [-1.0,1.0]:
   _box(landscape,Vector3(24,0.5,235),Vector3(side*16.0,-0.55,-90),Color("24283c"))
@@ -86,7 +96,7 @@ func layout_moons(size:Vector2)->void:
  if not active:return
  var short_landscape=size.x>size.y and size.y<650
  for i in range(3):
-  landscape.get_child(i).position.x=[-16.0,23.0,-33.0][i]*(1.7 if short_landscape else 1.0)
+  landscape.get_child(i).position.x=[-16.0,23.0,-33.0][i]*(1.7 if short_landscape else 1.8 if size.x>size.y else 1.0)
  if not short_landscape:return
  for i in range(game.moons.size()):
   game.moons[i].scale=Vector3.ONE*[0.48,0.30,0.20][i]

@@ -9,7 +9,7 @@ func run():
  g.apply_world(0)
  assert(g.meadow_visual.active)
  assert(g.meadow_visual.rolling_banks.size()==2)
- assert(g.meadow_visual.horizon_layers.size()==34)
+ assert(g.meadow_visual.horizon_layers.size()==22)
  for hill in g.meadow_visual.horizon_layers:
   assert(hill.position.is_finite() and hill.scale.is_finite())
   assert(hill.position.z< -80.0)

@@ -39,4 +39,4 @@ func apply(index:int)->void:
 func _rock_material(node:Node)->void:
  if node is MeshInstance3D:
   var mat=ShaderMaterial.new();mat.shader=load("res://scripts/visuals/sea_rock.gdshader");node.material_override=mat
-for child in node.get_children():_rock_material(child)
+ for child in node.get_children():_rock_material(child)

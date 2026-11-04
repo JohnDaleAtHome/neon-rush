@@ -89,6 +89,7 @@ var bunny: Node3D
 var animator: AnimationPlayer
 var animation_names: Array[StringName] = []
 var camera: Camera3D
+var track_edges: Array[MeshInstance3D] = []
 var ground: MeshInstance3D
 var hud: Label
 var message: Label
@@ -165,7 +166,7 @@ func _ready():
   var guide = box(Vector3(0.035,0.02,150),Vector3(lane_x,0.025,-62),Color("acc9d3"))
   lane_guides.append(guide)
  for side in [-1, 1]:
-  box(Vector3(0.08, 0.08, 150), Vector3(side * 3.6, 0.02, -62), Color("ef67b9"))
+  track_edges.append(box(Vector3(0.08, 0.08, 150), Vector3(side * 3.6, 0.02, -62), Color("ef67b9")))
  for i in range(3):
   var moon = MeshInstance3D.new()
   var sphere = SphereMesh.new()

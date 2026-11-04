@@ -1961,6 +1961,10 @@ func layout_moons(size: Vector2):
   var pixel_y = maxf(265.0,size.y*0.32)+(1-i)*13.0
   # Keep celestial silhouettes below the full objective text band.
   moons[i].position = camera.project_position(Vector2(size.x*fraction,pixel_y),60.0+i*15.0)
+  if landscape and size.y<650 and ((dunes_visual and dunes_visual.active) or (sea_visual and sea_visual.active)):
+   # Compact skies need satellites above the terrain, outside the text column.
+   moons[i].scale=Vector3.ONE*[0.48,0.30,0.20][i]
+   moons[i].position=camera.project_position(Vector2(size.x*[0.13,0.82,0.93][i],size.y*0.30),60.0+i*15.0)
 
  if meadow_visual and meadow_visual.active: meadow_visual.layout_moons(size)
  if comet_visual and comet_visual.active: comet_visual.layout_moons(size)

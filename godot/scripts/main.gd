@@ -109,6 +109,7 @@ var fire_time = 0.0
 var pending_advance = false
 var rng = RandomNumberGenerator.new()
 var meadow_visual
+var grove_visual
 var comet_visual
 var sea_visual
 var dunes_visual
@@ -209,6 +210,9 @@ func _ready():
  comet_visual=load("res://scripts/visuals/comet_visual.gd").new()
  add_child(comet_visual)
  comet_visual.bind(self)
+ grove_visual=load("res://scripts/visuals/grove_visual.gd").new()
+ add_child(grove_visual)
+ grove_visual.bind(self)
  var layer = CanvasLayer.new()
  add_child(layer)
  var root = Control.new()
@@ -899,6 +903,7 @@ func apply_world(index: int):
  if dunes_visual: dunes_visual.apply(index)
  if sea_visual: sea_visual.apply(index)
  if comet_visual: comet_visual.apply(index)
+ if grove_visual: grove_visual.apply(index)
 
 func terrain_material(source: StandardMaterial3D, fog_color: Color) -> ShaderMaterial:
  var result = ShaderMaterial.new()
@@ -1462,7 +1467,7 @@ func apply_options():
  adapt_layout()
  for moon in moons: moon.visible = options.stars and running and not paused
  if sky_stars: sky_stars.visible = options.stars and not options.light
- if scenery: scenery.visible = not options.light and mode == "story" and level == 2
+ if scenery: scenery.visible = not options.light and mode == "story" and level == 2 and not (grove_visual and grove_visual.active)
  if animator and reduced_motion(): animator.speed_scale = 0
  elif animator and not paused: animator.speed_scale = 1
  apply_bunny_tint(bunny)
@@ -1954,6 +1959,7 @@ func layout_moons(size: Vector2):
 
  if meadow_visual and meadow_visual.active: meadow_visual.layout_moons(size)
  if comet_visual and comet_visual.active: comet_visual.layout_moons(size)
+ if grove_visual and grove_visual.active: grove_visual.layout_moons(size)
 
 func configure_window():
  var physical = get_window().size

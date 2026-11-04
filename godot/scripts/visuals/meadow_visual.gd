@@ -119,6 +119,7 @@ func _apply_terrain() -> void:
 	var ground_mat := ShaderMaterial.new()
 	ground_mat.shader = load("res://scripts/visuals/meadow_terrain.gdshader")
 	ground_mat.set_shader_parameter("fog_color", MEADOW_FOG)
+	ground_mat.set_shader_parameter("path_cells",load(ASSET_DIR+"path_cells.png"))
 	game.ground.material_override = ground_mat
 
 

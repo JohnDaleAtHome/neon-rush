@@ -26,6 +26,24 @@ func bind(main_node)->void:
   for i in range(17):
    _box(landscape,Vector3(0.45,0.8,0.45),Vector3(side*5.1,0.1,12.0-i*13.0),Color("8d879b"))
   _box(landscape,Vector3(0.20,0.18,221),Vector3(side*5.1,0.55,-92),Color("9b94aa"))
+ var gate=Node3D.new();gate.name="MoonlightGate";landscape.add_child(gate);gate.position=Vector3(0,0,-145);gate.scale=Vector3(1.05,0.65,1.0)
+ for side in [-1.0,1.0]:
+  var tower=Node3D.new();gate.add_child(tower);tower.position=Vector3(side*15.0,0,0)
+  _box(tower,Vector3(10,1.2,12),Vector3(0,0,0),Color("76778f"))
+  _box(tower,Vector3(8.8,1.0,10.8),Vector3(0,1.0,0),Color("9390a4"))
+  for x in [-3.3,3.3]:
+   for z in [-4.0,4.0]:_box(tower,Vector3(0.75,17,0.75),Vector3(x,10,z),Color("673853"))
+  _box(tower,Vector3(5.8,14.5,7.2),Vector3(0,9.0,0),Color("5d526d"))
+  _box(tower,Vector3(1.6,9.5,0.2),Vector3(0,10.0,3.7),Color("847392"))
+  _box(tower,Vector3(8,0.7,9),Vector3(0,18.0,0),Color("b8a77f"))
+  for tier in range(2):
+   var roof=MeshInstance3D.new();roof.mesh=_roof(7.0-float(tier)*1.3,6.0-float(tier)*1.2,18.5+float(tier)*2.7);roof.material_override=_material(Color("35435b"));roof.material_override.cull_mode=BaseMaterial3D.CULL_DISABLED;tower.add_child(roof)
+ _box(gate,Vector3(22,1.0,3),Vector3(0,18.0,0),Color("c8b88e"))
+ var central_roof=MeshInstance3D.new();central_roof.mesh=_roof(12.0,4.8,18.7);central_roof.material_override=_material(Color("35435b"));central_roof.material_override.cull_mode=BaseMaterial3D.CULL_DISABLED;gate.add_child(central_roof)
+
+ for i in range(5):
+  var light=MeshInstance3D.new();var sphere=SphereMesh.new();sphere.radius=0.8;sphere.height=1.6;sphere.radial_segments=12;sphere.rings=6;light.mesh=sphere;light.position=Vector3(-6.4+float(i)*3.2,16.4,2.3);var light_mat=_material(Color("e4d6a6"));light_mat.shading_mode=BaseMaterial3D.SHADING_MODE_UNSHADED;light.material_override=light_mat;gate.add_child(light)
+ _batch_gate(gate)
  landscape.visible=false
 func apply(index:int)->void:
  active=index==5 and not game.options.get("light",false);landscape.visible=active
@@ -74,3 +92,22 @@ func layout_moons(size:Vector2)->void:
   game.moons[i].scale=Vector3.ONE*[0.48,0.30,0.20][i]
   game.moons[i].position=game.camera.project_position(Vector2(size.x*[0.13,0.82,0.93][i],size.y*0.30),60.0+i*15.0)
 # End of palace visual study.
+
+func _batch_gate(gate:Node3D)->void:
+ # Static scenic geometry only. Merge equal materials to avoid tiny far draw calls.
+ var batches={}
+ _collect_gate(gate,Transform3D.IDENTITY,batches)
+ for child in gate.get_children():gate.remove_child(child);child.queue_free()
+ for key in batches:
+  var entry=batches[key];var mesh=MeshInstance3D.new()
+  mesh.mesh=entry[0].commit();mesh.material_override=entry[1];gate.add_child(mesh)
+ gate.set_meta("light_count",5)
+func _collect_gate(node:Node3D,transform:Transform3D,batches:Dictionary)->void:
+ if node is MeshInstance3D:
+  var mat=node.material_override
+  var key=str(mat.albedo_color)+":"+str(mat.shading_mode)+":"+str(mat.cull_mode)
+  if not batches.has(key):
+   var st=SurfaceTool.new();st.begin(Mesh.PRIMITIVE_TRIANGLES);batches[key]=[st,mat]
+  for i in range(node.mesh.get_surface_count()):batches[key][0].append_from(node.mesh,i,transform)
+ for child in node.get_children():
+  if child is Node3D:_collect_gate(child,transform*child.transform,batches)

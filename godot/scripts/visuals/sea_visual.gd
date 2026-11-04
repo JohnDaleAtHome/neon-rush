@@ -16,6 +16,8 @@ func bind(main_node)->void:
   var rock=load("res://assets/visuals/nature_cc0/Rock_Medium_"+str(1+landscape.get_child_count()%3)+".gltf").instantiate();landscape.add_child(rock)
   # Source rocks are roughly 2m across; bury the lower half below sea level.
   rock.scale=Vector3(spec[2],spec[3],spec[2]*0.8);rock.position=Vector3(spec[0],-spec[3]*0.35,spec[1]);rock.rotation.y=spec[0]*0.13;_rock_material(rock)
+ var surf=MeshInstance3D.new();surf.name="StackSurf";surf.mesh=_surf()
+ var surf_mat=ShaderMaterial.new();surf_mat.shader=load("res://scripts/visuals/sea_surf.gdshader");surf.material_override=surf_mat;landscape.add_child(surf)
  landscape.visible=false
 func apply(index:int)->void:
  active=index==3 and not game.options.get("light",false)
@@ -24,6 +26,9 @@ func apply(index:int)->void:
   for i in range(game.track_edges.size()):game.track_edges[i].material_override=edge_materials[i]
   return
  water_material.set_shader_parameter("animate",not game.options.get("motion",false))
+ landscape.get_node("StackSurf").material_override.set_shader_parameter("animate",not game.options.get("motion",false))
+ var sky=Sky.new();var sky_mat=ShaderMaterial.new();sky_mat.shader=load("res://scripts/visuals/sea_sky.gdshader")
+ sky_mat.set_shader_parameter("camera_forward",-game.camera.global_basis.z);sky_mat.set_shader_parameter("camera_up",game.camera.global_basis.y);sky_mat.set_shader_parameter("vertical_tangent",tan(deg_to_rad(game.camera.fov)/2.0));sky.sky_material=sky_mat;game.env_world.environment.sky=sky
  game.env_world.environment.fog_light_color=Color("102c3e")
  game.env_world.environment.fog_depth_begin=25.0
  game.env_world.environment.fog_depth_end=170.0
@@ -40,3 +45,21 @@ func _rock_material(node:Node)->void:
  if node is MeshInstance3D:
   var mat=ShaderMaterial.new();mat.shader=load("res://scripts/visuals/sea_rock.gdshader");node.material_override=mat
  for child in node.get_children():_rock_material(child)
+
+func _surf()->ArrayMesh:
+ var st=SurfaceTool.new();st.begin(Mesh.PRIMITIVE_TRIANGLES)
+ # Unequal broken shore ribbons around off-track stacks, never in playable lanes.
+ var specs=[[-15.0,-37.0,4.6,3.8],[17.0,-58.0,5.5,4.6],[-39.0,-104.0,7.6,6.5],[68.0,-153.0,11.2,9.4],[-111.0,-230.0,15.5,11.4],[151.0,-270.0,16.5,12.8]]
+ for stack in range(specs.size()):
+  var spec=specs[stack]
+  for band in range(2):
+   for i in range(56):
+    if (i+stack*3+band)%7>4:continue
+    var points=[]
+    for q in [Vector2(i,0),Vector2(i,1),Vector2(i+1,1),Vector2(i+1,0)]:
+     var angle=q.x*TAU/56.0;var irregular=1.0+0.09*sin(angle*5.0+stack)+0.05*cos(angle*3.0)
+     var radius=irregular*(1.0+float(band)*0.22+q.y*0.055)
+     points.append(Vector3(spec[0]+cos(angle)*spec[2]*radius,-0.36,spec[1]+sin(angle)*spec[3]*radius))
+    for k in [0,2,1,0,3,2]:st.add_vertex(points[k])
+ st.generate_normals();return st.commit()
+# End of original off-track surf ribbons.

@@ -36,7 +36,7 @@ func run():
    imported+=1
    assert(absf(child.position.x)>6.0 or child.has_meta("distant_landmark"))
    assert(inspect_node(child)>0)
- assert(imported+impostors==52)
+ assert(imported+impostors==57)
  assert(impostors>8)
  assert(m.import_materials.size()<20)
  var opaque=0
@@ -51,5 +51,5 @@ func run():
  for level in range(1,6):
   g.apply_world(level);await process_frame;assert(not m.horizon_root.visible)
  g.apply_world(0);await process_frame;assert(m.horizon_root.visible)
- print("PASS52CC0placements-with-distant-impostors,noCollision,outsidecorridor,sharedmaterials,Lightandthemevisibility")
+ print("PASS57CC0placements-with-distant-impostors,noCollision,outsidecorridor,sharedmaterials,Lightandthemevisibility")
  quit()

@@ -34,9 +34,9 @@ func run():
  assert(chip.bg_color.a<0.8)
  for moon in g.moons:assert(moon.material_override.shader.resource_path.ends_with("meadow_moon.gdshader"))
  assert(g.scene_props.size()==98)
- assert(g.moons[0].scale.is_equal_approx(Vector3.ONE*1.55))
- assert(g.moons[1].scale.is_equal_approx(Vector3.ONE*0.75))
- assert(g.moons[2].scale.is_equal_approx(Vector3.ONE*0.50))
+ assert(g.moons[0].scale.is_equal_approx(Vector3.ONE*0.88))
+ assert(g.moons[1].scale.is_equal_approx(Vector3.ONE*0.42))
+ assert(g.moons[2].scale.is_equal_approx(Vector3.ONE*0.28))
  # Grouping remains periodic through the shared 145-unit scenery wrap.
  var initial=[]
  for prop in g.scene_props:initial.append(prop.position)

@@ -1340,6 +1340,7 @@ func show_story_encounter(which: int):
  add_child(actor)
  story_props.append(actor)
  if which == 2:
+  load("res://scripts/visuals/grove_witness.gd").add_witness(actor)
   encounter_sphere(actor,Vector3(0,1.3,0),Vector3(0.20,0.34,0.20),Color("694b41"))
   var light = encounter_sphere(actor,Vector3(0,1.18,0),Vector3(0.23,0.23,0.23),Color("ffde7e"))
   light.material_override = material(Color("ffde7e"),true)

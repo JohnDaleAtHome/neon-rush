@@ -5,16 +5,17 @@ var landscape:=Node3D.new()
 var active:=false
 func bind(main_node)->void:
  game=main_node;add_child(landscape)
- for spec in [[-16.0,-34.0,0.30]]:
-  var pavilion=load("res://assets/visuals/chinese_pavilion_cc0/pavilion.glb").instantiate()
-  landscape.add_child(pavilion);pavilion.position=Vector3(spec[0],0.0,spec[1]);pavilion.scale=Vector3.ONE*spec[2];pavilion.rotation.y=0.2
-  _pavilion_materials(pavilion)
-  _box(pavilion,Vector3(41.0,1.2,41.0),Vector3(0,-0.6,0),Color("686d66"))
- for spec in [[23.0,-73.0,0.37],[-33.0,-124.0,0.42]]:
-  var far=Node3D.new();landscape.add_child(far);far.position=Vector3(spec[0],0,spec[1]);far.scale=Vector3.ONE*spec[2]
-  var sprite=MeshInstance3D.new();var quad=QuadMesh.new();quad.size=Vector2(52,52);sprite.mesh=quad;sprite.position=Vector3(0,17.5,0);sprite.cast_shadow=GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-  var mat=ShaderMaterial.new();mat.shader=load("res://scripts/visuals/pavilion_far.gdshader");mat.set_shader_parameter("facade",load("res://assets/visuals/chinese_pavilion_cc0/pavilion_far.png"));sprite.material_override=mat;far.add_child(sprite)
-  _box(far,Vector3(41.0,1.2,41.0),Vector3(0,-0.6,0),Color("686d66"))
+ # Full authored Han houses use one shared material and static per-side MultiMesh.
+ var house=load("res://assets/visuals/han_house_ccbysa/house.glb").instantiate()
+ var house_mesh=_house_mesh(house)
+ for side in [-1.0,1.0]:
+  var block=MultiMeshInstance3D.new();block.name="HanStreet"
+  var mm=MultiMesh.new();mm.transform_format=MultiMesh.TRANSFORM_3D;mm.mesh=house_mesh.mesh;mm.instance_count=14
+  for i in range(14):mm.set_instance_transform(i,_house_transform(side,i))
+  block.set_meta("street_side",side);block.multimesh=mm;block.cast_shadow=GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+  var mat=house_mesh.mesh.surface_get_material(0).duplicate();mat.cull_mode=BaseMaterial3D.CULL_BACK
+  block.material_override=mat;landscape.add_child(block)
+ house.free()
  # Side terraces and low balustrades leave the central lane sight line open.
  for side in [-1.0,1.0]:
   var terrace=MeshInstance3D.new();var floor_mesh=BoxMesh.new();floor_mesh.size=Vector3(52,0.5,235);terrace.mesh=floor_mesh;terrace.position=Vector3(side*30.0,-0.55,-90);var paving=ShaderMaterial.new();paving.shader=load("res://scripts/visuals/palace_stone.gdshader");terrace.material_override=paving;landscape.add_child(terrace)
@@ -88,8 +89,6 @@ func _roof(width:float,length:float,y:float)->ArrayMesh:
 func layout_moons(size:Vector2)->void:
  if game.visual_world_index!=5:return
  var short_landscape=size.x>size.y and size.y<650
- for i in range(3):
-  landscape.get_child(i).position.x=[-16.0,23.0,-33.0][i]*(1.7 if short_landscape else 1.8 if size.x>size.y else 1.0)
  for i in range(game.moons.size()):
   game.moons[i].scale=Vector3.ONE*(0.4 if i==0 else 0.001)
   game.moons[i].position=game.camera.project_position(Vector2(size.x*0.88,size.y*0.29 if short_landscape else maxf(245.0,size.y*0.30)),60.0+i*15.0)
@@ -144,3 +143,13 @@ func _plant_material(node:Node):
   node.cast_shadow=GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
   var mat=StandardMaterial3D.new();mat.albedo_color=Color("374f36");mat.roughness=1.0;node.material_override=mat
  for child in node.get_children():_plant_material(child)
+
+func _house_mesh(node:Node)->MeshInstance3D:
+ if node is MeshInstance3D:return node
+ for child in node.get_children():
+  var found=_house_mesh(child)
+  if found:return found
+ return null
+
+func _house_transform(side:float,index:int)->Transform3D:
+ return Transform3D(Basis.IDENTITY.scaled(Vector3.ONE*0.34),Vector3(side*8.4,1.293663,8.0-index*5.65))

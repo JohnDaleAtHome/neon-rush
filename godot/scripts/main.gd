@@ -1369,20 +1369,15 @@ func show_story_encounter(which: int):
    actor.add_child(vine)
   story_label("TRAPPED FIREFLY",Vector3(0,2.2,-2))
  elif which == 3:
-  encounter_sphere(actor,Vector3(0,0.50,0),Vector3(1.35,0.75,1.25),Color("537e6e"))
-  encounter_sphere(actor,Vector3(0,0.37,0.72),Vector3(0.55,0.40,0.50),Color("9ec6a5"))
-  for side in [-1,1]:
-   for depth in [-1,1]: encounter_sphere(actor,Vector3(side*0.57,0.20,depth*0.43),Vector3(0.40,0.22,0.40),Color("9ec6a5"))
-   encounter_sphere(actor,Vector3(side*0.14,0.43,0.94),Vector3(0.065,0.035,0.035),Color("263b3c"))
-  var ridge = MeshInstance3D.new()
-  var ring = TorusMesh.new()
-  ring.inner_radius = 0.48
-  ring.outer_radius = 0.54
-  ridge.mesh = ring
-  ridge.position.y = 0.67
-  ridge.scale = Vector3(1,0.4,1)
-  ridge.material_override = material(Color("a1b67f"))
-  actor.add_child(ridge)
+  var turtle=load("res://assets/models/sea_turtle/turtle.glb").instantiate()
+  actor.add_child(turtle)
+  turtle.scale=Vector3.ONE*3.35
+  turtle.rotation_degrees.y=20
+  # Closed eye slits keep the authored animal's sleepy story role.
+  for eye in turtle.find_children("Turtle eyes","MeshInstance3D",true,false):
+   eye.scale.y=.16
+   eye.position.y=.224
+
   story_label("SLEEPY MOON-TURTLE",Vector3(0,1.7,-2))
  elif which == 4:
   actor.position.z = -3

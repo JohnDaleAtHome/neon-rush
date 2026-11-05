@@ -16,7 +16,7 @@ func run():
  g.options.stars=false;g.apply_options();for moon in g.moons:assert(not moon.visible)
  g.options.stars=true;g.apply_options();for moon in g.moons:assert(moon.visible)
  g.options.light=true;g.apply_options();assert(not g.meadow_visual.active)
- for moon in g.moons:assert(moon.scale.is_equal_approx(Vector3.ONE))
+ for i in range(3):assert(g.moons[i].scale.is_equal_approx(Vector3.ONE*[.88,.42,.28][i]))
  g.options.light=false;g.apply_options();assert(g.meadow_visual.active)
  g.apply_world(1)
  assert(is_equal_approx(g.moons[0].scale.x,0.28))

@@ -325,6 +325,8 @@ func _build_horizon() -> void:
 		plane.set_meta("tree_impostor",true);plane.set_meta("source_bounds",box);horizon_root.add_child(plane)
 		horizon_root.remove_child(model);model.queue_free()
 
+	_build_village_edge()
+
 func _landmark_haze(node:Node)->void:
 	if node is MeshInstance3D:
 		for i in range(node.mesh.get_surface_count()):
@@ -654,3 +656,40 @@ func layout_moons(size: Vector2) -> void:
 		var projected_top := camera_ref.unproject_position(provisional+camera_ref.global_basis.y*radius)
 		point.y=maxf(point.y,225.0+point.y-projected_top.y)
 		game.moons[i].position=camera_ref.project_position(point,depth)
+
+func _build_village_edge()->void:
+	# Exact decorative replacement group, not a broad x/z exclusion.
+	# Match after deterministic terrain placement and tree impostor construction.
+	var replaced_xz=[Vector2(-18.88061,-21.06017),Vector2(-15.15593,-30.28406),Vector2(-12.07459,-18),Vector2(-20.68187,-52),Vector2(-13.18502,-29.06255),Vector2(-10.44301,-54.19349),Vector2(-22.26175,-68.40083),Vector2(-19,-67)]
+	for child in horizon_root.get_children():
+		if not child is Node3D:continue
+		for point in replaced_xz:
+			if Vector2(child.position.x,child.position.z).distance_to(point)<0.01:
+				horizon_root.remove_child(child);child.queue_free();break
+	var village=Node3D.new();village.name="HanVillageEdge";horizon_root.add_child(village)
+	var house=load("res://assets/visuals/han_house_ccbysa/house.glb").instantiate();village.add_child(house)
+	var b=_village_house_mesh(house).get_aabb();house.scale=Vector3.ONE*0.48
+	house.rotation.y=PI/2
+	var center=house.basis*b.get_center()
+	house.position=Vector3(-12-center.x,1.15-b.position.y*.48,-48-center.z)
+	var stone=game.material(Color("555d53"));stone.albedo_texture=load("res://assets/visuals/nature_cc0/Rocks_Diffuse.png")
+	var soil=game.material(Color("535844"))
+	var top=MeshInstance3D.new();var surface=PlaneMesh.new();surface.size=Vector2(11,12);top.mesh=surface;top.position=Vector3(-12,1.15,-47.5);top.material_override=soil;village.add_child(top)
+	var st=SurfaceTool.new();st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var corners=[Vector2(-17.5,-53.5),Vector2(-6.5,-53.5),Vector2(-6.5,-41.5),Vector2(-17.5,-41.5)]
+	for k in 4:
+		var a:Vector2=corners[k];var b2:Vector2=corners[(k+1)%4]
+		for j in 12:
+			var p1:Vector2=a.lerp(b2,j/12.0);var p2:Vector2=a.lerp(b2,(j+1)/12.0)
+			var h1=_bank_height(p1.x,p1.y)-.12;var h2=_bank_height(p2.x,p2.y)-.12
+			var vs=[Vector3(p1.x,1.15,p1.y),Vector3(p2.x,1.15,p2.y),Vector3(p2.x,h2,p2.y),Vector3(p1.x,h1,p1.y)]
+			for i in [0,1,2,0,2,3]:
+				var v:Vector3=vs[i];st.set_uv(Vector2(v.x*.17+v.z*.17,v.y*.4));st.add_vertex(v)
+	st.generate_normals();var skirt=MeshInstance3D.new();skirt.mesh=st.commit();stone.cull_mode=BaseMaterial3D.CULL_DISABLED;skirt.material_override=stone;village.add_child(skirt)
+
+func _village_house_mesh(node:Node)->MeshInstance3D:
+	if node is MeshInstance3D:return node
+	for child in node.get_children():
+		var found=_village_house_mesh(child)
+		if found:return found
+	return null

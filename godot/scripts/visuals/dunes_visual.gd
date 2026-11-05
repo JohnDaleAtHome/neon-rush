@@ -3,6 +3,8 @@ extends Node3D
 var game
 var landscape:=Node3D.new()
 var active:=false
+var footing_skirt:MeshInstance3D
+var footing_transform:Transform3D
 func bind(main_node)->void:
  game=main_node
  add_child(landscape)
@@ -94,6 +96,7 @@ func layout_moons(size:Vector2):
  var x=-56.0 if compact else -32.0 if size.x>size.y else -13.0
  var z=-75.0 if size.x>size.y else -62.0
  tower.position=Vector3(x,height(x,z),z);tower.scale=Vector3.ONE*(0.52 if compact else 0.62 if size.x>size.y else 0.52)
+ _fit_footing(tower)
  for i in range(3):
   game.moons[i].scale=Vector3.ONE*(0.28 if i==0 else 0.001)
   game.moons[i].position=game.camera.project_position(Vector2(size.x*0.88,maxf(120.0,size.y*0.28) if compact else maxf(245.0,size.y*0.29)),60.0+i*15.0)
@@ -141,3 +144,21 @@ func _no_shadow(node:Node):
    if source is StandardMaterial3D:
     var mat=source.duplicate();mat.disable_fog=true;node.set_surface_override_material(i,mat)
  for child in node.get_children():_no_shadow(child)
+
+func _fit_footing(tower:Node3D)->void:
+ if not footing_skirt:
+  footing_skirt=MeshInstance3D.new();footing_skirt.name="PagodaFootingSkirt";landscape.add_child(footing_skirt)
+  var material=StandardMaterial3D.new();material.albedo_color=Color("8b7957");material.roughness=1.0;footing_skirt.material_override=material
+ if footing_skirt.mesh and footing_transform.is_equal_approx(tower.transform):return
+ footing_transform=tower.transform
+ var st=SurfaceTool.new();st.begin(Mesh.PRIMITIVE_TRIANGLES)
+ var corners=[Vector2(-8,-8),Vector2(8,-8),Vector2(8,8),Vector2(-8,8)]
+ for side in range(4):
+  for step in range(16):
+   var a:Vector2=corners[side].lerp(corners[(side+1)%4],step/16.0)
+   var b:Vector2=corners[side].lerp(corners[(side+1)%4],(step+1)/16.0)
+   var top_a=tower.transform*Vector3(a.x,-0.69,a.y);var top_b=tower.transform*Vector3(b.x,-0.69,b.y)
+   var low_a=Vector3(top_a.x,minf(top_a.y-0.15,height(top_a.x,top_a.z)-0.2),top_a.z)
+   var low_b=Vector3(top_b.x,minf(top_b.y-0.15,height(top_b.x,top_b.z)-0.2),top_b.z)
+   for v in [top_a,top_b,low_b,top_a,low_b,low_a]:st.add_vertex(v)
+ st.generate_normals();footing_skirt.mesh=st.commit()

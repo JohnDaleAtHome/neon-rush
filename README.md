@@ -52,7 +52,7 @@ Scores, settings and Story checkpoints are local to the current browser/origin. 
 - User requirements: [GAME-REQUIREMENTS.md](GAME-REQUIREMENTS.md) and [TECHNICAL-REQUIREMENTS.md](TECHNICAL-REQUIREMENTS.md).
 - Build/acceptance caveats: [Godot port status](godot/PORT-STATUS.md).
 - Recent environment/UI work: the `godot/*VALIDATION.md` notes distinguish native tests, rendered scenes and browser fixtures from natural play and device tests.
-- The ending has a static mooncake/shared-tea illustration: [reunion validation](godot/REUNION-CARD-VALIDATION.md). Chang'e, Wu Gang and the cinnamon-tree character scene are not complete.
+- The ending has an original generated static illustration of Chang'e, Mochi and Wu Gang sharing mooncake/tea beneath a flowering branch: [reunion validation](godot/REUNION-CARD-VALIDATION.md). These are ending-only2D depictions, not live NPCs or final-art approval. Grove still lacks a Wu Gang actor.
 
 Native scripted campaign checks and browser fixtures do not establish natural full-campaign acceptance, physical-device speed, audio quality or finished art. Several story mechanics remain simplified; see port status rather than treating the story specification as fully implemented.
 

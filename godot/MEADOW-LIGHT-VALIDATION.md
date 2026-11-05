@@ -1,0 +1,9 @@
+# Meadow Light consistency validation - 2026-11-06
+
+Light mode previously reverted Meadow to a neon digital track, green sky and large planetary materials. It now keeps the stone path, coordinated blue fog/sky and restrained moon presentation while still omitting all 98 props, horizon meshes and contact shadow. The Light ground shader makes one baked path texture lookup and uses flat green for the two existing bank planes. No new binary asset is added. Compact landscape places moons above the horizon without covering the objective. Other worlds retain their own materials and lighting.
+
+Main still advances the existing ground scroll uniform; the inactive scenery module does not own path movement. Full-detail state has exact pixel equality against the accepted bale baseline at 390x844, 1280x800 and 844x390. Dedicated regression checks 4 sizes x4 toggles, scene cost gates, moon option and seven world/endless transitions. Updated visual integration and synthetic campaign pass (8911 steps, zero deaths, six levels/reunion). Campaign evidence is not natural-play acceptance.
+
+Clean Godot 4.7.2 import and release Web export pass. Actual native and release Web frames were inspected at all three sizes, plus phone Full; Web page errors=0 and QA bridge undefined. Path and lane cues stay visible. Far bank edges remain simple flat geometry in Light, not finished landscape art.
+
+Sequential software-render fixture: phone, six populated waves, five warmup frames then 60 measured frames per run. A1/B1/A2/B2 mean ms=36.6389/36.34567/37.03793/35.43695. Draw calls=94/92, primitives=79298/79274. This is a noisy local comparison, not real-device or browser frame-rate clearance. Release PCK=7241836 bytes versus7240424, +1412 bytes. Native texture warnings on shutdown persist. No public deployment or final-art acceptance.

@@ -38,4 +38,17 @@ func run():
    for i in range(g.track_edges.size()):check(g.track_edges[i].material_override==original[i],"world restores edge")
  for dim in [Vector2i(390,844),Vector2i(1280,800),Vector2i(360,640),Vector2i(844,500)]:
   root.size=dim;await process_frame;g.layout_moons(dim);check(g.sea_visual.landscape.visible,"aspect sea visible")
+  check(not g.sky_stars.visible,"Sea no star field")
+  check(is_equal_approx(g.moons[0].scale.x,0.34) and g.moons[1].scale.x<0.002 and g.moons[2].scale.x<0.002,"one restrained Sea moon")
+  var center=g.camera.unproject_position(g.moons[0].position)
+  check(absf(center.x-dim.x*0.81)<1.0,"moon outside central objective column")
+  check(absf(center.y-dim.y*0.30)<1.0,"moon controlled vertical placement")
+  g.options.light=true;g.apply_options();g.layout_moons(dim)
+  check(not g.sea_visual.landscape.visible and not g.sky_stars.visible,"Light no landscape or stars")
+  check(is_equal_approx(g.moons[0].scale.x,0.34),"Light keeps restrained moon")
+  g.options.light=false;g.apply_options()
+ for world in [4,0,3]:
+  g.level=world;g.apply_world(world);g.layout_moons(root.size)
+  if world!=3:check(g.moons[1].scale.x>0.01,"other celestial worlds restore satellites")
+  else:check(g.moons[1].scale.x<0.002,"return Sea restores one moon")
  print("SEA_VISUAL failures=",failures);quit(failures)

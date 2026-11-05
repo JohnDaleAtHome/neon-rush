@@ -3,6 +3,7 @@ extends Node3D
 var game
 var landscape:=Node3D.new()
 var active:=false
+var light_landscape:=Node3D.new()
 func bind(main_node)->void:
  game=main_node;add_child(landscape)
  # Full authored Han houses use one shared material and static per-side MultiMesh.
@@ -42,8 +43,23 @@ func bind(main_node)->void:
  _batch_gate(gate)
  _courtyard_edges()
  landscape.visible=false
+ _build_light()
+func _build_light():
+ light_landscape.name="PalaceLight";add_child(light_landscape)
+ # A compact architectural frame, not the dense full courtyard.
+ for source in landscape.get_children():
+  if source is MultiMeshInstance3D:
+   var block=MultiMeshInstance3D.new();block.name="HanStreetLight"
+   var mm=MultiMesh.new();mm.transform_format=MultiMesh.TRANSFORM_3D;mm.mesh=source.multimesh.mesh;mm.instance_count=8
+   for i in range(8):mm.set_instance_transform(i,source.multimesh.get_instance_transform(mini(i*2,13)))
+   block.multimesh=mm;block.material_override=source.material_override;block.cast_shadow=GeometryInstance3D.SHADOW_CASTING_SETTING_OFF;light_landscape.add_child(block)
+  elif source.name=="MoonlightGate":light_landscape.add_child(source.duplicate())
+ for side in [-1.0,1.0]:
+  _box(light_landscape,Vector3(0.20,0.18,95),Vector3(side*5.1,0.55,-34),Color("a2a58f"))
+ light_landscape.visible=false
 func apply(index:int)->void:
  active=index==5 and not game.options.get("light",false);landscape.visible=active
+ light_landscape.visible=index==5 and game.options.get("light",false)
  if index!=5:return
  game.scenery.visible=false
  for side in game.side_planes:

@@ -31,3 +31,6 @@ runpy.run_path(str(ROOT / "tools" / "restore_path.py"), run_name="__main__")
 runpy.run_path(str(ROOT / "restore-pavilion.py"), run_name="__main__")
 
 runpy.run_path(str(ROOT/'restore-pagoda.py'),run_name='__main__')
+
+# Adapted 0 A.D. Han house, CC BY-SA 3.0, offline exact recovery.
+runpy.run_path(str(ROOT / "restore-han-house.py"), run_name="__main__")

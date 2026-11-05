@@ -8,6 +8,7 @@ func run():
    for large in [false,true]:
     g.mode="story";g.level=5;g.pieces=g.PIECES.duplicate();g.options.light=light;g.options.large=large;g.options.contrast=true;g.start_level();g.finish_story();await process_frame;g.adapt_layout();await process_frame
     var card=g.reunion_card
+    assert(card.picture.texture.get_size()==Vector2(720,540))
     assert(card.visible and not g.panel.visible and not g.message.visible and not g.running)
     assert(g.action.text=="NEW JOURNEY" and g.level==0 and g.pieces.is_empty())
     assert(card.primary.has_focus())

@@ -26,6 +26,7 @@ var shadow_mat: StandardMaterial3D
 var horizon_layers: Array[MeshInstance3D] = []
 var horizon_root := Node3D.new()
 var active := false
+var light_village := Node3D.new()
 var import_materials: Dictionary = {}
 var rolling_banks: Array[MeshInstance3D] = []
 var saved_ambient_color := Color.BLACK
@@ -42,6 +43,7 @@ func bind(main_node) -> void:
 	camera_ref = game.camera
 	_build_shadow()
 	_build_horizon()
+	_build_light_village()
 
 
 func handles_props(index: int) -> bool:
@@ -58,8 +60,9 @@ func build_props(main_node, index: int) -> bool:
 func apply(index: int) -> void:
 	# Runs at the end of main's apply_world, after main has restored its own
 	# base materials/fog/sky. Actively hide and reset everything of ours when
-	# leaving Meadow; Light retains the cheap path/atmosphere, never scenery.
+	# leaving Meadow; Light retains the cheap path/atmosphere and one grounded village house.
 	var light: bool = game != null and game.options.get("light", false)
+	light_village.visible = index == THEME_INDEX and light
 	if index != THEME_INDEX:
 		active = false
 		for side in game.side_planes: side.visible = true
@@ -704,3 +707,12 @@ func _village_house_mesh(node:Node)->MeshInstance3D:
 		var found=_village_house_mesh(child)
 		if found:return found
 	return null
+
+func _build_light_village() -> void:
+	light_village.name="MeadowLightVillage";add_child(light_village)
+	var village=horizon_root.get_node("HanVillageEdge")
+	for i in range(2):
+		var part=village.get_child(i).duplicate()
+		part.position.y-=1.28 # Full terrace top1.15 -> flat Light side-ground top-0.13.
+		light_village.add_child(part)
+	light_village.visible=false

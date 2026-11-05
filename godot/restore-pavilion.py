@@ -9,3 +9,10 @@ dest=root/'assets/visuals/chinese_pavilion_cc0/pavilion.glb'
 dest.parent.mkdir(parents=True,exist_ok=True)
 if not dest.exists() or dest.read_bytes()!=data:dest.write_bytes(data)
 print('CC0 pavilion verified and restored')
+
+# Distant courtyard facade baked from the same CC0 runtime pavilion.
+far=gzip.decompress(base64.b64decode(''.join((root/'pavilion-far.png.gz.b64').read_text().split()),validate=True))
+if hashlib.sha256(far).hexdigest()!='94b1586dc76d1fecb41c85ac4c74be0d6f20189feaeaa3534be3298c24711a09':raise SystemExit('Facade checksum mismatch; no file written')
+far_dest=dest.with_name('pavilion_far.png')
+if not far_dest.exists() or far_dest.read_bytes()!=far:far_dest.write_bytes(far)
+print('CC0 pavilion distant facade verified and restored')

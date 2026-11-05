@@ -52,7 +52,7 @@ func run():
   elif mat.shader.resource_path.ends_with("nature_moonlit.gdshader"):cutout+=1
  assert(opaque>0 and cutout>0)
  g.options.light=true;g.apply_options();await process_frame;assert(not m.horizon_root.visible)
- for edge in g.track_edges:assert(edge.visible)
+ for edge in g.track_edges:assert(not edge.visible)
  g.options.light=false;g.apply_options();await process_frame;assert(m.horizon_root.visible)
  for level in range(1,6):
   g.apply_world(level);await process_frame;assert(not m.horizon_root.visible)

@@ -29,3 +29,5 @@ runpy.run_path(str(ROOT / "tools" / "restore_path.py"), run_name="__main__")
 
 # CC0 Chinese pavilion; geometry only, no runtime scripts overwritten.
 runpy.run_path(str(ROOT / "restore-pavilion.py"), run_name="__main__")
+
+runpy.run_path(str(ROOT/'restore-pagoda.py'),run_name='__main__')

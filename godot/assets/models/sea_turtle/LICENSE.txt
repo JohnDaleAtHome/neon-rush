@@ -1,0 +1,7 @@
+Turtle by Pixor, released under CC0 1.0.
+Source: https://pixor.art/library/creatures/turtle/
+Original GLB: https://pixor.art/library/files/turtle/pixor-library-turtle.glb
+License: https://creativecommons.org/publicdomain/zero/1.0/
+Retrieved 2026-11-06. Original GLB is unchanged (86952 bytes).
+Runtime changes only: scale3.35, yaw20 degrees, compressed eye mesh for sleepy pose. Walk clip is not played. No new texture or animation is authored.
+Run python3 godot/assets/models/sea_turtle/restore_model.py before Godot import on a fresh source checkout, alongside the existing project asset recovery steps.

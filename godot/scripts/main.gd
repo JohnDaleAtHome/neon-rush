@@ -1485,7 +1485,7 @@ func apply_options():
  for guide in lane_guides: guide.visible = options.guides
  adapt_layout()
  for moon in moons: moon.visible = options.stars and running and not paused
- if sky_stars: sky_stars.visible = options.stars and not options.light and visual_world_index not in [1,2,5]
+ if sky_stars: sky_stars.visible = options.stars and not options.light and visual_world_index not in [1,2,3,5]
  if scenery: scenery.visible = not options.light and mode == "story" and level == 2 and visual_world_index!=2
  if animator and reduced_motion(): animator.speed_scale = 0
  elif animator and not paused: animator.speed_scale = 1
@@ -1985,6 +1985,7 @@ func layout_moons(size: Vector2):
  if grove_visual and visual_world_index==2: grove_visual.layout_moons(size)
  if palace_visual and visual_world_index==5: palace_visual.layout_moons(size)
  if dunes_visual and visual_world_index==1: dunes_visual.layout_moons(size)
+ if sea_visual and visual_world_index==3: sea_visual.layout_moons(size)
 
 func configure_window():
  var physical = get_window().size

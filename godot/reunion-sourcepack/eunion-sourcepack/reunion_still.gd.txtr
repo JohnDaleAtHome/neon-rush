@@ -1,0 +1,47 @@
+extends Node3D
+# Private art study. Original geometry; no reference photographs copied.
+var wood:StandardMaterial3D
+func mat(hex:String)->StandardMaterial3D:
+ var m=StandardMaterial3D.new();m.albedo_color=Color(hex);m.roughness=.78;return m
+func mesh_node(mesh:Mesh,m:Material,pos:Vector3)->MeshInstance3D:
+ var n=MeshInstance3D.new();n.mesh=mesh;n.material_override=m;n.position=pos;add_child(n);return n
+func cylinder(r:float,h:float,pos:Vector3,m:Material):
+ var c=CylinderMesh.new();c.top_radius=r;c.bottom_radius=r;c.height=h;c.radial_segments=48;return mesh_node(c,m,pos)
+func _ready():
+ wood=mat("543623")
+ cylinder(1.9,.13,Vector3(0,-.15,0),wood)
+ for x in [-1.0,1.0]:
+  var leg=BoxMesh.new();leg.size=Vector3(.16,1,.16);mesh_node(leg,wood,Vector3(x,-.68,0))
+ var plate=mat("d1d6c1");var jade=mat("597364");var tea=mat("684224")
+ cylinder(.92,.055,Vector3(0,-.036,.10),plate)
+ var lip=TorusMesh.new();lip.inner_radius=.87;lip.outer_radius=.92;lip.rings=48;lip.ring_segments=8;mesh_node(lip,jade,Vector3(0,0,.10))
+ cake(Vector3(0,.02,.10))
+ for pos in [Vector3(-1.23,0,-.35),Vector3(1.20,0,-.35),Vector3(.0,0,-1.22)]:
+  cylinder(.26,.035,pos+Vector3(0,-.035,0),plate)
+  var cup=CylinderMesh.new();cup.top_radius=.19;cup.bottom_radius=.12;cup.height=.21;cup.radial_segments=24;mesh_node(cup,plate,pos+Vector3(0,.08,0))
+  cylinder(.168,.006,pos+Vector3(0,.188,0),tea)
+  var rim=TorusMesh.new();rim.inner_radius=.165;rim.outer_radius=.195;rim.rings=24;rim.ring_segments=6;mesh_node(rim,jade,pos+Vector3(0,.188,0))
+func relief(x:float,z:float)->float:
+ var r=Vector2(x,z).length();var a=atan2(z,x)
+ var ring=exp(-pow((r-.51)/.027,2.0))*.035
+ # Eight original petal outlines and a simple central full-moon medallion.
+ var petals=exp(-pow((r-(.34+.11*cos(a*8.0)))/.025,2.0))*.035
+ var center=exp(-pow((r-.16)/.022,2.0))*.033
+ return ring+petals+center
+func cake(pos:Vector3):
+ var st=SurfaceTool.new();st.begin(Mesh.PRIMITIVE_TRIANGLES)
+ var seg=96;var radial=24
+ for j in range(radial):
+  for i in range(seg):
+   var points=[]
+   for p in [Vector2(j,i),Vector2(j+1,i),Vector2(j+1,i+1),Vector2(j,i+1)]:
+    var a=p.y*TAU/seg;var r=p.x/radial*(.69+.033*cos(a*16));var x=r*cos(a);var z=r*sin(a)
+    points.append(Vector3(x,.235+relief(x,z)-.02*pow(r/.73,8),z))
+   for index in [0,1,2,0,2,3]:
+    var v=points[index];var h=relief(v.x,v.z);st.set_color(Color("ce9244").lerp(Color("e8ba68"),minf(1,h/.04)));st.add_vertex(v)
+ for i in range(seg):
+  var a=i*TAU/seg;var b=(i+1)*TAU/seg
+  var ra=.69+.033*cos(a*16);var rb=.69+.033*cos(b*16)
+  var p=[Vector3(cos(a)*ra,0,sin(a)*ra),Vector3(cos(a)*ra,.215,sin(a)*ra),Vector3(cos(b)*rb,.215,sin(b)*rb),Vector3(cos(b)*rb,0,sin(b)*rb)]
+  for index in [0,1,2,0,2,3]:st.set_color(Color("b27736"));st.add_vertex(p[index])
+ st.generate_normals();var m=mat("ffffff");m.vertex_color_use_as_albedo=true;mesh_node(st.commit(),m,pos)

@@ -1,27 +1,61 @@
-# Neon Rush
+# Neon Rush: Mochi and the Moon Bridge
 
-A browser-based 3D runner. The current development version introduces MOCHI, a moon rabbit gathering treats across three moons.
+A browser-first 3D runner built with Godot 4. Mochi, Chang'e's moon rabbit, gathers five bridge pieces across a six-level Story journey. Chill, Classic, Rush, Chase and Mission modes are also in the project.
 
-## Run locally
+This repository is an active development source checkpoint, not a claim that the same version is hosted or that the rewrite/art is finished. Source commits do not publish the game.
 
-Serve this folder with a static web server, for example:
+## Open the current project
+
+Requirements: Python 3 and Godot 4.7.2 with matching Web export templates for browser builds.
+
+From the repository root:
 
 ```sh
-python3 -m http.server 8000
+python3 godot/fetch-assets.py
+godot --headless --path godot --editor --import
+godot --path godot
 ```
 
-Open http://localhost:8000 in a browser. No build step is required.
+Replace `godot` with your executable path if needed. Or open `godot/project.godot` in the editor after asset recovery.
 
-## Controls
+Recovery verifies assets before writing them. Baseline files still need the staging URLs recorded in the manifest: this is not a fully offline, self-contained asset archive. See [Asset recovery](godot/ASSET-RECOVERY.md). Do not continue after a failed or partial restore.
 
-Arrow keys or A/D change lanes. Space jumps. Down slides in Chase and Mission. F fires during the Mission guardian fight. P or Escape pauses. On phones, use the touch buttons or swipe controls.
+## Test and build for the browser
 
-Sound is off by default. Enable SOUND to hear the original synthesized music and action feedback.
+On Linux, run suites with temporary user data so tests neither inherit nor overwrite your ordinary preferences and saves:
 
-## Development status
+```sh
+python3 godot/tools/run_tests.py --godot /path/to/godot --logs /tmp/neon-tests-1
+```
 
-This is a development snapshot, not a claim that the same version is deployed. Mission gameplay and the moon-rabbit art are being playtested. Scores/settings are stored only in the current browser.
+The logs directory must be new. See [Native tests](godot/NATIVE-TESTS.md) for selections, timeout handling and platform limits.
 
-## Assets
+To export and serve a release build from the repository root:
 
-Moon 01 diffuse and displacement textures: https://polyhaven.com/a/moon_01 (CC0, https://polyhaven.com/license). This repository snapshot loads Three.js and textures from their public CDNs; the deployed game uses local copies. Lunar textures are CC0 assets from Poly Haven. Three.js is MIT licensed; see https://github.com/mrdoob/three.js/blob/r160/LICENSE. The rabbit, mochi and synthesized audio are original game content.
+```sh
+mkdir -p build
+godot --headless --path godot --export-release Web "$PWD/build/index.html"
+python3 -m http.server 8000 --directory build
+```
+
+Open http://localhost:8000. Serving the repository root does not build or run this Godot project. The Web preset is single-threaded WebAssembly/WebGL 2. Debug exports expose test state; release exports do not.
+
+## Controls and local data
+
+Arrow keys or A/D change lanes. Space jumps. Down slides. F fires in the guardian fight. P or Escape pauses. Phones have on-screen buttons and swipe controls. Sound is off by default.
+
+Scores, settings and Story checkpoints are local to the current browser/origin. Native runs use Godot user data. A different hosted origin cannot read the previous site's data. Classic, Chill and Rush records stay separate.
+
+## Current scope and evidence
+
+- Story order and dialogue: [STORYLINE.md](STORYLINE.md).
+- User requirements: [GAME-REQUIREMENTS.md](GAME-REQUIREMENTS.md) and [TECHNICAL-REQUIREMENTS.md](TECHNICAL-REQUIREMENTS.md).
+- Build/acceptance caveats: [Godot port status](godot/PORT-STATUS.md).
+- Recent environment/UI work: the `godot/*VALIDATION.md` notes distinguish native tests, rendered scenes and browser fixtures from natural play and device tests.
+- The ending has a static mooncake/shared-tea illustration: [reunion validation](godot/REUNION-CARD-VALIDATION.md). Chang'e, Wu Gang and the cinnamon-tree character scene are not complete.
+
+Native scripted campaign checks and browser fixtures do not establish natural full-campaign acceptance, physical-device speed, audio quality or finished art. Several story mechanics remain simplified; see port status rather than treating the story specification as fully implemented.
+
+## Asset credits
+
+The game uses original work and credited open assets. Check `godot/assets/ASSET-LICENSES.txt` after recovery, sourcepack notices and the relevant validation documents. These are not all under one license. In particular, the Han house is CC BY-SA 3.0; see [its license notice](godot/HAN-HOUSE-LICENSE.txt). Do not treat the entire repository as CC0 or redistribute credited source art without its terms.

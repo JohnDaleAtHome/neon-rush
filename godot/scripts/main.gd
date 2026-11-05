@@ -1286,29 +1286,14 @@ func create_guardian() -> MeshInstance3D:
  halo.rotation_degrees.x = 90
  halo.material_override = material(Color("a862b5"),true)
  guardian.add_child(halo)
- for side in [-1,1]:
-  var horn = MeshInstance3D.new()
-  var crescent = PrismMesh.new()
-  crescent.size = Vector3(0.5,1.35,0.5)
-  horn.mesh = crescent
-  horn.position = Vector3(side*0.68,0.9,0)
-  horn.rotation_degrees.z = side*-22
-  horn.material_override = material(Color("4e2e64"))
-  guardian.add_child(horn)
-  var eye = MeshInstance3D.new()
-  var eye_mesh = SphereMesh.new()
-  eye_mesh.radius = 0.13
-  eye_mesh.height = 0.13
-  eye.mesh = eye_mesh
-  eye.position = Vector3(side*0.30,0.12,0.82)
-  eye.material_override = material(Color("ffbd68"),true)
-  guardian.add_child(eye)
+ load("res://scripts/visuals/eclipse_mask.gd").add_face(guardian)
  return guardian
 
 func update_guardian_art(opened: bool):
  var visual_state = "exhausted" if opened and boss_hits >= 2 else "open" if opened else "closed"
  if boss.get_meta("visual_state","") == visual_state: return
  boss.set_meta("visual_state",visual_state)
+ load("res://scripts/visuals/eclipse_mask.gd").state(boss,opened,boss_hits >= 2)
  var tint = Color("e3b45e") if opened and boss_hits >= 2 else Color("6fcfae") if opened else Color("a862b5")
  boss.get_node("EclipseRing").material_override = material(tint,true)
  boss.material_override = material(Color("30203f") if not opened else Color("526463") if boss_hits < 2 else Color("69533c"))

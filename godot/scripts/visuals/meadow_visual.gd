@@ -58,9 +58,9 @@ func build_props(main_node, index: int) -> bool:
 func apply(index: int) -> void:
 	# Runs at the end of main's apply_world, after main has restored its own
 	# base materials/fog/sky. Actively hide and reset everything of ours when
-	# leaving Meadow or when light mode is on; never leave residue visible.
+	# leaving Meadow; Light retains the cheap path/atmosphere, never scenery.
 	var light: bool = game != null and game.options.get("light", false)
-	if index != THEME_INDEX or light:
+	if index != THEME_INDEX:
 		active = false
 		for side in game.side_planes: side.visible = true
 		for edge in game.track_edges: edge.visible = true
@@ -69,8 +69,8 @@ func apply(index: int) -> void:
 		_restore_ambient()
 		game.layout_moons(game.get_viewport().get_visible_rect().size)
 		return
-	active = true
-	for side in game.side_planes: side.visible = false
+	active = not light
+	for side in game.side_planes: side.visible = light
 	for edge in game.track_edges: edge.visible = false
 	var environment: Environment = game.env_world.environment
 	# Atmosphere: coordinated fog and sky so the horizon reads as one scene.
@@ -101,6 +101,14 @@ func apply(index: int) -> void:
 	environment.background_mode = Environment.BG_SKY
 	# Calmer path and banks: module terrain shader, same scroll contract.
 	_apply_terrain()
+	if light:
+		game.ground.material_override.shader = load("res://scripts/visuals/meadow_light_ground.gdshader")
+		for side in game.side_planes:
+			var sm := ShaderMaterial.new()
+			sm.shader = load("res://scripts/visuals/meadow_light_ground.gdshader")
+			sm.set_shader_parameter("fog_color", MEADOW_FOG)
+			sm.set_shader_parameter("bank", true)
+			side.material_override = sm
 	# Preserve celestial layout and moon option; veil their high contrast in Meadow haze.
 	for i in range(game.moons.size()):
 		game.moon_glows[i].modulate.a = MOON_GLOW_ALPHA
@@ -111,7 +119,7 @@ func apply(index: int) -> void:
 		moon_mat.set_shader_parameter("camera_up",camera_ref.global_basis.y)
 		moon_mat.set_shader_parameter("camera_right",camera_ref.global_basis.x)
 		moon_mat.set_shader_parameter("vertical_tangent",tan(deg_to_rad(camera_ref.fov)/2.0))
-	_set_horizon_visible(true)
+	_set_horizon_visible(not light)
 	game.layout_moons(game.get_viewport().get_visible_rect().size)
 
 
@@ -642,19 +650,22 @@ func _canopy_mesh(radius: float, seed_id: int) -> ArrayMesh:
 
 
 func layout_moons(size: Vector2) -> void:
-	if not active:return
+	if game.visual_world_index != THEME_INDEX:return
 	# One dominant partly framed moon plus quiet distant companions, not a row.
 	var landscape := size.x>size.y
 	var locations := [Vector2(0.25,0.31),Vector2(0.84,0.31),Vector2(0.73,0.35)] if landscape else [Vector2(0.12,0.30),Vector2(0.84,0.31),Vector2(0.70,0.35)]
 	for i in range(game.moons.size()):
 		var point: Vector2 = locations[i]*size
 		point.y=maxf(244.0,point.y)
+		if game.options.get("light",false) and landscape and size.y<650:
+			point.y=size.y*0.38
 		var depth := 60.0+i*15.0
 		game.moons[i].scale=Vector3.ONE*[0.88,0.42,0.28][i]
 		var provisional := camera_ref.project_position(point,depth)
 		var radius:float=game.moons[i].mesh.radius*game.moons[i].scale.x
 		var projected_top := camera_ref.unproject_position(provisional+camera_ref.global_basis.y*radius)
-		point.y=maxf(point.y,225.0+point.y-projected_top.y)
+		if not (game.options.get("light",false) and landscape and size.y<650):
+			point.y=maxf(point.y,225.0+point.y-projected_top.y)
 		game.moons[i].position=camera_ref.project_position(point,depth)
 
 func _build_village_edge()->void:

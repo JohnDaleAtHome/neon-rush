@@ -1485,8 +1485,8 @@ func apply_options():
  for guide in lane_guides: guide.visible = options.guides
  adapt_layout()
  for moon in moons: moon.visible = options.stars and running and not paused
- if sky_stars: sky_stars.visible = options.stars and not options.light
- if scenery: scenery.visible = not options.light and mode == "story" and level == 2 and not (grove_visual and grove_visual.active)
+ if sky_stars: sky_stars.visible = options.stars and not options.light and visual_world_index!=2
+ if scenery: scenery.visible = not options.light and mode == "story" and level == 2 and visual_world_index!=2
  if animator and reduced_motion(): animator.speed_scale = 0
  elif animator and not paused: animator.speed_scale = 1
  apply_bunny_tint(bunny)
@@ -1982,7 +1982,7 @@ func layout_moons(size: Vector2):
 
  if meadow_visual and meadow_visual.active: meadow_visual.layout_moons(size)
  if comet_visual and comet_visual.active: comet_visual.layout_moons(size)
- if grove_visual and grove_visual.active: grove_visual.layout_moons(size)
+ if grove_visual and visual_world_index==2: grove_visual.layout_moons(size)
  if palace_visual and palace_visual.active: palace_visual.layout_moons(size)
 
 func configure_window():

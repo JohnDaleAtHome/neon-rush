@@ -19,6 +19,7 @@ func run():
  for moon in g.moons:assert(moon.scale.is_equal_approx(Vector3.ONE))
  g.options.light=false;g.apply_options();assert(g.meadow_visual.active)
  g.apply_world(1)
- for moon in g.moons:assert(moon.scale.is_equal_approx(Vector3.ONE))
+ assert(is_equal_approx(g.moons[0].scale.x,0.28))
+ assert(g.moons[1].scale.x<0.002 and g.moons[2].scale.x<0.002)
  print("PASS clearing composition: four aspect ratios, lunar objective clearance, show-moons and Light/world restoration")
  quit()

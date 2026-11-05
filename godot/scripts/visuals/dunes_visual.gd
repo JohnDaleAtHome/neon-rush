@@ -64,6 +64,7 @@ func bind(main_node)->void:
  var ejecta=MeshInstance3D.new();ejecta.name="DuneEjecta";ejecta.mesh=stones.commit()
  var gravel=ShaderMaterial.new();gravel.shader=load("res://scripts/visuals/dunes_sand.gdshader");gravel.set_shader_parameter("sand_texture",load("res://assets/textures/ground_sand.png"));gravel.set_shader_parameter("is_rock",true)
  ejecta.material_override=gravel;landscape.add_child(ejecta)
+ _desert_architecture()
  landscape.visible=false
 func height(x:float,z:float)->float:
  var side=signf(x);var ax=absf(x)
@@ -74,14 +75,28 @@ func height(x:float,z:float)->float:
  var ridge3=12.0*exp(-pow((ax-147.0)/51.0,2.0)-pow((z+195.0)/102.0,2.0))
  return -0.14+edge*(ridge1+ridge2+ridge3)
 func apply(index:int)->void:
- active=index==1 and not game.options.get("light",false)
- landscape.visible=active
- if active:
-  var mat=ShaderMaterial.new();mat.shader=load("res://scripts/visuals/dunes_sand.gdshader");mat.set_shader_parameter("sand_texture",load("res://assets/textures/ground_sand.png"));mat.set_shader_parameter("is_path",true);game.ground.material_override=mat
-  var crater_mat=ShaderMaterial.new();crater_mat.shader=load("res://scripts/visuals/dunes_sand.gdshader");crater_mat.set_shader_parameter("sand_texture",load("res://assets/textures/ground_sand.png"))
-  for prop in game.scene_props:prop.material_override=crater_mat
-  for side in game.side_planes:side.visible=false
-  for edge in game.track_edges:edge.visible=false
+ active=index==1 and not game.options.get("light",false);landscape.visible=active
+ if index!=1:return
+ game.scenery.visible=false
+ for prop in game.scene_props:prop.visible=false
+ var mat=ShaderMaterial.new();mat.shader=load("res://scripts/visuals/dunes_sand.gdshader");mat.set_shader_parameter("sand_texture",load("res://assets/textures/ground_sand.png"));mat.set_shader_parameter("is_path",true);game.ground.material_override=mat
+ for side in game.side_planes:
+  side.visible=not active
+  if not active:side.material_override=mat
+ for edge in game.track_edges:edge.visible=false
+ game.env_world.environment.sky.sky_material.shader=load("res://scripts/visuals/desert_sky.gdshader")
+ game.env_world.environment.fog_light_color=Color("b4a17e");game.env_world.environment.fog_depth_end=240.0;game.world_sun.light_energy=1.0
+ game.sky_stars.visible=false;game.layout_moons(game.get_viewport().get_visible_rect().size)
+func layout_moons(size:Vector2):
+ if game.visual_world_index!=1:return
+ var compact=size.x>size.y and size.y<650
+ var tower=landscape.get_node("DesertPagoda")
+ var x=-56.0 if compact else -32.0 if size.x>size.y else -13.0
+ var z=-75.0 if size.x>size.y else -62.0
+ tower.position=Vector3(x,height(x,z),z);tower.scale=Vector3.ONE*(0.52 if compact else 0.62 if size.x>size.y else 0.52)
+ for i in range(3):
+  game.moons[i].scale=Vector3.ONE*(0.28 if i==0 else 0.001)
+  game.moons[i].position=game.camera.project_position(Vector2(size.x*0.88,maxf(120.0,size.y*0.28) if compact else maxf(245.0,size.y*0.29)),60.0+i*15.0)
 
 func _rock_material(node:Node)->void:
  if node is MeshInstance3D:
@@ -113,3 +128,16 @@ func _pebble(st:SurfaceTool,at:Transform3D,index:int)->void:
    var a:Vector3=at*tri[0];var b:Vector3=at*tri[1];var c:Vector3=at*tri[2]
    var normal=(c-a).cross(b-a).normalized()
    for v in [a,b,c]:st.set_normal(normal);st.add_vertex(v)
+
+func _desert_architecture():
+ var tower=load("res://assets/visuals/chinese_pagoda_cc0/pagoda.glb").instantiate();tower.name="DesertPagoda";landscape.add_child(tower);tower.position=Vector3(-25.0,height(-25,-75),-75);tower.scale=Vector3.ONE*0.72;tower.rotation.y=0.35
+ var footing=MeshInstance3D.new();var box=BoxMesh.new();box.size=Vector3(16,0.8,16);footing.mesh=box;footing.position=Vector3(0,-0.3,0);var mat=StandardMaterial3D.new();mat.albedo_color=Color("8b7957");mat.roughness=1.0;footing.material_override=mat;tower.add_child(footing)
+ _no_shadow(tower)
+func _no_shadow(node:Node):
+ if node is MeshInstance3D:
+  node.cast_shadow=GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+  for i in range(node.mesh.get_surface_count()):
+   var source=node.get_active_material(i)
+   if source is StandardMaterial3D:
+    var mat=source.duplicate();mat.disable_fog=true;node.set_surface_override_material(i,mat)
+ for child in node.get_children():_no_shadow(child)

@@ -36,7 +36,13 @@ func run():
    imported+=1
    assert(absf(child.position.x)>6.0 or child.has_meta("distant_landmark"))
    assert(inspect_node(child)>0)
- assert(imported+impostors==57)
+ assert(imported+impostors==49)
+ var village=m.horizon_root.get_node("HanVillageEdge")
+ assert(inspect_node(village)==3)
+ var house=m._village_house_mesh(village.get_child(0))
+ var verts=house.mesh.surface_get_arrays(0)[Mesh.ARRAY_VERTEX]
+ for v in verts:assert(absf((house.global_transform*v).x)>4.25)
+ assert(village.get_child_count()==3)
  assert(impostors>8)
  assert(m.import_materials.size()<20)
  var opaque=0
@@ -51,5 +57,5 @@ func run():
  for level in range(1,6):
   g.apply_world(level);await process_frame;assert(not m.horizon_root.visible)
  g.apply_world(0);await process_frame;assert(m.horizon_root.visible)
- print("PASS57CC0placements-with-distant-impostors,noCollision,outsidecorridor,sharedmaterials,Lightandthemevisibility")
+ print("PASS49CC0placements+HanHouseYardSkirt-with-distant-impostors,noCollision,outsidecorridor,sharedmaterials,Lightandthemevisibility")
  quit()

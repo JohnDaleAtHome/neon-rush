@@ -22,4 +22,6 @@ static func add_witness(actor: Node3D):
  witness.texture_filter=BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
  witness.alpha_cut=SpriteBase3D.ALPHA_CUT_DISCARD
  witness.alpha_scissor_threshold=0.3
-    actor.add_child(witness)
+ actor.add_child(witness)
+
+# End of original Grove witness module.

@@ -1,0 +1,36 @@
+Adapted Han house asset: Creative Commons Attribution-Share Alike 3.0 Unported.
+Original author: Wildfire Games, https://www.wildfiregames.com/
+License: https://creativecommons.org/licenses/by-sa/3.0/
+Source: https://github.com/0ad/0ad (archived source mirror).
+Mesh: binaries/data/mods/public/art/meshes/structural/han_house_a.dae
+Texture: binaries/data/mods/public/art/textures/skins/structural/han_struct_02.png
+Primary notice: https://github.com/0ad/0ad/blob/master/binaries/data/mods/public/art/LICENSE.txt
+Changes: static DAE converted to GLB, author transform applied, Z-up to Y-up,
+base texture reduced from 2048x1024 to 1024x512, alpha removed (player tint unused),
+normal/spec/AO textures not included. All 1,000 source triangles retained.
+Adapted GLB and its encoded copy remain CC BY-SA 3.0. No claim that the game's
+independent code is relicensed by this asset notice. See original notice below.
+
+The files in this directory are Copyright (C) 2009 Wildfire Games.
+
+These files are licensed under the Creative Commons Attribution-Share Alike 3.0
+(CC-by-sa) license, available at http://creativecommons.org/licenses/by-sa/3.0/
+
+Briefly, this means:
+
+* You may use, modify and distribute these files, for commercial and
+  non-commercial purposes.
+
+* If you distribute one of these files, you must include attribution (e.g.
+  in the credits screen of a game or a video, or in a text file accompanying
+  the files). The attribution must include:
+  * A link to http://creativecommons.org/licenses/by-sa/3.0/
+  * The name "Wildfire Games" as the original author
+  * A link to http://www.wildfiregames.com/
+
+* If you distribute one of these files, you must release it (and any
+  modifications you have made to it) under the CC-by-sa license.
+
+Some of the files in the "textures/" directory are derived from materials provided by CGTextures (http://www.cgtextures.com/). The original materials are the property of CGTextures or its contributors. Special permission has been granted by CGTextures to distribute these derived textures as CC-BY-SA. (This has no effect on the standard licensing of CGTextures materials, or on any other work derived from them.)
+
+All CGTextures materials have been altered from their original form. To access original super-high resolution CGTextures materials, please visit http://www.cgtextures.com/ .

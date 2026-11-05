@@ -3,6 +3,8 @@ extends Node3D
 var game
 var landscape:=Node3D.new()
 var active:=false
+var light_landscape:=Node3D.new()
+var light_tower:Node3D
 var footing_skirt:MeshInstance3D
 var footing_transform:Transform3D
 func bind(main_node)->void:
@@ -68,6 +70,9 @@ func bind(main_node)->void:
  ejecta.material_override=gravel;landscape.add_child(ejecta)
  _desert_architecture()
  landscape.visible=false
+ light_landscape.name="DunesLight";add_child(light_landscape)
+ light_tower=landscape.get_node("DesertPagoda").duplicate();light_landscape.add_child(light_tower)
+ light_landscape.visible=false
 func height(x:float,z:float)->float:
  var side=signf(x);var ax=absf(x)
  var edge=smoothstep(6.0,20.0,ax)
@@ -78,6 +83,7 @@ func height(x:float,z:float)->float:
  return -0.14+edge*(ridge1+ridge2+ridge3)
 func apply(index:int)->void:
  active=index==1 and not game.options.get("light",false);landscape.visible=active
+ light_landscape.visible=index==1 and game.options.get("light",false)
  if index!=1:return
  game.scenery.visible=false
  for prop in game.scene_props:prop.visible=false
@@ -97,6 +103,14 @@ func layout_moons(size:Vector2):
  var z=-75.0 if size.x>size.y else -62.0
  tower.position=Vector3(x,height(x,z),z);tower.scale=Vector3.ONE*(0.52 if compact else 0.62 if size.x>size.y else 0.52)
  _fit_footing(tower)
+ if light_tower:
+  light_tower.transform=tower.transform
+  # Fit Light to the existing side-ground footprint and outside compact text.
+  light_tower.position.x=maxf(light_tower.position.x,-20.0)
+  if compact:
+   light_tower.position.z=-40.0;light_tower.scale=Vector3.ONE*0.35
+  # Bottom of the existing footing meets the flat Light ground at -0.13m.
+  light_tower.position.y=0.70*light_tower.scale.y-0.13
  for i in range(3):
   game.moons[i].scale=Vector3.ONE*(0.28 if i==0 else 0.001)
   game.moons[i].position=game.camera.project_position(Vector2(size.x*0.88,maxf(120.0,size.y*0.28) if compact else maxf(245.0,size.y*0.29)),60.0+i*15.0)

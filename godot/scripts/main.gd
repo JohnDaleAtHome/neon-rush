@@ -87,6 +87,7 @@ var dew = 0
 var level = 0
 var pieces: Array = []
 var entities: Array[Node3D] = []
+var reunion_card:Control
 var player: Node3D
 var runner_variant: MeshInstance3D
 var bunny: Node3D
@@ -477,6 +478,8 @@ func return_menu():
  pause_button.hide()
 
 func show_beat(title: String, words: String, label: String):
+ if is_instance_valid(reunion_card): reunion_card.hide()
+ message.show()
  dimmer.show()
  running = false
  for moon in moons: moon.hide()
@@ -508,6 +511,8 @@ func on_action():
  start_level()
 
 func start_level():
+ if is_instance_valid(reunion_card): reunion_card.hide()
+ message.show()
  sound_button.show()
  options_button.show()
  stats_button.show()
@@ -1457,6 +1462,11 @@ func finish_story():
  pieces = []
  save_checkpoint()
  show_beat("The Mooncake of Reunion", "Chang'e: You came all this way. Sit. Share this mooncake with me. Wu Gang joins them beneath the cinnamon tree.", "NEW JOURNEY")
+ if not is_instance_valid(reunion_card):
+  reunion_card=load("res://scripts/visuals/reunion_card.gd").new(self)
+  overlay_root.add_child(reunion_card)
+ reunion_card.show();reunion_card.arrange();reunion_card.primary.grab_focus()
+ panel.hide();message.hide()
 
 func record_completion():
  record_story_attempt("reunion")
@@ -1959,6 +1969,7 @@ func adapt_layout():
  layout_moons(size)
  panel.position = Vector2((size.x-340)/2,size.y-90 if pending_advance else 155 if compact else 365)
  layout_encounter(size)
+ if is_instance_valid(reunion_card) and reunion_card.visible: reunion_card.arrange()
  message.position.y = 15 if compact and not running else 100 if compact else 145
  message.size.y = 120 if compact else 170
  message.add_theme_font_size_override("font_size",15 if compact else 16)

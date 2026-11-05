@@ -27,7 +27,8 @@ func apply(index:int)->void:
  landscape.visible=active
  if not active:
   for i in range(game.track_edges.size()):game.track_edges[i].material_override=edge_materials[i]
-  return
+  if index!=3:return
+ # Light retains sky and paving, not subdivided water, rocks, surf or rail geometry.
  water_material.set_shader_parameter("animate",not game.options.get("motion",false))
  landscape.get_node("StackSurf").material_override.set_shader_parameter("animate",not game.options.get("motion",false))
  var sky=game.env_world.environment.sky;var sky_mat=ShaderMaterial.new();sky_mat.shader=load("res://scripts/visuals/sea_sky.gdshader")
@@ -35,10 +36,13 @@ func apply(index:int)->void:
  game.env_world.environment.fog_light_color=Color("102c3e")
  game.env_world.environment.fog_depth_begin=25.0
  game.env_world.environment.fog_depth_end=170.0
- for side in game.side_planes:side.visible=false
+ for side in game.side_planes:
+  side.visible=not active
+  if not active:
+   var fallback=ShaderMaterial.new();fallback.shader=load("res://scripts/visuals/sea_light_water.gdshader");side.material_override=fallback
  for edge in game.track_edges:
-  edge.visible=true
-  edge.material_override=game.material(Color("568a94"))
+  edge.visible=active
+  edge.material_override=game.material(Color("568a94")) if active else edge_materials[game.track_edges.find(edge)]
  var paving=ShaderMaterial.new();paving.shader=load("res://scripts/visuals/sea_causeway.gdshader");paving.set_shader_parameter("path_surface",true);game.ground.material_override=paving
  var rings=StandardMaterial3D.new();rings.albedo_color=Color("477b88");rings.roughness=0.9
  for prop in game.scene_props:

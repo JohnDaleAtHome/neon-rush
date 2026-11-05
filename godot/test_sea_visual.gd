@@ -37,7 +37,7 @@ func run():
  g.options.motion=true;g.apply_world(3);check(not g.sea_visual.water_material.get_shader_parameter("animate"),"reduced motion");check(not surf.material_override.get_shader_parameter("animate"),"reduced surf motion")
  g.options.light=true;g.apply_world(3);check(not g.sea_visual.landscape.visible,"Light hides sea")
  for side in g.side_planes:check(side.visible,"Light restores sides")
- for i in range(g.track_edges.size()):check(g.track_edges[i].material_override==original[i],"Light restores edge")
+ for i in range(g.track_edges.size()):check(g.track_edges[i].material_override==original[i] and not g.track_edges[i].visible,"Light hides neon edge")
  g.options.light=false
  for world in [0,1,2,4,5,3]:
   g.level=world;g.apply_world(world);check(g.sea_visual.active==(world==3),"world ownership")

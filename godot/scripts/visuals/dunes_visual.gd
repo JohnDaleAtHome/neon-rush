@@ -17,7 +17,7 @@ func bind(main_node)->void:
      points.append(Vector3(x,height(x,z),z))
     for k in ([0,2,1,0,3,2] if side>0 else [0,1,2,0,2,3]):st.add_vertex(points[k])
   st.generate_normals();terrain.mesh=st.commit()
-  var mat=ShaderMaterial.new();mat.shader=load("res://scripts/visuals/dunes_sand.gdshader");mat.set_shader_parameter("sand_texture",load("res://assets/textures/ground_sand.png"))
+  var mat=ShaderMaterial.new();mat.shader=load("res://scripts/visuals/dunes_sand.gdshader");mat.set_shader_parameter("sand_texture",load("res://assets/textures/dunes_ripple_sand.jpg"))
   terrain.material_override=mat;landscape.add_child(terrain)
  # Broad dune skyline behind the encounter distance, with overlapping crests.
  for band in range(3):
@@ -31,7 +31,7 @@ func bind(main_node)->void:
      var y=-0.14+crest*sin(q.y/10.0*PI)
      points.append(Vector3(x,y,z))
     for k in [0,2,1,0,3,2]:st.add_vertex(points[k])
-  st.generate_normals();terrain.mesh=st.commit();var mat=ShaderMaterial.new();mat.shader=load("res://scripts/visuals/dunes_sand.gdshader");mat.set_shader_parameter("sand_texture",load("res://assets/textures/ground_sand.png"));terrain.material_override=mat;landscape.add_child(terrain)
+  st.generate_normals();terrain.mesh=st.commit();var mat=ShaderMaterial.new();mat.shader=load("res://scripts/visuals/dunes_sand.gdshader");mat.set_shader_parameter("sand_texture",load("res://assets/textures/dunes_ripple_sand.jpg"));terrain.material_override=mat;landscape.add_child(terrain)
  # Large eroded crater rims and ejecta outside the running corridor.
  for spec in [[-20.0,-34.0,11.0,1.8],[31.0,-69.0,19.0,3.5],[-50.0,-103.0,25.0,4.5],[74.0,-146.0,29.0,6.0]]:
   var rim=MeshInstance3D.new();var st=SurfaceTool.new();st.begin(Mesh.PRIMITIVE_TRIANGLES);st.set_smooth_group(0)
@@ -44,7 +44,7 @@ func bind(main_node)->void:
      var lift=spec[3]*exp(-pow((q.y-4.0)/1.2,2.0))*(0.83+0.17*sin(a*5.0))
      points.append(Vector3(x,height(x,z)+lift,z))
     for k in [0,2,1,0,3,2]:st.add_vertex(points[k])
-  st.generate_normals();rim.mesh=st.commit();var mat=ShaderMaterial.new();mat.shader=load("res://scripts/visuals/dunes_sand.gdshader");mat.set_shader_parameter("sand_texture",load("res://assets/textures/ground_sand.png"));rim.material_override=mat;landscape.add_child(rim)
+  st.generate_normals();rim.mesh=st.commit();var mat=ShaderMaterial.new();mat.shader=load("res://scripts/visuals/dunes_sand.gdshader");mat.set_shader_parameter("sand_texture",load("res://assets/textures/dunes_ripple_sand.jpg"));rim.material_override=mat;landscape.add_child(rim)
  # Ejecta gathers in unequal trails at slope bases, not evenly spaced rows.
  var stones=SurfaceTool.new();stones.begin(Mesh.PRIMITIVE_TRIANGLES)
  var templates=[]
@@ -62,7 +62,7 @@ func bind(main_node)->void:
   else:_pebble(stones,transform,i)
  for node in templates:node.free()
  var ejecta=MeshInstance3D.new();ejecta.name="DuneEjecta";ejecta.mesh=stones.commit()
- var gravel=ShaderMaterial.new();gravel.shader=load("res://scripts/visuals/dunes_sand.gdshader");gravel.set_shader_parameter("sand_texture",load("res://assets/textures/ground_sand.png"));gravel.set_shader_parameter("is_rock",true)
+ var gravel=ShaderMaterial.new();gravel.shader=load("res://scripts/visuals/dunes_sand.gdshader");gravel.set_shader_parameter("sand_texture",load("res://assets/textures/dunes_ripple_sand.jpg"));gravel.set_shader_parameter("is_rock",true)
  ejecta.material_override=gravel;landscape.add_child(ejecta)
  _desert_architecture()
  landscape.visible=false
@@ -79,7 +79,7 @@ func apply(index:int)->void:
  if index!=1:return
  game.scenery.visible=false
  for prop in game.scene_props:prop.visible=false
- var mat=ShaderMaterial.new();mat.shader=load("res://scripts/visuals/dunes_sand.gdshader");mat.set_shader_parameter("sand_texture",load("res://assets/textures/ground_sand.png"));mat.set_shader_parameter("is_path",true);game.ground.material_override=mat
+ var mat=ShaderMaterial.new();mat.shader=load("res://scripts/visuals/dunes_sand.gdshader");mat.set_shader_parameter("sand_texture",load("res://assets/textures/dunes_ripple_sand.jpg"));mat.set_shader_parameter("is_path",true);game.ground.material_override=mat
  for side in game.side_planes:
   side.visible=not active
   if not active:side.material_override=mat
@@ -100,7 +100,7 @@ func layout_moons(size:Vector2):
 
 func _rock_material(node:Node)->void:
  if node is MeshInstance3D:
-  var mat=ShaderMaterial.new();mat.shader=load("res://scripts/visuals/dunes_sand.gdshader");mat.set_shader_parameter("sand_texture",load("res://assets/textures/ground_sand.png"))
+  var mat=ShaderMaterial.new();mat.shader=load("res://scripts/visuals/dunes_sand.gdshader");mat.set_shader_parameter("sand_texture",load("res://assets/textures/dunes_ripple_sand.jpg"))
   node.material_override=mat
  for child in node.get_children():_rock_material(child)
 

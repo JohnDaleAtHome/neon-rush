@@ -1,5 +1,11 @@
-# Asset recovery contingency
+# Asset recovery
 
-This small source commit deliberately does not store binary assets in git. The complete source archive has them. To restore this checkout, run `python3 godot/fetch-assets.py` before opening Godot. The standard-library script downloads 28 assets from the companion staging site, validates exact byte lengths and SHA256 hashes, and writes only verified bytes. See assets-manifest.json.
+From a fresh clone, run `python3 godot/fetch-assets.py` before opening `godot/project.godot` in Godot 4.7.2.
 
-This depends on the companion stage staying available. It is less durable than storing assets directly in git, and must not be described as a self-contained checkout. Binary assets should be added in later incremental commits when the upload route permits. No secrets or paid services are used. Story and requirements remain the repository's root documents.
+The command verifies and restores the 28 baseline assets and then applies the tracked offline restore helpers for the visual sourcepack, Meadow assets, generated path, Chinese pavilion, pagoda, Han house, Dunes sand, Meadow hay-bale texture and Sea turtle model. The helpers preserve current tracked scripts rather than replacing them with an older embedded version. All binary content is checked against its recorded byte length and SHA256 hash before being written.
+
+The baseline assets still depend on the companion staging site in `assets-manifest.json`. This checkout is not fully self-contained or guaranteed to build offline from an empty folder. The newer sourcepacks restore their own contents offline, but that does not remove the baseline network dependency.
+
+If any download or validation fails, stop before opening the project. Do not treat a partial restore as a completed build. Re-running the command is safe: already-correct files are verified and retained.
+
+The Han house is CC BY-SA 3.0. Other asset notices and exact recovery details are kept with their respective sourcepacks and validation documents. No paid service or secret is needed.

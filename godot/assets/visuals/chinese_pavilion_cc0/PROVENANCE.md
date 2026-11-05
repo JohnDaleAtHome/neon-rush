@@ -7,4 +7,6 @@ Retrieved November 5, 2026. Creator page explicitly lists Creative Commons Zero 
 Original FBX SHA-256: e5a745fceef8eb0e4b45230e4d964f618c64ab0981f098e1e329c982c159e89c
 Original: 70 mesh objects, 76,926 triangles. Runtime: Godot-imported FBX exported as glTF, vertex-snapped at 0.65 source units, degenerate/duplicate faces removed, normals recomputed and batched by five materials: 12,632 triangles. Material colors are muted in the Grove code. Fine lattice detail is reduced. Decoration only, no collision bodies.
 
-Original source archive and reduction script are retained in the local research evidence, outside the runtime directory. This is a local unpublished trial; attribution is retained although CC0 does not require it.
+Original source archive and reduction script are retained in the local research evidence, outside the runtime directory. Attribution is retained although CC0 does not require it.
+
+Palace courtyard reuses the same runtime model for its near pavilion. The two distant facades are 512x512 transparent orthographic renders of that model, with a 52-unit frame and muted courtyard materials. Original bake helper is retained in research evidence. The facade PNG is checksum-restored by restore-pavilion.py from pavilion-far.png.gz.b64. No reference-game pixels are included.

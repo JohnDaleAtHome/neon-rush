@@ -1,6 +1,6 @@
 # Meadow visual candidate
 
-Scoped to level 0 (Neon Meadow), with Light quality off. This is incremental WIP environment art, not style acceptance or a finished campaign.
+Scoped to level 0 (Neon Meadow). Full scenery requires Light quality off; Light keeps the inexpensive stone path and atmosphere. This is incremental WIP environment art, not style acceptance or a finished campaign.
 
 ## Scene and lifecycle
 
@@ -10,14 +10,14 @@ Scoped to level 0 (Neon Meadow), with Light quality off. This is incremental WIP
 - Two smooth-normal rolling bank meshes stay outside abs(x) 3.8. Their rear/outer edges taper to the continuous underlay. They replace the six small berms and hide the original side planes only in full Meadow.
 - Thirty-four overlapping 3D hills and thirty-six groves replace the two flat ridge quads. Groves remain within the shaped bank footprint.
 - Props total 98: 34 solid stem/leaf/flower clumps, 48 dimensional fern/shrub clumps, 8 stones and 8 fireflies. Their existing scroll/wrap/free lifecycle is preserved. Terrain-bound props recalculate their height against the bank as they move.
-- Main calls bind after scenery creation, lets the module build props after clearing old props, and applies the module after restoring the base world. Horizon and shadow are created once and hidden outside full Meadow. Light quality changes restore the original side planes and minimal scene.
+- Main calls bind after scenery creation, lets the module build props after clearing old props, and applies the module after restoring the base world. Horizon and shadow are created once and hidden outside full Meadow. Light quality hides the scenery/shadow and restores flat side planes with a cheap bank material.
 - Contact shadow follows the player. Collision, level timing and saves are unchanged.
 
 The first rolling-bank draft exposed broad diagonal dark bands from repeating the gradient side texture over the mesh. Controlled replacement with world-space color noise removed those bands in inspected Web screenshots. Removing the alpha output alone had not fixed them. The opaque material and continuous underlay avoid transparent triangle sorting and ground gaps. Fog is computed per fragment rather than interpolating a fog value over large underlay triangles.
 
 ## Lighting
 
-Main uses direct-light energy 0.85 for full Meadow and 1.7 elsewhere/Light mode. Meadow ambient energy is 0.45; leaving the module restores prior ambient values. Existing restrained fur/eye emission and coordinated sky/fog remain.
+Main uses direct-light energy 0.85 for Meadow, including Light, and 1.7 elsewhere. Meadow ambient energy is 0.72; leaving the module restores prior ambient values. Existing restrained fur/eye emission and coordinated sky/fog remain.
 
 ## Verification
 
@@ -67,7 +67,7 @@ reduces relief/contrast with teal haze and lower glow; the established three
 moon layout and Show moons option remain. A separate Meadow sky shader adds
 very quiet broken wisps while retaining the gradient and objective legibility.
 Main gameplay, character, binaries, sourcepack and other themes are unchanged.
-Light-mode/other-theme cleanup retains the base moon shader.
+Historical v43 behavior: Light-mode/other-theme cleanup retained the base moon shader. The Light consistency increment below supersedes this for Meadow only.
 
 Actual release390duck/1280scroll pixels were inspected after correcting grass
 that initially intruded into the corridor. All28headless suites, clean import
@@ -95,3 +95,8 @@ shape but still reads as simple broad ridges/tonal layers. Grass is less
 triangular but remains stylized/sparse in places, moons remain detached and
 there is no final art, physical-device or natural-campaign acceptance claim.
 No deployment is included.
+
+
+## Meadow Light consistency
+
+See `MEADOW-LIGHT-VALIDATION.md`. Light retains the cheap Meadow path, sky, fog and moon treatment, with scenery and shadow still hidden. Other-world cleanup stays unchanged.

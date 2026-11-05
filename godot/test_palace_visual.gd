@@ -7,7 +7,13 @@ func run():
  var g=load("res://scenes/main.tscn").instantiate();root.add_child(g);await process_frame;g.set_process(false)
  g.mode="story";g.level=5;g.running=true;g.apply_world(5);g.apply_options()
  check(g.palace_visual.active,"palace active")
- for i in range(3):check(g.palace_visual.landscape.get_child(i).get_child_count()<=10,"bounded pavilion material batches")
+ var streets=[]
+ for child in g.palace_visual.landscape.get_children():
+  if child is MultiMeshInstance3D:streets.append(child)
+ check(streets.size()==2,"two bounded Han house batches")
+ for street in streets:
+  check(street.multimesh.instance_count==14,"full street house count")
+  check(street.multimesh.mesh.get_faces().size()/3==1000,"full authored house topology")
  check(g.ground.material_override.shader.resource_path.ends_with("palace_stone.gdshader"),"path material")
  for side in g.side_planes:check(not side.visible,"base sides hidden")
  var gate=g.palace_visual.landscape.get_node("MoonlightGate")
@@ -20,11 +26,17 @@ func run():
   check(not g.sky_stars.visible,"no palace star field")
   check(is_equal_approx(g.moons[0].scale.x,0.4) and g.moons[1].scale.x<0.002 and g.moons[2].scale.x<0.002,"one restrained moon")
   inspect(g.palace_visual.landscape)
-  check(absf(g.palace_visual.landscape.get_child(0).position.x)>=16.0,"pavilion lateral placement")
-  if dim.x>dim.y and dim.y>=650:
-   check(g.palace_visual.landscape.get_child(0).position.x < -28.0,"wide pavilion clears moon group")
+  for street in streets:
+   for k in range(street.multimesh.instance_count):
+    var xf=g.palace_visual._house_transform(street.get_meta("street_side"),k)
+    # Dummy RenderingServer does not retain MultiMesh transforms. Validate the
+    # source transform headlessly; cross-check stored transforms when rendered.
+    if DisplayServer.get_name()!="headless":check(street.multimesh.get_instance_transform(k).is_equal_approx(xf),"stored house transform")
+    for v in street.multimesh.mesh.get_faces():
+     var w=street.global_transform*xf*v
+     check(absf(w.x)>4.25,"Han houses outside full lane envelope")
+     check(w.y>=-0.001,"Han houses grounded")
   if dim.x>dim.y and dim.y<650:
-   check(g.palace_visual.landscape.get_child(0).position.x < -26.0,"landscape clears central cue")
    var horizon=g.camera.unproject_position(Vector3(0,0,-250)).y
    for moon in [g.moons[0]]:
     var radius=moon.mesh.radius*moon.scale.x

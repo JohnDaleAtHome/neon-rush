@@ -87,10 +87,10 @@ func run():
  g.options.light=true
  g.apply_options()
  assert(not g.meadow_visual.active)
- for moon in g.moons:assert(moon.scale.is_equal_approx(Vector3.ONE))
- for moon in g.moons:assert(moon.material_override.shader.resource_path=="res://scripts/moon.gdshader")
+ for i in range(3):assert(g.moons[i].scale.is_equal_approx(Vector3.ONE*[.88,.42,.28][i]))
+ for moon in g.moons:assert(moon.material_override.shader.resource_path.ends_with("meadow_moon.gdshader"))
  for side in g.side_planes:assert(side.visible)
- assert(is_equal_approx(g.world_sun.light_energy,1.7))
+ assert(is_equal_approx(g.world_sun.light_energy,.85))
  assert(not g.meadow_visual.horizon_root.visible)
  assert(not g.meadow_visual.shadow.visible)
  assert(g.scene_props.is_empty())

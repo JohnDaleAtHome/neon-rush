@@ -19,7 +19,7 @@ func run():
  g.mode="story";g.level=1;g.start_level();g.apply_world(1);await process_frame
  var d=g.dunes_visual
  assert(d.active and d.landscape.visible)
- assert(d.landscape.get_child_count()==11)
+ assert(d.landscape.get_child_count()==12)
  var ejecta=d.landscape.get_node("DuneEjecta")
  assert(ejecta.mesh.get_surface_count()==1)
  assert(ejecta.material_override.get_shader_parameter("is_rock"))
@@ -36,7 +36,7 @@ func run():
  assert(terrain.get_shader_parameter("is_path"))
  assert(terrain.get_shader_parameter("sand_texture").resource_path.ends_with("dunes_ripple_sand.jpg"))
  for child in d.landscape.get_children():
-  if child is MeshInstance3D:
+  if child is MeshInstance3D and child!=d.footing_skirt:
    assert(child.material_override.get_shader_parameter("sand_texture").resource_path.ends_with("dunes_ripple_sand.jpg"))
  g.options.light=true;g.apply_options();await process_frame
  assert(not d.active and not d.landscape.visible)
@@ -56,5 +56,17 @@ func run():
   assert(is_equal_approx(g.moons[0].scale.x,0.28) and g.moons[1].scale.x<0.002)
   assert(not g.sky_stars.visible)
   inspect(d.landscape)
- print("PASS Silver Dunes scenery bounds,11scenicnodes,30hiddenlegacyprops,Light/world restoration,fouraspects")
+  var tower=d.landscape.get_node("DesertPagoda")
+  var mesh=d.footing_skirt.mesh
+  assert(mesh.surface_get_array_len(0)==384)
+  assert(mesh.get_surface_count()==1)
+  g.layout_moons(root.size);assert(d.footing_skirt.mesh==mesh,"same layout reuses skirt")
+  var arrays=mesh.surface_get_arrays(0)[Mesh.ARRAY_VERTEX]
+  for segment in range(64):
+   var a=arrays[segment*6+5];var b=arrays[segment*6+2]
+   for n in range(21):
+    var p:Vector3=a.lerp(b,n/20.0)
+    assert(d.height(p.x,p.z)-p.y>=.18,"skirt buried between endpoints")
+   assert(absf(a.x)>7.0 and absf(b.x)>7.0,"footing stays well offlane")
+ print("PASS Silver Dunes scenery bounds,12scenicnodes,30hiddenlegacyprops,Light/world restoration,fouraspects")
  quit()

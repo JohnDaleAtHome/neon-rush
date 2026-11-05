@@ -6,23 +6,30 @@ func _init():call_deferred("run")
 func run():
  var g=load("res://scenes/main.tscn").instantiate();root.add_child(g);await process_frame;g.set_process(false)
  var original=[]
- for e in g.track_edges:original.append(e.material_override)
+ for m in g.sea_visual.edge_materials:original.append(m)
  g.level=3;g.apply_world(3)
  var current_sky=g.env_world.environment.sky
  g.sea_visual.apply(3)
  check(g.env_world.environment.sky==current_sky,"Sea reuses main sky resource instead of replacing it")
  check(g.sea_visual.active,"Sea active")
- check(g.sea_visual.landscape.get_child_count()==9,"2water6rock1surf")
- check(g.ground.material_override.shader.resource_path.ends_with("sea_water.gdshader"),"path material")
+ check(g.sea_visual.landscape.get_child_count()==10,"2water6rock1surf1causeway")
+ check(g.ground.material_override.shader.resource_path.ends_with("sea_causeway.gdshader"),"stone deck material")
  for p in g.scene_props:check(not p.visible,"decorative rings hidden")
  for side in g.side_planes:check(not side.visible,"base side hidden")
  check(g.lane_guides.size()==2,"guides unchanged")
  for child in g.sea_visual.landscape.get_children():
   check(not child is CollisionObject3D,"scenery no collision")
-  if child.name!="StackSurf":check(absf(child.position.x)>8.0,"scenery away from playable lanes")
-  if child is MeshInstance3D and child.name!="StackSurf":
+  if child.name not in ["StackSurf","StoneCauseway"]:check(absf(child.position.x)>8.0,"scenery away from playable lanes")
+  if child is MeshInstance3D and child.name not in ["StackSurf","StoneCauseway"]:
    check(child.mesh is PlaneMesh,"water mesh")
    check(child.mesh.subdivide_width<=80,"bounded subdivision")
+ var causeway=g.sea_visual.landscape.get_node("StoneCauseway")
+ check(causeway.mesh.get_surface_count()==1,"batched coping/posts")
+ var vertices=causeway.mesh.surface_get_arrays(0)[Mesh.ARRAY_VERTEX]
+ check(vertices.size()==2232,"two coping60posts36vertices each")
+ for v in vertices:check(v.is_finite() and absf(v.x)>=3.509 and v.y<=.576,"finite low offlane causeway")
+ var before=causeway.get_instance_id()
+ g.apply_world(3);check(g.sea_visual.landscape.get_node("StoneCauseway").get_instance_id()==before,"no duplicate causeway on apply")
  var surf=g.sea_visual.landscape.get_node("StackSurf")
  check(surf.mesh.get_surface_count()==1,"one batched surf surface")
  for v in surf.mesh.surface_get_arrays(0)[Mesh.ARRAY_VERTEX]:check(v.is_finite() and absf(v.x)>3.65,"finite off-track surf")

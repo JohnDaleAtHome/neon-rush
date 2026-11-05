@@ -1,5 +1,9 @@
 extends Node3D
 
+const MEADOW_BALE_MESH = preload("res://assets/models/meadow_bale/hay_bale.obj")
+const MEADOW_BALE_TEXTURE = preload("res://assets/models/meadow_bale/textures/hay.jpg")
+var meadow_bale_material: StandardMaterial3D
+
 const LANES = [-2.2, 0.0, 2.2]
 const LEVEL_NAMES = ["Neon Meadow", "Silver Dunes", "Cinnamon Grove", "Storm Sea", "Shadow Comet", "Guanghan Palace"]
 const PIECES = ["Moon Dew Vial", "Silver Lantern", "Cinnamon Blossom", "Tide Pearl", "Eclipse Key"]
@@ -1405,6 +1409,15 @@ func layout_encounter(size: Vector2):
   prop.position = prop.get_meta("encounter_origin") + offset
 
 func decorate_hazard(hazard: MeshInstance3D, kind: String):
+ if kind == "low" and mode == "story" and level == 0:
+  hazard.mesh = MEADOW_BALE_MESH
+  hazard.rotation = Vector3.ZERO
+  if meadow_bale_material == null:
+   meadow_bale_material = StandardMaterial3D.new()
+   meadow_bale_material.albedo_texture = MEADOW_BALE_TEXTURE
+   meadow_bale_material.roughness = 1.0
+  hazard.material_override = meadow_bale_material
+  return
  if kind == "low":
   var shape = CylinderMesh.new()
   shape.top_radius = 0.44

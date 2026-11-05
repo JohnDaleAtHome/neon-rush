@@ -11,7 +11,8 @@ func run():
  g.start_level()
  assert(g.boss.mesh is SphereMesh)
  assert(g.boss.has_node("EclipseRing"))
- assert(g.boss.get_child_count() == 5)
+ assert(g.boss.get_child_count() == 2)
+ assert(g.boss.has_node("EclipseMask"))
  g.update_guardian_art(false)
  var closed = g.boss.get_node("EclipseRing").material_override.albedo_color
  g.update_guardian_art(true)

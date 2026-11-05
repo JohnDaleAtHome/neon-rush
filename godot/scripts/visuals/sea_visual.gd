@@ -20,6 +20,7 @@ func bind(main_node)->void:
  var surf_mat=ShaderMaterial.new();surf_mat.shader=load("res://scripts/visuals/sea_surf.gdshader");surf.material_override=surf_mat;landscape.add_child(surf)
  landscape.visible=false
 func apply(index:int)->void:
+ if index==3:game.sky_stars.visible=false
  active=index==3 and not game.options.get("light",false)
  landscape.visible=active
  if not active:
@@ -63,3 +64,8 @@ func _surf()->ArrayMesh:
     for k in [0,2,1,0,3,2]:st.add_vertex(points[k])
  st.generate_normals();return st.commit()
 # End of original off-track surf ribbons.
+
+func layout_moons(size:Vector2)->void:
+ # One restrained lunar landmark. World index also keeps Light mode coherent.
+ for i in range(3):game.moons[i].scale=Vector3.ONE*(0.34 if i==0 else 0.001)
+ game.moons[0].position=game.camera.project_position(Vector2(size.x*0.81,size.y*0.30),60.0)

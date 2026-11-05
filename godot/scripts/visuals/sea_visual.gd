@@ -18,6 +18,8 @@ func bind(main_node)->void:
   rock.scale=Vector3(spec[2],spec[3],spec[2]*0.8);rock.position=Vector3(spec[0],-spec[3]*0.35,spec[1]);rock.rotation.y=spec[0]*0.13;_rock_material(rock)
  var surf=MeshInstance3D.new();surf.name="StackSurf";surf.mesh=_surf()
  var surf_mat=ShaderMaterial.new();surf_mat.shader=load("res://scripts/visuals/sea_surf.gdshader");surf.material_override=surf_mat;landscape.add_child(surf)
+ var causeway=MeshInstance3D.new();causeway.name="StoneCauseway";causeway.mesh=_causeway()
+ var stone=ShaderMaterial.new();stone.shader=load("res://scripts/visuals/sea_causeway.gdshader");stone.set_shader_parameter("stone",load("res://assets/visuals/nature_cc0/Rocks_Diffuse.png"));causeway.material_override=stone;landscape.add_child(causeway)
  landscape.visible=false
 func apply(index:int)->void:
  if index==3:game.sky_stars.visible=false
@@ -37,7 +39,7 @@ func apply(index:int)->void:
  for edge in game.track_edges:
   edge.visible=true
   edge.material_override=game.material(Color("568a94"))
- var water=ShaderMaterial.new();water.shader=load("res://scripts/visuals/sea_water.gdshader");water.set_shader_parameter("path_surface",true);game.ground.material_override=water
+ var paving=ShaderMaterial.new();paving.shader=load("res://scripts/visuals/sea_causeway.gdshader");paving.set_shader_parameter("path_surface",true);game.ground.material_override=paving
  var rings=StandardMaterial3D.new();rings.albedo_color=Color("477b88");rings.roughness=0.9
  for prop in game.scene_props:
   prop.material_override=rings
@@ -69,3 +71,16 @@ func layout_moons(size:Vector2)->void:
  # One restrained lunar landmark. World index also keeps Light mode coherent.
  for i in range(3):game.moons[i].scale=Vector3.ONE*(0.34 if i==0 else 0.001)
  game.moons[0].position=game.camera.project_position(Vector2(size.x*0.81,size.y*0.30),60.0)
+
+# Original low coping and posts, one surface and no collision. Lane is unchanged.
+func _causeway()->ArrayMesh:
+ var st=SurfaceTool.new();st.begin(Mesh.PRIMITIVE_TRIANGLES)
+ for side in [-1.0,1.0]:
+  _box(st,Vector3(side*3.84,-.30,-125),Vector3(.48,.7,300))
+  for i in range(30):_box(st,Vector3(side*3.84,.15,20-i*10),Vector3(.66,.85,.66))
+ return st.commit()
+func _box(st:SurfaceTool,center:Vector3,size:Vector3)->void:
+ var mesh=BoxMesh.new();mesh.size=size
+ var a=mesh.get_mesh_arrays();var verts=a[Mesh.ARRAY_VERTEX];var normals=a[Mesh.ARRAY_NORMAL];var indices=a[Mesh.ARRAY_INDEX]
+ for i in indices:
+  st.set_normal(normals[i]);st.add_vertex(verts[i]+center)

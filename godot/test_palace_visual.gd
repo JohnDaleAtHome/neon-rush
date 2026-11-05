@@ -17,17 +17,25 @@ func run():
  inspect(g.palace_visual.landscape)
  for dim in [Vector2i(390,844),Vector2i(1280,800),Vector2i(360,640),Vector2i(844,500)]:
   root.size=dim;await process_frame;g.layout_moons(dim)
+  check(not g.sky_stars.visible,"no palace star field")
+  check(is_equal_approx(g.moons[0].scale.x,0.4) and g.moons[1].scale.x<0.002 and g.moons[2].scale.x<0.002,"one restrained moon")
+  inspect(g.palace_visual.landscape)
   check(absf(g.palace_visual.landscape.get_child(0).position.x)>=16.0,"pavilion lateral placement")
   if dim.x>dim.y and dim.y>=650:
    check(g.palace_visual.landscape.get_child(0).position.x < -28.0,"wide pavilion clears moon group")
   if dim.x>dim.y and dim.y<650:
    check(g.palace_visual.landscape.get_child(0).position.x < -26.0,"landscape clears central cue")
    var horizon=g.camera.unproject_position(Vector3(0,0,-250)).y
-   for moon in g.moons:
+   for moon in [g.moons[0]]:
     var radius=moon.mesh.radius*moon.scale.x
     check(g.camera.unproject_position(moon.position-g.camera.global_basis.y*radius).y<horizon-10.0,"sky satellites above horizon")
  g.options.light=true;g.apply_options();check(not g.palace_visual.landscape.visible,"Light hides palace")
  check(not g.scenery.visible,"Light no primitive avenue")
+ check(not g.sky_stars.visible,"Light no star field")
+ check(g.ground.material_override.shader.resource_path.ends_with("palace_stone.gdshader"),"Light keeps palace paving")
+ check(g.env_world.environment.sky.sky_material.shader.resource_path.ends_with("garden_sky.gdshader"),"Light keeps courtyard sky")
+ g.layout_moons(root.size)
+ check(is_equal_approx(g.moons[0].scale.x,0.4) and g.moons[1].scale.x<0.002,"Light keeps one restrained moon")
  for side in g.side_planes:check(side.visible,"Light restores sides")
  g.options.light=false
  for world in [0,1,2,3,4,5]:

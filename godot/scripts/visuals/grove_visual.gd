@@ -3,6 +3,7 @@ extends Node3D
 var game
 var landscape:=Node3D.new()
 var active:=false
+var light_landscape:=Node3D.new()
 func bind(main_node)->void:
  game=main_node;add_child(landscape)
  # Unequal clusters, not matched avenue rows. Leave central sky and all lanes open.
@@ -47,15 +48,27 @@ func bind(main_node)->void:
  var under_mat=ShaderMaterial.new();under_mat.shader=load("res://scripts/visuals/grove_understory.gdshader");understory.material_override=under_mat;landscape.add_child(understory)
  _garden_architecture()
  landscape.visible=false
+ _build_light()
+func _build_light():
+ light_landscape.name="GroveLight";add_child(light_landscape)
+ # Reuse terrain with its grounded props. No bushes, rocks, walls or live foliage.
+ var selected=0
+ for source in landscape.get_children():
+  if source is MeshInstance3D and source.material_override is ShaderMaterial and source.material_override.shader.resource_path.ends_with("grove_impostor.gdshader"):
+   if selected%2==0:
+    light_landscape.add_child(source.duplicate())
+   selected+=1
+  elif source.name in ["ChinesePavilion","PavilionPaving","PavilionFoundation"]:light_landscape.add_child(source.duplicate())
+  elif source is MeshInstance3D and source.material_override is ShaderMaterial and source.material_override.shader.resource_path.ends_with("grove_ground.gdshader") and source.name!="PavilionPaving":light_landscape.add_child(source.duplicate())
+ light_landscape.visible=false
 func apply(index:int)->void:
  active=index==2 and not game.options.get("light",false);landscape.visible=active
+ light_landscape.visible=index==2 and game.options.get("light",false)
  if index!=2:return
  game.scenery.visible=false
  for p in game.scene_props:p.visible=false
  for p in game.side_planes:
-  p.visible=not active
-  if not active:
-   var side_mat=ShaderMaterial.new();side_mat.shader=load("res://scripts/visuals/grove_ground.gdshader");p.material_override=side_mat
+  p.visible=false
  for e in game.track_edges:e.visible=false
  game.env_world.environment.fog_light_color=Color("453223")
  var pathmat=ShaderMaterial.new();pathmat.shader=load("res://scripts/visuals/grove_ground.gdshader");pathmat.set_shader_parameter("path_surface",true);game.ground.material_override=pathmat
@@ -102,7 +115,7 @@ func layout_moons(size:Vector2)->void:
  if game.visual_world_index!=2:return
  for i in range(game.moons.size()):
   game.moons[i].scale=Vector3.ONE*(0.25 if i==0 else 0.001)
-  game.moons[i].position=game.camera.project_position(Vector2(size.x*0.78,maxf(245.0,size.y*0.29)),60.0+i*15.0)
+  game.moons[i].position=game.camera.project_position(Vector2(size.x*0.78,(size.y*0.30 if game.options.get("light",false) and size.x>size.y and size.y<650 else maxf(245.0,size.y*0.29))),60.0+i*15.0)
 
 func _bounds(node:Node,base:Transform3D)->AABB:
  var result=AABB();var found=false

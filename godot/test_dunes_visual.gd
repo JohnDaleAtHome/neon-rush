@@ -34,6 +34,10 @@ func run():
  var terrain=g.ground.material_override
  assert(terrain.shader.resource_path.ends_with("dunes_sand.gdshader"))
  assert(terrain.get_shader_parameter("is_path"))
+ assert(terrain.get_shader_parameter("sand_texture").resource_path.ends_with("dunes_ripple_sand.jpg"))
+ for child in d.landscape.get_children():
+  if child is MeshInstance3D:
+   assert(child.material_override.get_shader_parameter("sand_texture").resource_path.ends_with("dunes_ripple_sand.jpg"))
  g.options.light=true;g.apply_options();await process_frame
  assert(not d.active and not d.landscape.visible)
  for side in g.side_planes:assert(side.visible)

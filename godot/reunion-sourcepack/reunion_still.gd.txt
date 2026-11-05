@@ -8,6 +8,7 @@ func mesh_node(mesh:Mesh,m:Material,pos:Vector3)->MeshInstance3D:
 func cylinder(r:float,h:float,pos:Vector3,m:Material):
  var c=CylinderMesh.new();c.top_radius=r;c.bottom_radius=r;c.height=h;c.radial_segments=48;return mesh_node(c,m,pos)
 func _ready():
+ tree()
  wood=mat("543623")
  cylinder(1.9,.13,Vector3(0,-.15,0),wood)
  for x in [-1.0,1.0]:
@@ -45,3 +46,30 @@ func cake(pos:Vector3):
   var p=[Vector3(cos(a)*ra,0,sin(a)*ra),Vector3(cos(a)*ra,.215,sin(a)*ra),Vector3(cos(b)*rb,.215,sin(b)*rb),Vector3(cos(b)*rb,0,sin(b)*rb)]
   for index in [0,1,2,0,2,3]:st.set_color(Color("b27736"));st.add_vertex(p[index])
  st.generate_normals();var m=mat("ffffff");m.vertex_color_use_as_albedo=true;mesh_node(st.commit(),m,pos)
+
+func limb(a:Vector3,b:Vector3,r1:float,r2:float,m:Material):
+ var c=CylinderMesh.new();c.bottom_radius=r1;c.top_radius=r2;c.height=a.distance_to(b);c.radial_segments=12
+ var n=mesh_node(c,m,(a+b)*.5);n.quaternion=Quaternion(Vector3.UP,(b-a).normalized())
+func tree():
+ var bark=mat("6c5a42");var green=mat("627d62");var lightgreen=mat("849272");var cream=mat("eedda7")
+ var stems=[
+ [Vector3(-1.8,-.4,-1.15),Vector3(-1.9,.65,-1.25),.13,.105],
+ [Vector3(-1.9,.65,-1.25),Vector3(-1.5,1.5,-1.3),.105,.07],
+ [Vector3(-1.5,1.5,-1.3),Vector3(-.65,1.87,-1.5),.07,.035],
+ [Vector3(-.65,1.87,-1.5),Vector3(.65,1.8,-1.6),.035,.01],
+ [Vector3(-1.9,.65,-1.25),Vector3(-2.15,1.15,-.9),.065,.02],
+ [Vector3(-1.5,1.5,-1.3),Vector3(-1.75,1.97,-1.4),.05,.01],
+ [Vector3(-.65,1.87,-1.5),Vector3(-.25,2.1,-1.4),.025,.008],
+ [Vector3(.2,1.83,-1.6),Vector3(.78,2.07,-1.5),.018,.005]]
+ for s in stems:limb(s[0],s[1],s[2],s[3],bark)
+ var rng=RandomNumberGenerator.new();rng.seed=104729
+ for center in [Vector3(-2.12,1.17,-.9),Vector3(-1.78,1.95,-1.4),Vector3(-1.15,1.72,-1.4),Vector3(-.65,1.9,-1.5),Vector3(-.2,2.07,-1.4),Vector3(.35,1.8,-1.6),Vector3(.77,2.02,-1.5)]:
+  for i in range(9):
+   var leaf=SphereMesh.new();leaf.radius=.08;leaf.height=.16;leaf.radial_segments=8;leaf.rings=4
+   var p=center+Vector3(rng.randf_range(-.26,.26),rng.randf_range(-.12,.15),rng.randf_range(-.16,.16))
+   var n=mesh_node(leaf,green if i%2==0 else lightgreen,p);n.scale=Vector3(.6,.3,1.8);n.rotation=Vector3(rng.randf(),rng.randf()*TAU,rng.randf())
+  for i in range(5):
+   var p=center+Vector3(rng.randf_range(-.17,.17),rng.randf_range(-.08,.08),.12)
+   for k in 4:
+    var petal=SphereMesh.new();petal.radius=.022;petal.height=.044;petal.radial_segments=6;petal.rings=3
+    mesh_node(petal,cream,p+Vector3(cos(k*TAU/4)*.026,sin(k*TAU/4)*.026,0))

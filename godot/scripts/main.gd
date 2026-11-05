@@ -852,7 +852,7 @@ func add_cue(hazard: Node3D, kind: String):
 
 func apply_world(index: int):
  visual_world_index = index
- if world_sun: world_sun.light_energy = 0.85 if index == 0 and not options.light else 1.7
+ if world_sun: world_sun.light_energy = 0.85 if index == 0 else 1.7
  visual_light_enabled = options.light
  visual_world_ready = true
  var m = material(Color.WHITE if index >= 0 and index < 4 else COLORS[index] if index >= 0 else Color("77708e"))
@@ -1993,7 +1993,7 @@ func layout_moons(size: Vector2):
    moons[i].scale=Vector3.ONE*[0.48,0.30,0.20][i]
    moons[i].position=camera.project_position(Vector2(size.x*[0.13,0.82,0.93][i],size.y*0.30),60.0+i*15.0)
 
- if meadow_visual and meadow_visual.active: meadow_visual.layout_moons(size)
+ if meadow_visual and visual_world_index==0: meadow_visual.layout_moons(size)
  if comet_visual and comet_visual.active: comet_visual.layout_moons(size)
  if grove_visual and visual_world_index==2: grove_visual.layout_moons(size)
  if palace_visual and visual_world_index==5: palace_visual.layout_moons(size)

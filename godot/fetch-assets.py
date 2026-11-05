@@ -34,3 +34,9 @@ runpy.run_path(str(ROOT/'restore-pagoda.py'),run_name='__main__')
 
 # Adapted 0 A.D. Han house, CC BY-SA 3.0, offline exact recovery.
 runpy.run_path(str(ROOT / "restore-han-house.py"), run_name="__main__")
+
+# Exact newer visual assets must survive a fresh clone as well.
+runpy.run_path(str(ROOT / "restore-dunes-sand.py"), run_name="__main__")
+runpy.run_path(str(ROOT / "assets/models/meadow_bale/restore_texture.py"), run_name="__main__")
+runpy.run_path(str(ROOT / "assets/models/sea_turtle/restore_model.py"), run_name="__main__")
+print("Current visual assets restored, including Dunes sand, Meadow bale and Sea turtle.")

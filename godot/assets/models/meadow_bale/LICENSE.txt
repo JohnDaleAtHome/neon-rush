@@ -1,0 +1,5 @@
+Hay Bale by Mish7913
+Source: https://opengameart.org/content/hay-bale-0
+Download: https://opengameart.org/sites/default/files/hay_bale_obj.zip
+Author release: CC0 (https://creativecommons.org/publicdomain/zero/1.0/)
+Retrieved 2026-11-06. Original model 108 triangles. Adapted: rotated/scaled OBJ coordinates to 1.4 x 0.8 x 1.2 hazard envelope, texture reduced from 1024 to 256 square. Material roughness set to 1 for this game. No collision or navigation imported.

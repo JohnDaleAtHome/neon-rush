@@ -3,15 +3,14 @@
 This is a native Godot 4 project, not the completed replacement. The hosted legacy game has not been replaced. No Three.js code is included.
 
 ## Run
-Open project.godot in Godot 4.7.2, import resources, then run. GDScript and Compatibility rendering. Export preset Web uses single-threaded WebAssembly/WebGL 2.
+Run `python3 godot/fetch-assets.py` from the repository root, then open godot/project.godot in Godot 4.7.2, import resources and run. GDScript and Compatibility rendering. Export preset Web uses single-threaded WebAssembly/WebGL 2.
 
 Command line:
 ```
 godot --headless --path godot --editor --import
-godot --headless --path godot --script res://test_port.gd
-godot --headless --path godot --script res://test_systems.gd
-godot --headless --path godot --script res://test_campaign.gd
-godot --headless --path godot --export-release Web ./build/index.html
+python3 godot/tools/run_tests.py --godot /path/to/godot --logs /tmp/neon-tests-1
+mkdir -p build
+godot --headless --path godot --export-release Web "$PWD/build/index.html"
 ```
 Install matching web export templates first. Serve build over HTTP(S), not file://. Debug web exports expose read-only neonQA test state; release exports do not.
 
@@ -35,7 +34,7 @@ Old localStorage stays untouched. First engine use maps valid legacy control/vis
 - Latest natural L5 completion, L6 guardian and reunion acceptance remain open. Desktop cloud input latency limited reviewer coverage; it neither proves a game defect nor proves latency is the sole cause of deaths. Do not retune based on that alone.
 - Story mechanics are simplified. Most obstacles reuse low/tall/beam variants, rather than all authored pits/serpents/shadow bolts/eclipse-ring mechanics in STORYLINE.md. Gates and footprints are simple markers.
 - Tide Pearl slows only its short crossing, not a continuing wave/arch encounter. Eclipse Key gates entry through the five-piece assertion, but does not currently change Guardian HP/timing compared with standalone Mission. The stronger story unlock descriptions are not fully realized mechanics.
-- Environment/NPC/guardian art remains simplified. Animated Quaternius Bunny is a placeholder, not a finished match to the user's rabbit reference. Chang'e/Wu Gang/mooncake reunion is text, not a finished character scene. No final-art approval is implied.
+- Environment/NPC/guardian art remains simplified. Animated Quaternius Bunny is a placeholder, not a finished match to the user's rabbit reference. The reunion now has an original static mooncake/shared-tea card; Chang'e, Wu Gang and cinnamon-tree character art remain missing. See REUNION-CARD-VALIDATION.md. No final-art approval is implied.
 - Browser audio listening, physical-device performance/gesture review and human fun acceptance remain open. Automated and emulated-touch checks do not replace them.
 - Totals import legacy runs/distance/treats, then track new attempts; active seconds start with this engine update. Missing older engine attempts are not fabricated from rolling history. Historical field names can differ from newer attempt labels.
 - Source binaries are recovered through the checksum manifest/bootstrap, with an explicit network dependency on preserved staging source-assets URLs. The source tree is not a self-contained binary asset archive.
@@ -53,3 +52,7 @@ PNG/GLB Git blobs. Run `python3 godot/fetch-assets.py` before import: the12new
 visual assets restore offline from trackedchunks with SHA256checks; original28
 baseline assets still use the preserved checksum network recovery workflow. Official and immutable review builds
 are unchanged by source integration.
+
+## November 6 source follow-through
+
+The native test runner now isolates user data on Linux and reports script errors/timeouts. All 46 suites passed at the test-isolation checkpoint; the added reunion-card suite and targeted campaign/save checks passed after the ending change. Those later targeted results do not claim a new full-suite run. Recovery from a fresh remote archive, using only fetch-assets.py, imported without errors and passed reunion/campaign/preferences tests. See NATIVE-TESTS.md and REUNION-CARD-VALIDATION.md. No deployment or physical-device clearance is implied.

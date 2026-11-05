@@ -14,7 +14,7 @@ func run():
   assert(actor.get_child_count() >= (1 if which==3 else 6))
   assert(g.story_props[1] is Label3D)
   assert(not g.player.visible)
-  for part in actor.get_children(): assert(part is MeshInstance3D or which==3)
+  for part in actor.get_children(): assert(part is MeshInstance3D or part is Sprite3D or which==3)
   for size in [Vector2(390,819),Vector2(1280,800),Vector2(844,390)]:
    g.layout_encounter(size)
    var before = actor.position

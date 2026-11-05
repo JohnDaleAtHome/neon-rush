@@ -26,3 +26,6 @@ print('All baseline and Meadow assets are exact. Open project.godot in Godot 4.7
 
 # Original generated path material; checksum-verified offline recovery.
 runpy.run_path(str(ROOT / "tools" / "restore_path.py"), run_name="__main__")
+
+# CC0 Chinese pavilion; geometry only, no runtime scripts overwritten.
+runpy.run_path(str(ROOT / "restore-pavilion.py"), run_name="__main__")

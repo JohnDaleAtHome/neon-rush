@@ -175,8 +175,7 @@ func _garden_architecture():
    for end in [-1,1]:
     _garden_box(Vector3(0.8,4.4,0.8),at+Vector3(0,0,end*12.5),Color("737c70"))
  _garden_batch_walls()
- var base=Vector3(-10.4,0,-48)
- _garden_box(Vector3(11.2,0.4,11.2),base,Color("656f66"))
+ _pavilion_foundation()
 func _garden_box(size:Vector3,at:Vector3,color:Color):
  var mesh=MeshInstance3D.new();var box=BoxMesh.new();box.size=size;mesh.mesh=box;mesh.position=at
  var mat=StandardMaterial3D.new();mat.albedo_color=color;mat.roughness=0.95;mesh.material_override=mat;mesh.set_meta("garden_wall",true);landscape.add_child(mesh)
@@ -203,3 +202,20 @@ func _garden_batch_walls():
  for node in nodes:landscape.remove_child(node);node.queue_free()
  for key in batches:
   var mesh=MeshInstance3D.new();mesh.mesh=batches[key][0].commit();mesh.material_override=batches[key][1];landscape.add_child(mesh)
+
+func _pavilion_foundation():
+ # Retain the accepted top plane and footprint; bury the skirt below the bank.
+ var st=SurfaceTool.new();st.begin(Mesh.PRIMITIVE_TRIANGLES)
+ var corners=[Vector2(-16.0,-53.6),Vector2(-4.8,-53.6),Vector2(-4.8,-42.4),Vector2(-16.0,-42.4)]
+ for k in 4:
+  var a:Vector2=corners[k];var b:Vector2=corners[(k+1)%4]
+  for j in 12:
+   var p:Vector2=a.lerp(b,j/12.0);var q:Vector2=a.lerp(b,(j+1)/12.0)
+   var points=[Vector3(p.x,.2,p.y),Vector3(q.x,.2,q.y),Vector3(q.x,_height(q.x,q.y)-.12,q.y),Vector3(p.x,_height(p.x,p.y)-.12,p.y)]
+   for i in [0,1,2,0,2,3]:
+    var v:Vector3=points[i];st.set_uv(Vector2((v.x+v.z)*.25,v.y));st.add_vertex(v)
+ st.generate_normals()
+ var skirt=MeshInstance3D.new();skirt.name="PavilionFoundation";skirt.mesh=st.commit()
+ var mat=StandardMaterial3D.new();mat.albedo_color=Color("656f66");mat.albedo_texture=load("res://assets/visuals/nature_cc0/Rocks_Diffuse.png");mat.roughness=1.0;mat.cull_mode=BaseMaterial3D.CULL_DISABLED;skirt.material_override=mat;landscape.add_child(skirt)
+ var top=MeshInstance3D.new();top.name="PavilionPaving";var plane=PlaneMesh.new();plane.size=Vector2(11.2,11.2);top.mesh=plane;top.position=Vector3(-10.4,.2,-48)
+ var paving=ShaderMaterial.new();paving.shader=load("res://scripts/visuals/grove_ground.gdshader");paving.set_shader_parameter("path_surface",true);top.material_override=paving;landscape.add_child(top)

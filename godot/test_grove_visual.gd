@@ -55,7 +55,7 @@ func run():
  check(g.env_world.environment.sky.sky_material.shader.resource_path.ends_with("garden_sky.gdshader"),"Light keeps garden sky")
  g.layout_moons(root.size)
  check(g.moons[0].scale.x==0.25 and g.moons[1].scale.x<0.002,"Light no planet trio")
- for side in g.side_planes:check(side.visible,"Light restores sides")
+ for side in g.side_planes:check(not side.visible,"Light uses grounded banks, not flat sides")
  g.options.light=false
  for world in [0,1,3,4,5,2]:
   g.level=world;g.apply_world(world);g.apply_options();check(g.grove_visual.active==(world==2),"world ownership")

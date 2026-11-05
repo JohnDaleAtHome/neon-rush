@@ -8,7 +8,7 @@ func run():
   for dim in [Vector2i(844,500),Vector2i(812,375),Vector2i(1024,600)]:
    root.size=dim;await process_frame;g.layout_moons(dim)
    var horizon=g.camera.unproject_position(Vector3(0,0,-250)).y
-   for m in ([g.moons[0]] if world==1 else g.moons):
+   for m in [g.moons[0]]:
     var p=g.camera.unproject_position(m.position)
     var radius=m.mesh.radius*m.scale.x
     var top=g.camera.unproject_position(m.position+g.camera.global_basis.y*radius).y
@@ -22,7 +22,8 @@ func run():
    assert(is_equal_approx(g.moons[0].scale.x,0.28))
    assert(g.moons[1].scale.x<0.002 and g.moons[2].scale.x<0.002)
   else:
-   for m in g.moons:assert(m.scale.is_equal_approx(Vector3.ONE))
+   assert(is_equal_approx(g.moons[0].scale.x,0.34))
+   assert(g.moons[1].scale.x<0.002 and g.moons[2].scale.x<0.002)
  g.options.stars=false;g.apply_options();for m in g.moons:assert(not m.visible)
  print("PASS compact Dunes/Sea sky placement, three landscape sizes, portrait restoration, visibility and resize idempotence")
  quit()

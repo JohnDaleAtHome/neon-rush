@@ -18,3 +18,10 @@ Other crossings retain their existing safe input-disabled paths. Core six-world 
 - Local ordinary production Web startup has no page errors and no debug interface. Seeded checkpoint startup verified the existing three-piece Sea payload; this is a fixture, not earned progression. Timed keyboard play did not reach the exit and is not proof of browser exit acceptance.
 
 No public deployment, physical-device, audio listening, human difficulty/fun, or ordinary-browser full-campaign clearance is implied. Fresh remote recovery and release-fixture results are recorded separately when complete.
+
+## Remote recovery and release checks
+Untouched7eeb434 archive plus only documented fetch-assets.py restore: all58 isolated suites pass; clean import and release export. This archive includes all eight changed paths byte-identical to the tested local project. Clean production PCK has195 actual indexed paths and7635344bytes; no test, QA or fixture paths. Ordinary fresh release390px gameplay screenshot inspected, no page errors, debug interface undefined.
+
+A separate, explicitly labeled release fixture enters the actual Sea exit, pauses, resizes390x844 to844x390, resumes via keyboard and shows moving wave/arch cues with Bridge3/5 still pending. Actual active/paused pixels inspected, no page errors, debug interface undefined. The fixture's setup file is not in the clean production PCK. This is browser phase compatibility evidence, not a naturally earned checkpoint or a phone performance test.
+
+Native captures also show correct3/3 Story entry,1/3 after two first-window hits, and reunion after the second window. A focused Mission test separately verifies4HP, two hits per window and completion in the second window. The inherited native renderer emits two texture-leak warnings on shutdown; no new in-play script error was observed.

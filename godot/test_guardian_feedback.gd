@@ -32,7 +32,7 @@ func run():
   g.fire_time = 0
   g.input_action(3)
   for tick in range(18): g._process(1.0/60)
- assert(g.boss_hp == 2)
+ assert(g.boss_hp == 1)
  assert(g.boss_hits == 2)
  assert("wait for green" in g.guardian_feedback)
  assert("WAIT FOR NEXT GREEN" in g.progress_label.text)
@@ -57,5 +57,5 @@ func run():
  assert(not g.fresh_button.visible)
  g.show_beat("Menu", "Choose", "START STORY")
  assert(g.fresh_button.visible)
- print("GUARDIAN_FEEDBACK_TEST_PASS: unchanged two-hit windows, HP4 to reunion, next-window cue, one reunion action")
+ print("GUARDIAN_FEEDBACK_TEST_PASS: unchanged two-hit windows, Story HP3 to reunion, next-window cue, one reunion action")
  quit()

@@ -65,3 +65,9 @@ are unchanged by source integration.
 ## Earlier November 6 source follow-through (historical)
 
 The native test runner isolates user data on Linux and reports script errors/timeouts. At the earlier5463190 checkpoint, all51 isolated suites passed from a restored fresh archive. Current57-suite evidence is recorded at the top of this document. At that earlier point, branch-frame and reunion-people changes had targeted card/campaign/save/guardian checks, not a newer full-suite run. That historical evidence has since been supplemented by the current57-suite fresh-archive check above. See NATIVE-TESTS.md and REUNION-CARD-VALIDATION.md. No deployment or physical-device clearance is implied.
+
+
+## November6 evening: selected story-piece payoff
+The Tide Pearl now has the selected short playable Sea exit: two authored hazards at7m/s for five seconds, one continuously clear lane, ordinary movement/contact and no random pickups or exit bonuses. Bridge4/5 is saved only after completion; death/retry retains the prior Sea checkpoint. Eclipse Key starts Story Guardian at3HP with a3-point display; Mission stays4HP. Both keep the existing two-hit window and shield timing.
+
+All58 isolated suites pass locally and on an untouched7eeb434 source archive after documented asset restore. Controlled campaign now8892steps/zero deaths/reunion, not the previous8911-step fixture. Production Web startup and separate labeled Sea release-fixture pause/resize/resume pixels checked. See PEARL-KEY-VALIDATION.md for exact limits. Public deployment, natural full-browser campaign, human balance/listening and physical-device acceptance remain open.

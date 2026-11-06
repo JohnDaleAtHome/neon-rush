@@ -368,7 +368,7 @@ func play_animation(suffix: String):
    return
 
 func input_action(code: int):
- if not running or paused or unlock: return
+ if not running or paused or (unlock and not playable_sea_exit()): return
  if code == -1 or code == 1: lane = clampi(lane + code, 0, 2)
  elif code == 0:
   if height <= 0.01:
@@ -512,6 +512,7 @@ func on_action():
  start_level()
 
 func start_level():
+ if gate: gate.queue_free(); gate = null
  if is_instance_valid(reunion_card): reunion_card.hide()
  message.show()
  sound_button.show()
@@ -575,7 +576,7 @@ func start_level():
  speed = 16 if mode == "story" and level == 4 else 10 if mode == "easy" else 19 if mode == "hard" else 14 if mode != "story" else 12
  guard = 0
  shadow_gap = 20
- boss_hp = 4
+ boss_hp = guardian_max_hp()
  boss_clock = 0
  boss_hits = 0
  guardian_feedback = ""
@@ -587,9 +588,11 @@ func start_level():
  if mode == "story" and level == 5:
   assert(pieces.size() == 5)
   boss = create_guardian()
+  message.text = "ECLIPSE KEY weakens the Guardian: one light breaks."
  if mode != "story": message.text = NeonHudTheme.mode_hint(mode)
  apply_options()
  if options.sound: music_player.play()
+ update_hud()
 
 func spawn_wave():
  var l = rng.randi_range(0, 2)
@@ -639,6 +642,7 @@ func hurt():
  if hearts <= 0:
   if mode == "story":
    record_story_attempt("checkpoint retry")
+   unlock = false
    show_beat("The silver bell rings", "Your bridge pieces are safe. Jump low hazards, dodge tall ones, slide under arches.", "RETRY CHECKPOINT")
    sound("bell")
   else: finish_run("Three hits ended this journey. Try a new route.")
@@ -680,7 +684,7 @@ func _process(dt):
    shield_pickup.set_meta("kind", "shield")
    entities.append(shield_pickup)
    shield_time = 18
- if unlock:
+ if unlock and not playable_sea_exit():
   update_unlock(dt)
   return
  var frame_start_x: float = player.position.x
@@ -710,7 +714,9 @@ func _process(dt):
     show_beat("The silver bell rings", "The shadow caught up. Gather light to push it back.", "RETRY CHECKPOINT")
    else: finish_run("The shadow caught up. Treats push it back.")
    return
- if not ((mode == "story" and level == 5) or (mode == "mission" and mission_phase == 2)):
+ if playable_sea_exit():
+  pass # Authored exit only: ordinary movement/contact, no random generation.
+ elif not ((mode == "story" and level == 5) or (mode == "mission" and mission_phase == 2)):
   spawn_time -= dt
   if spawn_time <= 0: spawn_wave(); spawn_time = 1.7 if mode == "chase" or (mode == "story" and level == 4) else 1.3 if mode in ["easy", "normal", "hard"] else 2.5
   if mode == "mission":
@@ -751,7 +757,7 @@ func _process(dt):
     if ((mode == "story" and level == 5) or (mode == "mission" and mission_phase == 2)) and last_open and boss_hits < 2 and absf(item.position.x - boss.position.x) < 1.2:
      boss_hp -= 1
      boss_hits += 1
-     guardian_feedback = "HIT! Guardian %d / 4" % boss_hp
+     guardian_feedback = "HIT! Guardian %d / %d" % [boss_hp,guardian_max_hp()]
      guardian_feedback_time = 0.9
      sound("coin")
      if boss_hp <= 0:
@@ -784,7 +790,7 @@ func _process(dt):
      pickup_feedback_time = 0.9
   if kind == "low" and absf(item.position.z) < 1.1 and height > 0.65 and absf(item.position.x - player.position.x) < 1.0:
    item.set_meta("jump_clear",true)
-  if item.position.z > 1.1 and kind == "low" and item.get_meta("jump_clear",false) and height > 0.65 and absf(item.position.x - player.position.x) < 1.0 and not jump_scored.has(item.get_instance_id()):
+  if not playable_sea_exit() and item.position.z > 1.1 and kind == "low" and item.get_meta("jump_clear",false) and height > 0.65 and absf(item.position.x - player.position.x) < 1.0 and not jump_scored.has(item.get_instance_id()):
    jump_scored[item.get_instance_id()] = true
    jump_bonus += 20
    score += 20
@@ -815,9 +821,17 @@ func _process(dt):
     var collision = not (slide_time > 0 and height < 0.1) if kind == "beam" else height < (0.65 if kind == "low" else 2.3)
     if swept.get("contact",false) or collision: hurt(); entities.erase(item); item.queue_free()
  refresh_hazard_cues()
+ if playable_sea_exit() and running: update_unlock(dt)
  update_hud()
 
+func guardian_max_hp() -> int:
+ return 3 if mode == "story" and level == 5 else 4
+
+func playable_sea_exit() -> bool:
+ return unlock and mode == "story" and level == 3
+
 func update_hud():
+ if mode == "story" and level == 5 and guardian_feedback_time > 0: message.text = ""
  var extra_metric=mode=="chase" or (mode=="story" and level in [4,5]) or (mode=="mission" and mission_phase==2)
  hud.add_theme_font_size_override("font_size",14 if options.compact or extra_metric else 17)
  var hud_chip=hud.get_theme_stylebox("normal")
@@ -830,14 +844,14 @@ func update_hud():
  else:
   hud.text = "%s  %d pts\n%d m  %d treats  %ds\nBest %d" % [display_mode(mode), int(score), int(distance), collected, int(elapsed), int(stats.get(mode, {}).get("best", 0))]
  if mode == "chase" or (mode == "story" and level == 4): hud.text += "\nShadow %.1fm" % shadow_gap
- if (mode == "story" and level == 5) or (mode == "mission" and mission_phase == 2): hud.text += "\nGuardian %d / 4" % boss_hp
+ if (mode == "story" and level == 5) or (mode == "mission" and mission_phase == 2): hud.text += "\nGuardian %d / %d" % [boss_hp,guardian_max_hp()]
  if mode == "story" and running and not unlock:
   progress_label.text = "DEW %d / 6 TO LIGHT THE LAUNCH PAD" % mini(dew,6) if level == 0 else "PATH TO %s: %d%%" % [PIECES[level].to_upper(),mini(100,int(elapsed/[24,25,26,27,28][level]*100))] if level < 5 else "TWO HITS - WAIT FOR NEXT GREEN" if boss_hits >= 2 and last_open else "SHIELD OPEN - ALIGN AND FIRE" if last_open else "SHIELD CLOSED - ALIGN AND WAIT"
  elif mode == "mission" and running and mission_phase == 2:
   progress_label.text = "TWO HITS - WAIT FOR NEXT GREEN" if boss_hits >= 2 and last_open else "SHIELD OPEN - ALIGN AND FIRE" if last_open else "SHIELD CLOSED - ALIGN AND WAIT"
  elif running and mode in ["easy","normal","hard","chase"]:
   progress_label.text = "GOAL COMPLETE" if run_goal else "EARN GOLD: %d / 250m + %d / 10 TREATS" % [mini(250,int(distance)),mini(10,collected)]
- elif unlock: progress_label.text = "BRIDGE CROSSING %d%%" % mini(100,int(unlock_time/5*100))
+ elif unlock: progress_label.text = ("TIDE PEARL FOUND - CROSSING %d%%" if playable_sea_exit() else "BRIDGE CROSSING %d%%") % mini(100,int(unlock_time/5*100))
  else: progress_label.text = ""
  status_label.text = guardian_feedback if guardian_feedback_time > 0 and ((mode == "story" and level == 5) or (mode == "mission" and mission_phase == 2)) else pickup_feedback if pickup_feedback_time > 0 else "SHIELD READY" if shield else "MAGNET %.1fs" % magnet_time if magnet_time > 0 else "CHAIN %d / 3" % chain if chain > 0 else ""
 
@@ -1017,8 +1031,20 @@ func begin_unlock():
  entities.clear()
  if gate: gate.queue_free()
  gate = build_crossing_bridge()
- message.text = ["MOON DEW lights the launch pad. Hop toward the Silver Moon.", "SILVER LANTERN reveals Chang'e's footprints.", "CINNAMON BLOSSOM opens Wu Gang's gate.", "TIDE PEARL calms the waves. Hazards move slower.", "ECLIPSE KEY opens the palace and weakens the Guardian."][level]
+ message.text = ["MOON DEW lights the launch pad. Hop toward the Silver Moon.", "SILVER LANTERN reveals Chang'e's footprints.", "CINNAMON BLOSSOM opens Wu Gang's gate.", "TIDE PEARL found. The storm slows. Cross the calm water.", "ECLIPSE KEY opens the palace and weakens the Guardian."][level]
  speed = 7 if level == 3 else 12
+ if level == 3:
+  # Two existing hazard forms, separate lanes; center stays continuously clear.
+  for spec in [["low",0,-18.0],["beam",2,-28.0]]:
+   var kind: String = spec[0]
+   var size = Vector3(1.4,0.8,1.2) if kind == "low" else Vector3(1.4,0.4,1.2)
+   var hazard = box(size,Vector3(LANES[spec[1]],0.4 if kind == "low" else 1.65,spec[2]),Color("e4a35b") if kind == "low" else Color("9eccec"))
+   decorate_hazard(hazard,kind)
+   hazard.set_meta("kind",kind)
+   hazard.set_meta("lane",spec[1])
+   add_cue(hazard,kind)
+   entities.append(hazard)
+  refresh_hazard_cues()
  if level == 1:
   for i in range(14):
    var foot = box(Vector3(0.16, 0.02, 0.3), Vector3(0.2 if i%2 else -0.2, 0.04, -i * 2 - 2), Color("ffeebb"))
@@ -1039,12 +1065,14 @@ func build_crossing_bridge() -> Node3D:
  return bridge
 
 func update_unlock(dt: float):
+ if not unlock or not running or paused: return
  unlock_time += dt
  if level == 0 and unlock_time > 1.4 and unlock_time - dt <= 1.4: velocity = 13
- velocity -= 19 * dt
- height = maxf(0, height + velocity * dt)
- player.position.y = height
- play_animation("Jump_Idle" if height > 0.1 else "Run")
+ if not playable_sea_exit():
+  velocity -= 19 * dt
+  height = maxf(0, height + velocity * dt)
+  player.position.y = height
+  play_animation("Jump_Idle" if height > 0.1 else "Run")
  for foot in footprints:
   foot.position.z += speed * dt
  update_hud()

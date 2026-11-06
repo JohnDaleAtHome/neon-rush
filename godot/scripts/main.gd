@@ -682,6 +682,9 @@ func _process(dt):
  if unlock:
   update_unlock(dt)
   return
+ var frame_start_x: float = player.position.x
+ var frame_start_height: float = height
+ var frame_start_slide: float = slide_time
  guard = maxf(0, guard - dt)
  slide_time = maxf(0, slide_time - dt)
  if (elapsed > 7 or not options.banners) and not unlock: message.text = ""
@@ -738,6 +741,7 @@ func _process(dt):
   if not running: break
   var kind: String = item.get_meta("kind")
   if kind == "orb" and not reduced_motion(): item.rotation.y += dt * 2
+  var item_start: Vector3 = item.position
   if item.has_meta("sway"):
    item.position.x = LANES[int(item.get_meta("lane"))] + sin(elapsed * 2 + float(item.get_instance_id() % 9)) * 0.8
   item.position.z += (-65 if kind == "shot" else speed) * dt
@@ -761,6 +765,12 @@ func _process(dt):
      guardian_feedback_time = 0.9
     entities.erase(item); item.queue_free()
    continue
+  var swept: Dictionary = {}
+  var radius: float = 2.2 if magnet_time > 0 and kind == "orb" else 1.1
+  if preload("res://scripts/skipped_contact.gd").skipped(item_start.z,item.position.z,radius):
+   swept=preload("res://scripts/skipped_contact.gd").evaluate(kind,item_start.z,item.position.z,item_start.x-frame_start_x,item.position.x-player.position.x,frame_start_height,height,frame_start_slide,dt,magnet_time>0)
+   if swept.jump:item.set_meta("jump_clear",true)
+   if swept.near:item.set_meta("near_seen",true)
   if kind == "tall" and mode in ["easy","normal","hard","chase"]:
    var dx = absf(item.position.x - player.position.x)
    if absf(item.position.z) < 2.2 and dx >= 1.0 and dx < 1.8: item.set_meta("near_seen",true)
@@ -780,8 +790,8 @@ func _process(dt):
    pickup_feedback = "+20 JUMP CLEAR"
    pickup_feedback_time = 0.9
   if item.position.z > 10: entities.erase(item); jump_scored.erase(item.get_instance_id()); item.queue_free(); continue
-  if absf(item.position.z) < (2.2 if magnet_time > 0 and kind == "orb" else 1.1) and absf(item.position.x - player.position.x) < (3.4 if magnet_time > 0 and kind == "orb" else 1.0):
-   if kind == "orb" and height < 1.8:
+  if swept.get("contact",false) or (absf(item.position.z) < (2.2 if magnet_time > 0 and kind == "orb" else 1.1) and absf(item.position.x - player.position.x) < (3.4 if magnet_time > 0 and kind == "orb" else 1.0)):
+   if kind == "orb" and (swept.get("contact",false) or height < 1.8):
     dew += 1
     collected += 1
     score += 50
@@ -797,12 +807,12 @@ func _process(dt):
       if magnet_time <= 0: magnet_time = 3
     if mode == "chase" or (mode == "story" and level == 4): shadow_gap = minf(28, shadow_gap + 1.4)
     entities.erase(item); item.queue_free()
-   elif kind == "shield" and height < 1.8:
+   elif kind == "shield" and (swept.get("contact",false) or height < 1.8):
     shield = true
     entities.erase(item); item.queue_free()
    elif kind != "orb":
     var collision = not (slide_time > 0 and height < 0.1) if kind == "beam" else height < (0.65 if kind == "low" else 2.3)
-    if collision: hurt(); entities.erase(item); item.queue_free()
+    if swept.get("contact",false) or collision: hurt(); entities.erase(item); item.queue_free()
  update_hud()
 
 func update_hud():

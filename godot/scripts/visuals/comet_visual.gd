@@ -3,6 +3,7 @@ extends Node3D
 var game
 var landscape:=Node3D.new()
 var active:=false
+var light_landscape:=Node3D.new()
 func bind(main_node)->void:
  game=main_node;add_child(landscape)
  var mat=ShaderMaterial.new();mat.shader=load("res://scripts/visuals/comet_stone.gdshader")
@@ -28,9 +29,13 @@ func bind(main_node)->void:
   _fracture(st,pos+Vector3(-signf(spec[0])*spec[2]*0.55,0,-spec[2]*1.1),spec[2]*0.55,spec[3]*0.8)
  var cliffs=MeshInstance3D.new();cliffs.name="CometFractures";cliffs.mesh=st.commit();var cliff_mat=ShaderMaterial.new();cliff_mat.shader=mat.shader;cliff_mat.set_shader_parameter("cliff_surface",true);cliffs.material_override=cliff_mat;landscape.add_child(cliffs)
  landscape.visible=false
+ light_landscape.name="CometLight";add_child(light_landscape)
+ for i in range(14):light_landscape.add_child(landscape.get_child(i).duplicate())
+ light_landscape.visible=false
 func apply(index:int)->void:
  active=index==4 and not game.options.get("light",false);landscape.visible=active
- if not active:return
+ light_landscape.visible=index==4 and game.options.get("light",false)
+ if index!=4:return
  game.env_world.environment.fog_light_color=Color("211529")
  game.env_world.environment.fog_depth_end=180.0
  for side in game.side_planes:side.visible=false
@@ -69,7 +74,7 @@ func _plate(side:float,z:float,width:float,index:int)->ArrayMesh:
 # End of Comet visual study.
 
 func layout_moons(size:Vector2)->void:
- if not active or size.x<=size.y or size.y>=650:return
+ if game.visual_world_index!=4 or size.x<=size.y or size.y>=650:return
  # The old 265px minimum falls below the horizon on short landscape screens.
  # Keep small satellites at the outer sky edges, away from the objective band.
  for i in range(game.moons.size()):

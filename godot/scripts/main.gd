@@ -328,6 +328,7 @@ func _ready():
  get_window().size_changed.connect(configure_window)
  configure_window()
  get_viewport().size_changed.connect(adapt_layout)
+ get_viewport().size_changed.connect(refresh_hazard_cues)
  adapt_layout()
  NeonHudTheme.apply(root, {"primary": action, "pad": controls, "pause": pause_button, "hud": hud, "title": message, "status": status_label, "progress": progress_label, "dimmer": dimmer})
  var had_engine_options = FileAccess.file_exists("user://options.json") or browser_options_exist()
@@ -813,6 +814,7 @@ func _process(dt):
    elif kind != "orb":
     var collision = not (slide_time > 0 and height < 0.1) if kind == "beam" else height < (0.65 if kind == "low" else 2.3)
     if swept.get("contact",false) or collision: hurt(); entities.erase(item); item.queue_free()
+ refresh_hazard_cues()
  update_hud()
 
 func update_hud():
@@ -869,6 +871,20 @@ func add_cue(hazard: Node3D, kind: String):
  label.position = hazard.basis.inverse() * Vector3(0, 0.5 if kind == "low" else 0.0, 0.66)
  label.no_depth_test = false
  hazard.add_child(label)
+ hazard.set_meta("action_cue",label)
+ scale_hazard_cue(label)
+
+func scale_hazard_cue(label: Label3D):
+ if camera == null or not label.is_inside_tree(): return
+ var base=camera.unproject_position(label.global_position)
+ var top=camera.unproject_position(label.global_position+Vector3.UP*label.font_size*label.pixel_size)
+ var pixels=base.distance_to(top)
+ label.scale=Vector3.ONE*clampf(16.0/maxf(pixels,0.01),1.0,4.0)
+
+func refresh_hazard_cues():
+ for hazard in entities:
+  if is_instance_valid(hazard) and hazard.has_meta("action_cue"):
+   scale_hazard_cue(hazard.get_meta("action_cue"))
 
 func apply_world(index: int):
  visual_world_index = index

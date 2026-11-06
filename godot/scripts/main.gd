@@ -831,7 +831,7 @@ func playable_sea_exit() -> bool:
  return unlock and mode == "story" and level == 3
 
 func update_hud():
- if mode == "story" and level == 5 and guardian_feedback_time > 0: message.text = ""
+ if running and not paused and mode == "story" and level == 5 and guardian_feedback_time > 0: message.text = ""
  var extra_metric=mode=="chase" or (mode=="story" and level in [4,5]) or (mode=="mission" and mission_phase==2)
  hud.add_theme_font_size_override("font_size",14 if options.compact or extra_metric else 17)
  var hud_chip=hud.get_theme_stylebox("normal")

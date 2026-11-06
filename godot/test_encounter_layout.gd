@@ -28,7 +28,7 @@ func run():
  assert(not g.controls.visible)
  for moon in g.moons: assert(moon.visible)
  assert(g.player.visible and g.story_props.is_empty() and g.unlock)
- assert(g.entities.is_empty())
+ assert(g.entities.size()==2) # Accepted Sea crossing now owns two authored hazards.
  g.options.stars = false
  g.pending_advance = true
  g.show_beat("Piece","Cross","CONTINUE")

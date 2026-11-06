@@ -1,0 +1,11 @@
+# Dunes collection scene, November 6, 2026
+
+The stopped Silver Lantern collection now shows an original fictional hexagonal framed travel lantern and ten original sole silhouettes in the sand. It fixes a text/scene mismatch: the story previously named a lantern and footprints without showing either. No external model, texture, museum image, new light, or shader is included. The earlier CC0 hanging-lantern model trial failed visual review and is not used.
+
+The framed-panel idea was informed by the China Lantern Museum collection, https://www.lantern-museum.cn/list/product/38969.html . This is not a copy, exact period object, or historical reconstruction. Godot primitives form pale panels, silver ribs, dark roof, open carry loop and small tassels. Original triangulated flat soles use one MultiMesh. Geometry exists only during the stopped level1 collection beat. It stays ground-anchored on resize rather than following the floating kindness-actor layout.
+
+Validation: all56 local isolated native suites passed, including new test_dunes_story plus unchanged kindness art, encounter layout, campaign and preference suites. New assertions check Full/Light, four viewport layouts, ten prints, reward order, crossing and cleanup. Native Full/Light390x844/1280x800/844x390 pixels inspected. Controlled release Web fixture Full390x844/844x390/320x568 and Light390x844 inspected, no page/script errors and debug QA absent. Actual LIFT click clears lantern/prints before crossing, restores Mochi and retains original rails/message. Fixture uses stopped staging, not a natural campaign or save proof; native tests establish reward transition. Ordinary release export succeeds separately. Existing native renderer texture warnings on quit remain.
+
+No level duration, collision, lane, reward, story text, save schema or input change. No device performance, uninterrupted browser campaign, deployment or user acceptance claim. Native full-suite results apply to this local candidate until remote source parity and fresh recovery are checked.
+
+Research sources also checked: https://3dassets.dev/assets/imperial-china-palace-and-garden-hanging-silk-lantern-24c01831 (rejected model, not runtime); https://docs.godotengine.org/en/stable/tutorials/assets_pipeline/importing_3d_scenes/available_formats.html ; https://creativecommons.org/publicdomain/zero/1.0/ .

@@ -1336,13 +1336,6 @@ func show_story_encounter(which: int):
  # A stopped collection/kindness beat is not an active hazard scene.
  # Crossing/retry already clears these run entities before gameplay resumes.
  for item in entities:item.hide()
- if which == 1:
-  player.hide()
-  dimmer.color.a = 0.35
-  var scene=load("res://scripts/visuals/dunes_story.gd").build()
-  add_child(scene)
-  story_props.append(scene)
-  return
  if which not in [2,3,4]: return
  player.hide()
  dimmer.color.a = 0.35
@@ -1397,7 +1390,7 @@ func show_story_encounter(which: int):
  layout_encounter(get_viewport().get_visible_rect().size)
 
 func layout_encounter(size: Vector2):
- if story_props.is_empty() or level == 1: return
+ if story_props.is_empty(): return
  var center = camera.project_position(Vector2(size.x/2,size.y*0.50),8.0)
  var origin = Vector3(0,1,-3 if level == 4 else -2)
  var offset = center-origin

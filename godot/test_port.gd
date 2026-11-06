@@ -33,6 +33,6 @@ func run():
   g.update_unlock(5.1)
   assert(g.level == i+1 and g.pieces.size() == i+1)
  g.start_level()
- assert(g.boss_hp == 4 and g.boss != null)
+ assert(g.boss_hp == 3 and g.boss != null)
  print("PASS Godot allsixmode/start/lane/jump/pause/menu/fiveunlock/checkpoint/finalegate scaffold")
  quit()

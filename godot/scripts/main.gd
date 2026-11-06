@@ -1986,7 +1986,7 @@ func layout_moons(size: Vector2):
    moons[i].position=camera.project_position(Vector2(size.x*[0.13,0.82,0.93][i],size.y*0.30),60.0+i*15.0)
 
  if meadow_visual and visual_world_index==0: meadow_visual.layout_moons(size)
- if comet_visual and comet_visual.active: comet_visual.layout_moons(size)
+ if comet_visual and visual_world_index==4: comet_visual.layout_moons(size)
  if grove_visual and visual_world_index==2: grove_visual.layout_moons(size)
  if palace_visual and visual_world_index==5: palace_visual.layout_moons(size)
  if dunes_visual and visual_world_index==1: dunes_visual.layout_moons(size)

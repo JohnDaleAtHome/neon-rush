@@ -18,8 +18,8 @@ func run():
  check(g.lane_guides.size()==2,"guides unchanged")
  inspect(g.comet_visual.landscape)
  g.options.light=true;g.apply_world(4);check(not g.comet_visual.landscape.visible,"Light hides comet")
- for side in g.side_planes:check(side.visible,"Light restores sides")
- for edge in g.track_edges:check(edge.visible,"Light restores edges")
+ for side in g.side_planes:check(not side.visible,"Light hides flat sides")
+ for edge in g.track_edges:check(not edge.visible,"Light hides pink edges")
  g.options.light=false
  for world in [0,1,2,3,5,4]:
   g.level=world;g.apply_world(world);check(g.comet_visual.active==(world==4),"world ownership")

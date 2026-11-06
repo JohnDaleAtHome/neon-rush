@@ -806,14 +806,19 @@ func _process(dt):
  update_hud()
 
 func update_hud():
+ var extra_metric=mode=="chase" or (mode=="story" and level in [4,5]) or (mode=="mission" and mission_phase==2)
+ hud.add_theme_font_size_override("font_size",14 if options.compact or extra_metric else 17)
+ var hud_chip=hud.get_theme_stylebox("normal")
+ hud_chip.content_margin_top=3 if extra_metric else 5
+ hud_chip.content_margin_bottom=3 if extra_metric else 5
  if mode == "story":
   hud.text = "STORY  %d / 6 %s\nHearts %d   Bridge %d / 5\nDew %d   Time %ds" % [level + 1, LEVEL_NAMES[level], hearts, pieces.size(), dew, int(elapsed)]
  elif mode == "mission":
   hud.text = "MISSION  %d / 3\nHearts %d  Mochi %d / 6\nTime %ds" % [mission_phase + 1, hearts, mission_cores, int(elapsed)]
  else:
   hud.text = "%s  %d pts\n%d m  %d treats  %ds\nBest %d" % [display_mode(mode), int(score), int(distance), collected, int(elapsed), int(stats.get(mode, {}).get("best", 0))]
- if mode == "chase" or (mode == "story" and level == 4): hud.text += "  Shadow %.1fm" % shadow_gap
- if (mode == "story" and level == 5) or (mode == "mission" and mission_phase == 2): hud.text += "  Guardian %d / 4" % boss_hp
+ if mode == "chase" or (mode == "story" and level == 4): hud.text += "\nShadow %.1fm" % shadow_gap
+ if (mode == "story" and level == 5) or (mode == "mission" and mission_phase == 2): hud.text += "\nGuardian %d / 4" % boss_hp
  if mode == "story" and running and not unlock:
   progress_label.text = "DEW %d / 6 TO LIGHT THE LAUNCH PAD" % mini(dew,6) if level == 0 else "PATH TO %s: %d%%" % [PIECES[level].to_upper(),mini(100,int(elapsed/[24,25,26,27,28][level]*100))] if level < 5 else "TWO HITS - WAIT FOR NEXT GREEN" if boss_hits >= 2 and last_open else "SHIELD OPEN - ALIGN AND FIRE" if last_open else "SHIELD CLOSED - ALIGN AND WAIT"
  elif mode == "mission" and running and mission_phase == 2:

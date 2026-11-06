@@ -17,8 +17,8 @@ func run():
     check(g.hud.get_theme_font_size("font_size")==14,"dense metrics compact font")
     if mode in ["chase","story"]:check(g.hud.text.contains("\nShadow 28.0m"),"shadow own line")
     if mode=="mission":check(g.hud.text.contains("\nGuardian 4 / 4"),"guardian own line")
-  g.mode="story";g.level=5;g.update_hud();await process_frame
-  check(g.hud.text.contains("\nGuardian 4 / 4"),"storyguardian ownline")
+  g.mode="story";g.level=5;g.boss_hp=3;g.update_hud();await process_frame
+  check(g.hud.text.contains("\nGuardian 3 / 3"),"storyguardian ownline")
   check(not g.hud.get_global_rect().intersects(g.pause_button.get_global_rect()),"storyguardian clear pause")
   g.level=0;g.options.compact=false;g.update_hud()
   check(g.hud.get_theme_font_size("font_size")==17,"ordinaryfont restored")

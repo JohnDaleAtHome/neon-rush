@@ -14,12 +14,12 @@ func run():
   var mesh=bridge.get_child(0).mesh
   for v in mesh.surface_get_arrays(0)[Mesh.ARRAY_VERTEX]:check(v.is_finite() and absf(v.x)>3.65,"finite geometry outside playable lanes")
   var original=bridge.position
-  for i in range(140):g.update_unlock(1.0/60.0)
+  for i in range(140):g._process(1.0/60.0)
   check(bridge.position==original,"bridge stays at ground instead of rising bar")
   check(g.level==world and g.unlock,"crossing duration unchanged before five seconds")
   check(g.pieces.size()==world,"no early piece reward")
   for i in range(162):
-   if g.unlock:g.update_unlock(1.0/60.0)
+   if g.unlock:g._process(1.0/60.0)
   check(g.level==world+1 and not g.unlock,"existing next level after five seconds")
   check(g.gate==null,"bridge removed at level change")
   await process_frame;check(not is_instance_valid(bridge),"bridge freed after level change")

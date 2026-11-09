@@ -30,3 +30,9 @@ Existing project notices/provenance are the art inventory. Han primary reference
 - https://creativecommons.org/licenses/by-sa/3.0/legalcode
 
 No deployment permission is implied by these checks.
+
+## Final focus-repair recovery
+
+Untouched final `25568d2668973ffd3fbdea4d71a8a4613955ce72` archive includes the keyboard repair. Documented fetch-assets recovery, clean import, all 62 isolated suites and release Web export passed. Six changed files matched the candidate exactly. The final PCK has 200 production paths and 7,688,684 bytes, with no QA/test/fixture/oracle paths and the same Han-notice SHA-256 recorded above.
+
+Fresh ordinary final export checks cover credits top/footer-close, return to Settings, close Settings, Story start/jump, and a separate Enter/Tab close back to Settings with focus restored. Actual 390x844 pixels inspected; no browser page errors and no debug QA hook. The earlier four-size candidate layout checks remain separate evidence. This is source-complete, not deployed, and does not clear actual-device, listening or natural full-campaign acceptance.

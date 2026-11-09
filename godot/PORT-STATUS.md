@@ -14,11 +14,11 @@ godot --headless --path godot --export-release Web "$PWD/build/index.html"
 ```
 Install matching web export templates first. Serve build over HTTP(S), not file://. Debug web exports expose read-only neonQA test state; release exports do not.
 
-## Current source checkpoint - November 6, 2026
+## Current source checkpoint - November9,2026
 
-This status describes source35949a2, not the hosted game. All57 isolated native suites passed from an untouched35949a2 archive restored with the documented asset bootstrap. Import and release Web export succeeded; ordinary portrait release start was visually inspected with no page errors or debug QA hook. The deterministic campaign remains8911 fixed steps, zero deaths, all six worlds and reunion. This is automated evidence, not human or physical-device acceptance.
+This describes source2b089d5, not the hosted game. An untouched2b089d5archive completed documented asset bootstrap, import, all61isolated native suites and release Web export. The ordinary390portrait release start/jump image was inspected, with no page errors and no debug QA hook. Controlled campaign is8892steps, zero deaths, allsixworlds/reunion. This is automated evidence, not human or physical-device acceptance.
 
-Recent source changes add a full-skipped-band contact fallback for long frames and bounded hazard action-cue scaling across distance/resize. They do not rebalance gameplay. See SKIPPED-CONTACT-VALIDATION.md and CUE-SCALE-VALIDATION.md for exact contracts and limitations.
+Latest source adds the original static Shadow kindness offering illustration to the stopped beat, following the Grove witness/reunion approach. Both quality options and four screen sizes were inspected. Words/action and running3D remain unchanged. Earlier source adds gesture-only Guardian FIRE access and Shadow capture retry bell parity. See SHADOW-OFFER-VALIDATION.md, GESTURE-FIRE-VALIDATION.md and SHADOW-BELL-VALIDATION.md.
 
 ## Implemented, with evidence limits
 Six-level finite Story, five ordered bridge pieces, kindness interactions, short unlock crossings, guardian/reunion text, validated whole-level checkpoint saves. Chill/Classic/Rush/Chase/Mission, keyboard/touch controls, pause/menu, shields/chains/magnet, local stats/history/JSON+CSV exports, settings and generated WAV music/cues exist. Sphere/diamond alternative runners are implemented. Existence and automated checks do not establish finished feature parity or human fun acceptance.
@@ -76,3 +76,6 @@ All58 isolated suites pass locally and on an untouched7eeb434 source archive aft
 With movement buttons hidden, Guardian FIRE remains available as the only on-screen action. Movement gestures and keyboard mappings, Story3HP/Mission4HP, timing and save schema are unchanged. Settings names the movement-button option and explains the exception. All59 isolated native suites and controlled production-release browser touch/pause checks pass; actual390/844/1280pixels inspected. See GESTURE-FIRE-VALIDATION.md. Not deployed; no real-phone or unassisted-play clearance.
 
 Vic changed routine updates to one changelog every30days on November9, replacing twice-daily summaries. Authorized improvement work continues between updates; deployment remains separately gated.
+
+## November9: closed studies and source-only kindness illustration
+The extracted kagami-mochi trial read as a ring/plate and the Sea-wave mesh trial read as pale scallops without a clarity gain. Both were rejected, discarded intermediate assets/fixtures/exports removed, and compact comparison evidence retained. Neither is a delivered improvement. The accepted original Shadow illustration has a solid rice cake on Mochi's palm and a reaching violet shadow; it appears only in the stopped single-action beat. Public hosting is unchanged. No deployment, physical-device, natural full-campaign, listening or human-fun clearance.

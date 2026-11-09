@@ -417,7 +417,7 @@ func toggle_pause():
   status_label.show()
   dimmer.hide()
   panel.hide()
-  controls.visible = options.buttons
+  refresh_touch_controls()
   message.text = ""
   if options.sound: music_player.play()
  for moon in moons: moon.visible = options.stars and running and not paused
@@ -541,7 +541,7 @@ func start_level():
  pause_button.text = "PAUSE"
  paused = false
  panel.hide()
- controls.visible = options.buttons
+ refresh_touch_controls()
  apply_options()
  adapt_layout()
  elapsed = 0
@@ -1531,14 +1531,23 @@ func record_story_attempt(outcome: String):
  history = history.slice(0,20)
  save_stats()
 
+func guardian_combat() -> bool:
+ return (mode == "story" and level == 5) or (mode == "mission" and mission_phase == 2)
+
+func refresh_touch_controls():
+ if not is_instance_valid(controls): return
+ # Gestures cover movement, but have no FIRE equivalent. Keep that action reachable.
+ controls.visible = running and not paused and (options.buttons or guardian_combat())
+ for i in [0,1,3]: controls.get_child(i).visible = options.buttons
+ controls.get_child(2).visible = options.buttons and mode in ["story","mission","chase"]
+ controls.get_child(4).visible = guardian_combat()
+
 func apply_options():
  if visual_world_ready and visual_light_enabled != bool(options.light):
   apply_world(visual_world_index)
  apply_system_motion()
  if not is_instance_valid(controls): return
- controls.visible = running and not paused and options.buttons
- controls.get_child(2).visible = mode in ["story","mission","chase"]
- controls.get_child(4).visible = (mode == "story" and level == 5) or (mode == "mission" and mission_phase == 2)
+ refresh_touch_controls()
  controls.offset_top = -110 if options.large else -88
  for child in controls.get_children(): child.custom_minimum_size.y = 78 if options.large else 56
  hud.add_theme_font_size_override("font_size",14 if options.compact else 17)
@@ -1642,7 +1651,7 @@ func open_settings():
   warning.text = storage_warning
   warning.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
   list.add_child(warning)
- for entry in [["light","Light quality"],["buttons","On-screen buttons"],["large","Large controls"],["contrast","High contrast HUD"],["tap","Tap to jump"],["stars","Show moons"],["guides","Lane guides"],["compact","Compact HUD"],["banners","Story guidance"]]:
+ for entry in [["light","Light quality"],["buttons","Movement buttons"],["large","Large controls"],["contrast","High contrast HUD"],["tap","Tap to jump"],["stars","Show moons"],["guides","Lane guides"],["compact","Compact HUD"],["banners","Story guidance"]]:
   var key: String = entry[0]
   var button = CheckButton.new()
   button.text = entry[1]
@@ -1650,6 +1659,10 @@ func open_settings():
   button.custom_minimum_size.y = 42
   button.toggled.connect(func(on): options[key] = on; save_options(); apply_options())
   list.add_child(button)
+ var fire_note = Label.new()
+ fire_note.text = "FIRE stays visible during Guardian fights."
+ fire_note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+ list.add_child(fire_note)
  var motion_choice = OptionButton.new()
  for label in ["Motion: system preference","Motion: full","Motion: reduced"]: motion_choice.add_item(label)
  motion_choice.selected = 0 if options.motion_system else 2 if options.motion else 1
@@ -2023,7 +2036,8 @@ func adapt_layout():
  pause_button.position.x = size.x-104
  status_label.position.x = (size.x-350)/2
  progress_label.position.x = (size.x-350)/2
- var width = minf(480,size.x-16) if options.hand == "center" else minf(360,size.x-16)
+ var fire_only = not options.buttons and guardian_combat()
+ var width = minf(96,size.x-16) if fire_only else minf(480,size.x-16) if options.hand == "center" else minf(360,size.x-16)
  var center = size.x/2 if options.hand == "center" else width/2+8 if options.hand == "left" else size.x-width/2-8
  controls.anchor_left = 0
  controls.anchor_right = 0

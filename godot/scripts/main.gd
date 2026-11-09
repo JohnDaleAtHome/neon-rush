@@ -66,6 +66,8 @@ var gold_unlocked = false
 var run_goal = false
 var campaign_run_recorded = false
 var storage_warning = ""
+var storage_notice_shown = false
+const STORAGE_CAUTION = "Saving may not persist after closing. Journey progress and preferences may reset. Stats exports preserve records only, not journey progress."
 var jump_scored: Dictionary = {}
 var overlay_root: Control
 var progress_label: Label
@@ -427,6 +429,7 @@ func toggle_pause():
   if options.sound: music_player.play()
  for moon in moons: moon.visible = options.stars and running and not paused
  pause_button.text = "RESUME" if paused else "PAUSE"
+ if paused: show_storage_notice.call_deferred()
 
 func reset_discard_prompt():
  discard_pending = ""
@@ -506,6 +509,7 @@ func show_beat(title: String, words: String, label: String):
  stats_button.visible = not pending_advance
  adapt_layout()
  play_animation("Idle")
+ show_storage_notice.call_deferred()
 
 func on_action():
  if paused:
@@ -1140,7 +1144,7 @@ func save_stats():
  browser_backup("stats",{"records":stats,"history":history,"totals":totals,"totals_scope":totals_scope})
  var f = FileAccess.open("user://stats.json", FileAccess.WRITE)
  if f: f.store_string(JSON.stringify({"records":stats,"history":history,"totals":totals,"totals_scope":totals_scope}))
- else: storage_warning = "Saving unavailable. This session only. Export your stats."
+ else: set_storage_warning()
 
 func load_stats():
  var backup = browser_restore("stats")
@@ -1193,11 +1197,34 @@ func apply_stats_data(data: Dictionary) -> bool:
   history.append(clean)
  return true
 
+func set_storage_warning():
+ storage_warning = STORAGE_CAUTION
+ for label in get_tree().get_nodes_in_group("storage_warning_labels"):
+  label.text = storage_warning
+  label.visible = true
+ show_storage_notice.call_deferred()
+
+func storage_warning_label(list: VBoxContainer):
+ var warning = Label.new()
+ warning.text = storage_warning
+ warning.visible = storage_warning != ""
+ warning.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+ warning.add_to_group("storage_warning_labels")
+ list.add_child(warning)
+
+func show_storage_notice():
+ if storage_warning == "" or storage_notice_shown or (running and not paused) or not popup_stack.is_empty(): return
+ if not is_instance_valid(overlay_root): return
+ storage_notice_shown = true
+ var list = popup_frame("SAVE WARNING")
+ storage_warning_label(list)
+ NeonHudTheme.style_popup(list)
+
 func browser_backup(kind: String, data: Dictionary):
  if not OS.has_feature("web"): return
  var packed = Marshalls.utf8_to_base64(JSON.stringify(data))
  var result = JavaScriptBridge.eval("(()=>{try{localStorage.setItem('neonrush_godot_%s_v2',atob('%s'));return 'ok'}catch(e){return 'failed'}})()" % [kind,packed],true)
- if str(result) != "ok": storage_warning = "Browser save unavailable. Export stats before closing."
+ if str(result) != "ok": set_storage_warning()
 
 func browser_restore(kind: String):
  if not OS.has_feature("web"): return null
@@ -1210,7 +1237,7 @@ func save_options():
   out.gold_unlocked = gold_unlocked
   var packed = Marshalls.utf8_to_base64(JSON.stringify(out))
   var result = JavaScriptBridge.eval("(()=>{try{localStorage.setItem('neonrush_godot_options_v2',atob('%s'));return 'ok'}catch(e){return 'failed'}})()" % packed,true)
-  if str(result) != "ok": storage_warning = "Settings backup unavailable. Export stats; preferences may reset."
+  if str(result) != "ok": set_storage_warning()
  var f = FileAccess.open("user://options.json", FileAccess.WRITE)
  if f:
   var out = options.duplicate()
@@ -1648,6 +1675,7 @@ func popup_frame(title: String) -> VBoxContainer:
   for item in suspended:
    if is_instance_valid(item[0]): item[0].focus_mode = item[1]
   if is_instance_valid(previous_focus): previous_focus.grab_focus()
+  show_storage_notice.call_deferred()
  )
  var scroll = ScrollContainer.new()
  bg.add_child(scroll)
@@ -1690,11 +1718,7 @@ func open_settings():
  help.custom_minimum_size.y = 44
  help.pressed.connect(func(): load("res://scripts/visuals/how_to_play.gd").open(self))
  list.add_child(help)
- if storage_warning != "":
-  var warning = Label.new()
-  warning.text = storage_warning
-  warning.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-  list.add_child(warning)
+ storage_warning_label(list)
  for entry in [["light","Light quality"],["buttons","Movement buttons"],["large","Large controls"],["contrast","High contrast HUD"],["tap","Tap to jump"],["stars","Show moons"],["guides","Lane guides"],["compact","Compact HUD"],["banners","Story guidance"]]:
   var key: String = entry[0]
   var button = CheckButton.new()
@@ -1759,11 +1783,7 @@ func mode_records_text(key: String, record: Dictionary) -> String:
 
 func open_stats():
  var list = popup_frame("THIS BROWSER STATS")
- if storage_warning != "":
-  var warning = Label.new()
-  warning.text = storage_warning
-  warning.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-  list.add_child(warning)
+ storage_warning_label(list)
  var totals_label = Label.new()
  totals_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
  totals_label.text = "%s\n%d recorded attempts / %dm / %d treats\n%d seconds tracked by engine" % [totals_scope,totals.runs,totals.distance,totals.treats,totals.seconds]

@@ -14,9 +14,11 @@ godot --headless --path godot --export-release Web "$PWD/build/index.html"
 ```
 Install matching web export templates first. Serve build over HTTP(S), not file://. Debug web exports expose read-only neonQA test state; release exports do not.
 
-## Verified source checkpoint - November 9, 2026
+## Verified source checkpoint - November 10, 2026
 
-The latest verified runtime checkpoint is `25568d2668973ffd3fbdea4d71a8a4613955ce72`. An untouched archive completed documented asset bootstrap, clean import, all 62 isolated native suites and release Web export. Its production PCK has 200 paths and 7,688,684 bytes, including the unchanged complete Han-house notice, with no QA/test/fixture/oracle paths. Fresh ordinary 390x844 release checks covered Settings, credits, footer close, Story start and jump; no browser page errors or debug QA hook were present.
+The latest verified runtime checkpoint is `a0588ab1741ab777d974ff9dac016dc756e907bf`. An untouched archive completed documented asset bootstrap, clean import, all 63 isolated native suites and release Web export. Its production PCK has 200 paths and 7,688,988 bytes, including the unchanged complete Han-house notice, with no QA/test/fixture/oracle paths. Fresh ordinary 390x844 release checks covered one-Enter Settings/Stats closure and Story start/pause; no browser page errors or debug QA hook were present.
+
+Settings, Stats and nested credits now share modal focus and pointer isolation, with Escape closing only the top popup. Ordinary release checks also verified background Sound/Begin clicks do not act through Settings, and a changed contrast option survives reload. This is an input bug fix, not a popup-layout redesign. See POPUP-FOCUS-VALIDATION.md.
 
 Latest source adds Settings ART CREDITS with the Han author/license/adaptation/full notice and existing CC0 art contributors. Credits responds to resize and blocks background pointer and keyboard activation. A late ordinary Enter check found stacked panels; the fix suspends/restores background focus and focuses credits close. The final archive includes that fix, the ui_accept regression, and ordinary Enter/Tab close verification. See ART-CREDITS-VALIDATION.md.
 
@@ -37,7 +39,7 @@ The approved Tide Pearl payoff is a five-second playable Sea exit at 7m/s, with 
 - Independent persistent-browser review verified the checkpoint across reload and separate browser sessions, reaching persisted L4/Bridge3 of5. An earlier nonpersistent test-session checkpoint loss was not a demonstrated game defect. Whole-level retry resets elapsed/dew/health, not partial-level progress. Earlier apparent progress/health inconsistency was withdrawn after source clarification.
 - Earlier ordinary release checks cover portrait/landscape menu, start/jump/pause/resume and Settings/Stats layout. Moon/button settings persisted across reload. Emulated touch horizontal swipes and touch Pause worked; physical-device performance and vertical-gesture animation remain unverified. Own local v31 screenshot-observed ordinary-input run reached L2 naturally; it does not fill late-campaign gaps.
 - Synthetic fixtures verified old-data migration, controlled checkpoint/storage restores, score feedback and populated exports. Actual JSON/CSV downloads parsed correctly from a populated fixture. These do not prove naturally accumulated data correctness. Same-origin legacy import remains separate from staging.
-- Through v32,26 suites passed. That was historical coverage; the verified November 9 checkpoint has 62 isolated suites as stated above. The same deterministic campaign is synthetic evidence, not natural browser acceptance.
+- Through v32,26 suites passed. That was historical coverage; the verified November 9 checkpoint has 63 isolated suites as stated above. The same deterministic campaign is synthetic evidence, not natural browser acceptance.
 - A later November6 debug Web event-loop campaign reached all six levels and reunion across four browser phases with two retries, using read-only engine state for automated lane decisions. It is not a release-only natural human run.
 - Earlier release pause/resize and browser-process restart checks preserve ordinary options/stats. Separate controlled same-origin Grove collection and production-release reload restored Storm Sea/Bridge3. These earlier checks were controlled save evidence, not naturally earned progress. The later November 9 ordinary release-only run earned and recovered Sea / Bridge 3 as recorded above; it does not prove later campaign completion. Screenshot/OCR controller delays limited that run, and no game difficulty defect was established.
 
@@ -72,7 +74,7 @@ are unchanged by source integration.
 
 ## Earlier November 6 source follow-through (historical)
 
-The native test runner isolates user data on Linux and reports script errors/timeouts. At the earlier5463190 checkpoint, all51 isolated suites passed from a restored fresh archive. The current 62-suite checkpoint is recorded at the top of this document. At that earlier point, branch-frame and reunion-people changes had targeted card/campaign/save/guardian checks, not a newer full-suite run. That historical evidence has since been supplemented by the later fresh-archive checks above. See NATIVE-TESTS.md and REUNION-CARD-VALIDATION.md. No deployment or physical-device clearance is implied.
+The native test runner isolates user data on Linux and reports script errors/timeouts. At the earlier5463190 checkpoint, all51 isolated suites passed from a restored fresh archive. The current 63-suite checkpoint is recorded at the top of this document. At that earlier point, branch-frame and reunion-people changes had targeted card/campaign/save/guardian checks, not a newer full-suite run. That historical evidence has since been supplemented by the later fresh-archive checks above. See NATIVE-TESTS.md and REUNION-CARD-VALIDATION.md. No deployment or physical-device clearance is implied.
 
 
 ## November6 evening: selected story-piece payoff

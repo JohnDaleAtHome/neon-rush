@@ -28,3 +28,7 @@ Vic approved the priorities below after inspecting the current game and the conc
 - Keep official legacy and frozen review builds intact. New source work does not authorize overwriting the public game; publish review artifacts separately when coordinated.
 
 See VISUAL-IMPLEMENTATION.md for ownership, integration and acceptance steps.
+
+## Work and changelog cadence - 9 November 2026
+
+Continue the authorized improvement work between updates. Vic's November9 instruction replaces twice-daily summaries with one changelog every30days. The next changelog is arranged for December9; only a decision or blocker needing Vic should interrupt that cadence. This is a communication change, not a pause in development or permission to deploy. Keep changes tracked in GitHub and distinguish committed source from the public build.

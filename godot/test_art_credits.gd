@@ -13,8 +13,9 @@ func run():
   g.open_settings()
   var settings=g.overlay_root.get_child(-1)
   var button=settings.get_child(0).get_child(0).get_child(2)
-  assert(button.text=="ART CREDITS");button.pressed.emit();await process_frame
+  assert(button.text=="ART CREDITS");button.grab_focus();button.pressed.emit();await process_frame
   var popup=g.overlay_root.get_child(-1);var list=popup.get_child(0).get_child(0)
+  assert(list.get_child(1).has_focus() and button.focus_mode==Control.FOCUS_NONE)
   assert(g.overlay_root.get_node("ArtCreditsBlocker").mouse_filter==Control.MOUSE_FILTER_STOP)
   var connections=g.get_viewport().size_changed.get_connections().size()
   assert(list.get_node("ArtCreditsNotice").text==text)
@@ -27,6 +28,7 @@ func run():
   await process_frame
   assert(g.get_viewport().size_changed.get_connections().size()==connections-1)
   assert(g.overlay_root.get_child_count()==before+1 and is_instance_valid(settings))
+  assert(button.has_focus() and button.focus_mode==Control.FOCUS_ALL)
   assert(g.level==level and g.pieces==pieces and g.elapsed==time)
   if paused:assert(g.paused)
   for i in range(3):
@@ -34,7 +36,11 @@ func run():
    again.get_child(1).pressed.emit();await process_frame;await process_frame
    assert(g.get_viewport().size_changed.get_connections().size()==connections-1)
    assert(g.overlay_root.get_child_count()==before+1)
+  credits.open(g);await process_frame
+  var key=InputEventAction.new();key.action="ui_accept";key.pressed=true;Input.parse_input_event(key);await process_frame
+  key=InputEventAction.new();key.action="ui_accept";key.pressed=false;Input.parse_input_event(key);await process_frame;await process_frame
+  assert(g.overlay_root.get_child_count()==before+1 and button.has_focus())
   settings.queue_free();await process_frame
  g.queue_free();await process_frame
- print("PASS preserved notice/contributors, Settings path, four-size resize, footer close, menu/pause and unchanged state")
+ print("PASS preserved notice/contributors, Settings path, four-size resize, footer/keyboard close, background focus isolation/restore, menu/pause and unchanged state")
  quit()

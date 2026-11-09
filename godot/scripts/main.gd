@@ -1683,6 +1683,11 @@ func open_settings():
  credits.custom_minimum_size.y = 44
  credits.pressed.connect(func(): load("res://scripts/visuals/art_credits.gd").open(self))
  list.add_child(credits)
+ var help = Button.new()
+ help.text = "HOW TO PLAY"
+ help.custom_minimum_size.y = 44
+ help.pressed.connect(func(): load("res://scripts/visuals/how_to_play.gd").open(self))
+ list.add_child(help)
  if storage_warning != "":
   var warning = Label.new()
   warning.text = storage_warning

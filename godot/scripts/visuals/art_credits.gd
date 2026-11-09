@@ -5,14 +5,6 @@ const CONTRIBUTORS="Other reused art (CC0)\nQuaternius: bunny rig/animations and
 static func text() -> String:
  return "Han house / 0 A.D.\nOriginal author: Wildfire Games\nhttps://www.wildfiregames.com/\nCC BY-SA 3.0\nhttps://creativecommons.org/licenses/by-sa/3.0/\n\nAdapted for this game: static DAE converted to GLB, coordinate transform applied, texture reduced and alpha removed. The adapted model remains CC BY-SA 3.0. This notice does not relicense independent game code or imply endorsement.\n\n"+CONTRIBUTORS+"Full Han house source and license notice:\n\n"+FileAccess.get_file_as_string(NOTICE_PATH)
 static func open(game):
- var previous_focus=game.get_viewport().gui_get_focus_owner()
- var suspended=[]
- for child in game.overlay_root.get_children():suspend_focus(child,suspended)
- var blocker=Control.new()
- blocker.name="ArtCreditsBlocker"
- blocker.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
- blocker.mouse_filter=Control.MOUSE_FILTER_STOP
- game.overlay_root.add_child(blocker)
  var list=game.popup_frame("ART CREDITS")
  var panel=list.get_parent().get_parent() as PanelContainer
  var arrange=func():
@@ -24,10 +16,6 @@ static func open(game):
  arrange.call()
  game.get_viewport().size_changed.connect(arrange)
  panel.tree_exiting.connect(func():
-  blocker.queue_free()
-  for item in suspended:
-   if is_instance_valid(item[0]):item[0].focus_mode=item[1]
-  if is_instance_valid(previous_focus):previous_focus.grab_focus()
   if game.get_viewport().size_changed.is_connected(arrange):game.get_viewport().size_changed.disconnect(arrange)
  )
  var body=Label.new()
@@ -44,8 +32,3 @@ static func open(game):
  list.add_child(close)
  list.get_child(1).grab_focus()
  return list
-static func suspend_focus(node,saved):
- if node is Control and node.focus_mode!=Control.FOCUS_NONE:
-  saved.append([node,node.focus_mode])
-  node.focus_mode=Control.FOCUS_NONE
- for child in node.get_children():suspend_focus(child,saved)

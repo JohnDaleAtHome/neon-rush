@@ -8,7 +8,7 @@ The Han house source notice was tracked in this project, but it was absent from 
 
 The same page acknowledges the other recorded reused CC0 art: Quaternius, Poly Haven, VVayToyek, Innerscene, Pixor and Mish7913, with source links. This is a release-readiness repair, not a legal verdict on an earlier public build. No new art, level mechanics, save formats, scoring or option defaults were added.
 
-Credits uses a scroll panel with top and bottom close buttons. Its own layout responds to viewport changes; a transparent input blocker prevents clicks on Settings underneath. Closing removes the blocker and size-change callback. Existing general popup positioning is not rewritten.
+Credits uses a scroll panel with top and bottom close buttons. Its own layout responds to viewport changes; a transparent input blocker prevents clicks on Settings underneath. Closing removes the blocker and size-change callback. Credits takes keyboard focus, temporarily removes background controls from keyboard focus traversal, then restores their original focus modes and the previous focused control on close. Existing general popup positioning is not rewritten.
 
 ## Checks
 
@@ -18,6 +18,7 @@ Credits uses a scroll panel with top and bottom close buttons. Its own layout re
 - Untouched source archive `821cc8fa5472c49def1fd1e9a03912f49ea83b2e`: documented `fetch-assets.py` recovery, clean import, all 62 isolated suites and Web release export passed. All six changed source files were byte-exact against the candidate; the temporary duplicate editor path was removed by a tracked rename before runtime hookup.
 - Fresh production PCK: 200 paths, 7,688,188 bytes, no QA/test/fixture/oracle paths. The included Han notice SHA-256 is `0a67a874293828d744bf25bd958cb8da918d3cadc083e84a93a700c434a7a78d`, identical to source.
 - Fresh ordinary export, 390x844: Settings, credits top and bottom, footer close back to Settings, close Settings, Story start and jump inspected. No browser page errors; no QA API present. Additional ordinary candidate checks opened credits after resize at all four sizes and returned through the footer; no page errors.
+- An additional ordinary Enter-key check then found duplicate credits panels because the underlying Settings button retained keyboard focus. The follow-up focus repair passed all62 candidate suites, a new ui_accept regression and actual ordinary Enter/Tab/close browser pixels. The current module suspends/restores background focus and focuses the top close button. Fresh source follow-through must include this repair; the earlier821cc8f archive proof alone is not keyboard clearance.
 - Final documentation-only follow-through does not alter runtime. Source-complete does not mean deployed or natural full-campaign complete.
 
 ## Provenance

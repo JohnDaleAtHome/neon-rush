@@ -23,6 +23,27 @@ func run():
  assert(labels[0].visible and labels[0].text==g.STORAGE_CAUTION)
  assert(g.popup_stack.size()==1,"No stacked warning over an existing panel")
  g.popup_stack[0].queue_free();await process_frame
+ # Only run this destructive path fixture under the runner's disposable user data.
+ var data = OS.get_user_data_dir()
+ assert(data.contains("neon-rush-test-"), "Use tools/run_tests.py for isolated user data")
+ for entry in [["options","save_options"],["journey","save_checkpoint"],["stats","save_stats"]]:
+  var path = data.path_join(entry[0]+".json")
+  var original = FileAccess.get_file_as_string(path) if FileAccess.file_exists(path) else ""
+  if FileAccess.file_exists(path): assert(DirAccess.remove_absolute(path)==OK)
+  assert(DirAccess.make_dir_absolute(path)==OK)
+  g.storage_warning = ""
+  g.call(entry[1])
+  assert(g.storage_warning == g.STORAGE_CAUTION, entry[0]+" open failure needs caution")
+  assert(DirAccess.remove_absolute(path)==OK)
+  if original != "":
+   var restored=FileAccess.open(path,FileAccess.WRITE)
+   assert(restored != null)
+   restored.store_string(original)
+   restored.close()
+  g.storage_warning = ""
+  g.call(entry[1])
+  assert(g.storage_warning == "", entry[0]+" successful write must not warn")
+  assert(FileAccess.file_exists(path))
  g.queue_free();await process_frame
- print("STORAGE_WARNING_OK live deferral, paused notice, once-only, dynamic panels, accurate backup limits")
+ print("STORAGE_WARNING_OK live deferral, paused notice, once-only, dynamic panels, accurate backup limits, isolated native write failures")
  quit()

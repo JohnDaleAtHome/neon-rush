@@ -1432,20 +1432,14 @@ func show_story_encounter(which: int):
   story_label("SLEEPY MOON-TURTLE",Vector3(0,1.7,-2))
  elif which == 4:
   actor.position.z = -3
-  encounter_sphere(actor,Vector3(0,0.85,0),Vector3(1.15,1.6,0.7),Color("443149"))
-  encounter_sphere(actor,Vector3(0,1.75,0),Vector3(0.95,0.9,0.75),Color("443149"))
-  for side in [-1,1]:
-   var ear = encounter_sphere(actor,Vector3(side*0.29,2.28,0),Vector3(0.25,0.85,0.22),Color("443149"))
-   ear.rotation_degrees.z = side*-18
-   encounter_sphere(actor,Vector3(side*0.19,1.80,0.35),Vector3(0.11,0.15,0.06),Color("d5b0e8"))
-   var hand = encounter_sphere(actor,Vector3(side*0.60,1.05,0.05),Vector3(0.27,0.8,0.27),Color("443149"))
-   hand.rotation_degrees.z = side*30
+  load("res://scripts/visuals/shadow_offer.gd").add_offer(actor)
   story_label("A SHADOW, ALONE",Vector3(0,3.0,-3))
 
  layout_encounter(get_viewport().get_visible_rect().size)
 
 func layout_encounter(size: Vector2):
  if story_props.is_empty(): return
+ if level==4:load("res://scripts/visuals/shadow_offer.gd").arrange(story_props[0],size)
  var center = camera.project_position(Vector2(size.x/2,size.y*0.50),8.0)
  var origin = Vector3(0,1,-3 if level == 4 else -2)
  var offset = center-origin
@@ -1453,6 +1447,8 @@ func layout_encounter(size: Vector2):
  for prop in story_props:
   if not prop.has_meta("encounter_origin"): prop.set_meta("encounter_origin",prop.position)
   prop.position = prop.get_meta("encounter_origin") + offset
+ if level==4 and size.x/size.y>1.4 and size.y>=600:
+  story_props[1].position=camera.project_position(Vector2(size.x/2,size.y*.37),8.0)
 
 func decorate_hazard(hazard: MeshInstance3D, kind: String):
  if kind == "low" and mode == "story" and level == 0:

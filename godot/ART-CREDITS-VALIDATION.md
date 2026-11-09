@@ -15,7 +15,10 @@ Credits uses a scroll panel with top and bottom close buttons. Its own layout re
 - All 62 isolated native suites passed on the private candidate, including `test_art_credits.gd`.
 - Focused regression checks complete notice/contributors and export inclusion, Settings entry, resize bounds/reversibility at 390x844, 320x568, 844x390 and 1280x720, top/footer close, repeated-open connection cleanup, and unchanged menu/paused-run state.
 - Actual ordinary-release browser pixels inspected at all four sizes, both top and scrolled bottom. Initial credits resize clipping was found and fixed before integration. Software browser screenshots establish layout, not actual-device performance.
-- Fresh source archive recovery, complete suites, production export and ordinary-release checks are required again after source integration. Candidate evidence is not substituted for those results.
+- Untouched source archive `821cc8fa5472c49def1fd1e9a03912f49ea83b2e`: documented `fetch-assets.py` recovery, clean import, all 62 isolated suites and Web release export passed. All six changed source files were byte-exact against the candidate; the temporary duplicate editor path was removed by a tracked rename before runtime hookup.
+- Fresh production PCK: 200 paths, 7,688,188 bytes, no QA/test/fixture/oracle paths. The included Han notice SHA-256 is `0a67a874293828d744bf25bd958cb8da918d3cadc083e84a93a700c434a7a78d`, identical to source.
+- Fresh ordinary export, 390x844: Settings, credits top and bottom, footer close back to Settings, close Settings, Story start and jump inspected. No browser page errors; no QA API present. Additional ordinary candidate checks opened credits after resize at all four sizes and returned through the footer; no page errors.
+- Final documentation-only follow-through does not alter runtime. Source-complete does not mean deployed or natural full-campaign complete.
 
 ## Provenance
 

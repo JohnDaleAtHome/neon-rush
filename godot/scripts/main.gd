@@ -607,6 +607,7 @@ func spawn_wave():
  var l = rng.randi_range(0, 2)
  var safe = (l + 1 + rng.randi_range(0, 1)) % 3
  var kind = "low"
+ if mode == "story" and level == 0 and elapsed >= 4.0: kind = "tall" if rng.randf() > 0.75 else "low"
  if mode in ["easy", "normal", "hard"]: kind = "tall" if rng.randf() > 0.45 else "low"
  if mode == "story" and level == 1: kind = "tall" if rng.randf() > 0.5 else "low"
  if (mode == "story" and level in [2,3]) or (mode == "mission" and mission_phase == 1): kind = "beam" if rng.randf() > 0.5 else "low"
@@ -1487,6 +1488,17 @@ func layout_encounter(size: Vector2):
   story_props[1].position=camera.project_position(Vector2(size.x/2,size.y*.37),8.0)
 
 func decorate_hazard(hazard: MeshInstance3D, kind: String):
+ if kind == "tall" and mode == "story" and level == 0:
+  # A narrow three-bee swarm fills the existing tall dodge envelope.
+  # Keep normal proportions instead of stretching one bee into a wall.
+  hazard.mesh = null
+  var bee_scene = preload("res://assets/models/meadow_bee/bee.glb")
+  for i in range(3):
+   var bee = bee_scene.instantiate()
+   bee.scale = Vector3.ONE * 5.6
+   bee.position = Vector3(-0.12 if i%2==0 else 0.12, (i-1)*0.70, 0)
+   hazard.add_child(bee)
+  return
  if kind == "low" and mode == "story" and level == 0:
   hazard.mesh = MEADOW_BALE_MESH
   hazard.rotation = Vector3.ZERO

@@ -7,17 +7,6 @@ static func text() -> String:
 static func open(game):
  var list=game.popup_frame("ART CREDITS")
  var panel=list.get_parent().get_parent() as PanelContainer
- var arrange=func():
-  var size=game.get_viewport().get_visible_rect().size
-  var width=minf(370,size.x-20)
-  panel.position=Vector2((size.x-width)/2,20 if size.y<650 else 70)
-  panel.size=Vector2(width,minf(690,size.y-(40 if size.y<650 else 90)))
-  list.get_parent().custom_minimum_size=Vector2(width-32,minf(650,size.y-(80 if size.y<650 else 130)))
- arrange.call()
- game.get_viewport().size_changed.connect(arrange)
- panel.tree_exiting.connect(func():
-  if game.get_viewport().size_changed.is_connected(arrange):game.get_viewport().size_changed.disconnect(arrange)
- )
  var body=Label.new()
  body.name="ArtCreditsNotice"
  body.text=text()

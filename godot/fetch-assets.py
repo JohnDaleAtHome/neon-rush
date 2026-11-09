@@ -40,3 +40,6 @@ runpy.run_path(str(ROOT / "restore-dunes-sand.py"), run_name="__main__")
 runpy.run_path(str(ROOT / "assets/models/meadow_bale/restore_texture.py"), run_name="__main__")
 runpy.run_path(str(ROOT / "assets/models/sea_turtle/restore_model.py"), run_name="__main__")
 print("Current visual assets restored, including Dunes sand, Meadow bale and Sea turtle.")
+
+# CC0 Meadow bee: exact, offline and independent of runtime scripts.
+runpy.run_path(str(ROOT / "assets/models/meadow_bee/restore_model.py"), run_name="__main__")

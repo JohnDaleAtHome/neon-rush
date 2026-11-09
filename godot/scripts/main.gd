@@ -869,6 +869,7 @@ func save_checkpoint():
  browser_backup("journey",{"level":level,"pieces":pieces})
  var f = FileAccess.open("user://journey.json", FileAccess.WRITE)
  if f: f.store_string(JSON.stringify({"level": level, "pieces": pieces}))
+ else: set_storage_warning()
 
 func load_checkpoint():
  var saved = browser_restore("journey")
@@ -1243,6 +1244,7 @@ func save_options():
   var out = options.duplicate()
   out.gold_unlocked = gold_unlocked
   f.store_string(JSON.stringify(out))
+ else: set_storage_warning()
 
 func load_options():
  load_browser_options()

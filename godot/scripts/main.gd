@@ -712,6 +712,7 @@ func _process(dt):
    if mode == "story":
     record_story_attempt("shadow checkpoint retry")
     show_beat("The silver bell rings", "The shadow caught up. Gather light to push it back.", "RETRY CHECKPOINT")
+    sound("bell")
    else: finish_run("The shadow caught up. Treats push it back.")
    return
  if playable_sea_exit():

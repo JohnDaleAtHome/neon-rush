@@ -19,10 +19,18 @@ func run():
     assert(close.has_focus() and opener.focus_mode==Control.FOCUS_NONE)
     assert(g.popup_stack.size()==1 and g.overlay_root.get_child_count()==before+2)
     assert(g.overlay_root.get_child(-2).mouse_filter==Control.MOUSE_FILTER_STOP)
+    var callbacks=g.get_viewport().get_signal_connection_list("size_changed").size()
+    for size in [Vector2i(844,390),Vector2i(320,568),Vector2i(1280,720),Vector2i(390,844)]:
+     root.size=size;await process_frame;await process_frame
+     var rect=popup.get_global_rect();var bounds=g.get_viewport().get_visible_rect()
+     assert(rect.position.x>=0 and rect.position.y>=0 and rect.end.x<=bounds.end.x+1 and rect.end.y<=bounds.end.y+1)
+     assert(popup.get_child(0).size.y<=rect.size.y)
+     assert(g.get_viewport().get_signal_connection_list("size_changed").size()==callbacks)
     for key in [KEY_P,KEY_M,KEY_LEFT,KEY_SPACE]:
      var e=InputEventKey.new();e.keycode=key;e.pressed=true;g._unhandled_key_input(e)
     assert([g.level,g.pieces,g.options,g.stats,g.elapsed,g.running,g.paused]==state)
     await accept()
+    assert(g.get_viewport().get_signal_connection_list("size_changed").size()==callbacks-1)
     assert(g.popup_stack.is_empty() and g.overlay_root.get_child_count()==before)
     assert(opener.has_focus() and opener.focus_mode==Control.FOCUS_ALL)
   g.options_button.grab_focus();g.open_settings();await process_frame

@@ -49,9 +49,9 @@ const TOGGLE_OFF_PNG := "iVBORw0KGgoAAAANSUhEUgAAADgAAAAgCAYAAABHA7voAAAGRUlEQVR
 const INTRO_WORDS := "The eclipse shattered the Moon Bridge. Gather the five pieces and guide Mochi home."
 const LEVEL_HINTS := [
 	"Gather six dew drops. Jump the bales, dodge the bees.",
-	"Long hops over the crater lips.",
-	"Slide under the branches. Help the firefly.",
-	"Jump the waves. Slide under the lightning arches.",
+	"Silver Moon: long hops over the crater lips.",
+	"Cinnamon Moon: slide under branches. Help the firefly.",
+	"Storm Moon: jump waves. Slide under lightning arches.",
 	"Gather light. Hits let the shadow closer.",
 	"Five lights open the palace. FIRE when the shield falls.",
 ]

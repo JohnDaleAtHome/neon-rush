@@ -952,7 +952,9 @@ func apply_world(index: int):
  environment.fog_light_color = [Color("1d5c3a"),Color("341a52"),Color("57351a"),Color("174464"),Color("3d1738"),Color("443e7c")][maxi(index,0)] if index >= 0 else Color("11182e")
  environment.fog_light_energy = 1.0
  environment.fog_sky_affect = 0.0
- var sky = Sky.new()
+ # Keep one scene-owned Sky; replacing it before the first rendered frame retains GLES textures.
+ var sky = environment.sky
+ if sky == null: sky = Sky.new()
  var sky_material = ShaderMaterial.new()
  sky_material.shader = load("res://scripts/sky.gdshader")
  sky_material.set_shader_parameter("camera_forward",-camera.global_basis.z)

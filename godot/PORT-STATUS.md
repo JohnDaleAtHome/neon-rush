@@ -71,3 +71,8 @@ The native test runner isolates user data on Linux and reports script errors/tim
 The Tide Pearl now has the selected short playable Sea exit: two authored hazards at7m/s for five seconds, one continuously clear lane, ordinary movement/contact and no random pickups or exit bonuses. Bridge4/5 is saved only after completion; death/retry retains the prior Sea checkpoint. Eclipse Key starts Story Guardian at3HP with a3-point display; Mission stays4HP. Both keep the existing two-hit window and shield timing.
 
 All58 isolated suites pass locally and on an untouched7eeb434 source archive after documented asset restore. Controlled campaign now8892steps/zero deaths/reunion, not the previous8911-step fixture. Production Web startup and separate labeled Sea release-fixture pause/resize/resume pixels checked. See PEARL-KEY-VALIDATION.md for exact limits. Public deployment, natural full-browser campaign, human balance/listening and physical-device acceptance remain open.
+
+## November9: gesture-only Guardian access
+With movement buttons hidden, Guardian FIRE remains available as the only on-screen action. Movement gestures and keyboard mappings, Story3HP/Mission4HP, timing and save schema are unchanged. Settings names the movement-button option and explains the exception. All59 isolated native suites and controlled production-release browser touch/pause checks pass; actual390/844/1280pixels inspected. See GESTURE-FIRE-VALIDATION.md. Not deployed; no real-phone or unassisted-play clearance.
+
+Vic changed routine updates to one changelog every30days on November9, replacing twice-daily summaries. Authorized improvement work continues between updates; deployment remains separately gated.

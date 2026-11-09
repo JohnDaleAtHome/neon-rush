@@ -92,7 +92,9 @@ func apply(index: int) -> void:
 	environment.ambient_light_color = Color("c5d8ef")
 	environment.ambient_light_energy = 0.72
 	# Sky gradient tuned to the same teal-to-indigo ramp as the fog.
-	var sky := Sky.new()
+	# Reuse the scene-owned sky while replacing only its material.
+	var sky: Sky = environment.sky
+	if sky == null: sky = Sky.new()
 	var sky_material := ShaderMaterial.new()
 	sky_material.shader = load("res://scripts/visuals/meadow_sky.gdshader")
 	sky_material.set_shader_parameter("camera_forward", -camera_ref.global_basis.z)

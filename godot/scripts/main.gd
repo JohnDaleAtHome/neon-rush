@@ -1643,6 +1643,11 @@ func popup_frame(title: String) -> VBoxContainer:
 
 func open_settings():
  var list = popup_frame("SETTINGS - THIS BROWSER")
+ var credits = Button.new()
+ credits.text = "ART CREDITS"
+ credits.custom_minimum_size.y = 44
+ credits.pressed.connect(func(): load("res://scripts/visuals/art_credits.gd").open(self))
+ list.add_child(credits)
  if storage_warning != "":
   var warning = Label.new()
   warning.text = storage_warning

@@ -1,0 +1,10 @@
+Bee by Quaternius
+Source: https://poly.pizza/m/HvfIku26CK
+Publisher download/model-viewer file: https://static.poly.pizza/1dbebe1f-7ef7-4886-ae25-4395b1dae452.glb.br
+Retrieved November 10, 2026. The browser decodes transport compression to GLB.
+Publisher license: Public Domain (CC0)
+Terms: https://creativecommons.org/publicdomain/zero/1.0/
+Original model: 57,672 bytes, 914 triangles, two surfaces, embedded Cards_Atlas.png.
+SHA256: 0687a865029fad29678759bff04b53a8db70cb95f69835bf8e94a3e2273a1d56
+The GLB is unmodified. Three uniformly scaled instances form a narrow swarm;
+no stretching, new animation, or texture edits. No endorsement is implied.

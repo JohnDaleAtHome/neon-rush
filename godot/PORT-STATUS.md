@@ -79,3 +79,8 @@ Vic changed routine updates to one changelog every30days on November9, replacing
 
 ## November9: closed studies and source-only kindness illustration
 The extracted kagami-mochi trial read as a ring/plate and the Sea-wave mesh trial read as pale scallops without a clarity gain. Both were rejected, discarded intermediate assets/fixtures/exports removed, and compact comparison evidence retained. Neither is a delivered improvement. The accepted original Shadow illustration has a solid rice cake on Mochi's palm and a reaching violet shadow; it appears only in the stopped single-action beat. Public hosting is unchanged. No deployment, physical-device, natural full-campaign, listening or human-fun clearance.
+
+
+## November 9: release art credits
+
+Settings now has ART CREDITS. The ordinary release includes the unchanged full Han-house notice and readable attribution/license/adaptation summary, plus the existing CC0 art contributors and source links. Credits-only responsive layout, input blocking and top/footer close preserve the paused/menu state. Candidate all62 isolated suites and four-size actual ordinary-release pixels passed. See ART-CREDITS-VALIDATION.md for limits and final recovery follow-through. Source-only, not deployed; no new device/FPS/listening/natural-full-campaign clearance.

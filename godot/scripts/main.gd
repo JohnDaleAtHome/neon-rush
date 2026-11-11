@@ -868,9 +868,7 @@ func update_hud():
 
 func save_checkpoint():
  browser_backup("journey",{"level":level,"pieces":pieces})
- var f = FileAccess.open("user://journey.json", FileAccess.WRITE)
- if f: f.store_string(JSON.stringify({"level": level, "pieces": pieces}))
- else: set_storage_warning()
+ if not save_file_text("user://journey.json",JSON.stringify({"level":level,"pieces":pieces})): set_storage_warning()
 
 func load_checkpoint():
  var saved = browser_restore("journey")
@@ -1144,9 +1142,7 @@ func show_stats():
 
 func save_stats():
  browser_backup("stats",{"records":stats,"history":history,"totals":totals,"totals_scope":totals_scope})
- var f = FileAccess.open("user://stats.json", FileAccess.WRITE)
- if f: f.store_string(JSON.stringify({"records":stats,"history":history,"totals":totals,"totals_scope":totals_scope}))
- else: set_storage_warning()
+ if not save_file_text("user://stats.json",JSON.stringify({"records":stats,"history":history,"totals":totals,"totals_scope":totals_scope})): set_storage_warning()
 
 func load_stats():
  var backup = browser_restore("stats")
@@ -1240,12 +1236,18 @@ func save_options():
   var packed = Marshalls.utf8_to_base64(JSON.stringify(out))
   var result = JavaScriptBridge.eval("(()=>{try{localStorage.setItem('neonrush_godot_options_v2',atob('%s'));return 'ok'}catch(e){return 'failed'}})()" % packed,true)
   if str(result) != "ok": set_storage_warning()
- var f = FileAccess.open("user://options.json", FileAccess.WRITE)
- if f:
-  var out = options.duplicate()
-  out.gold_unlocked = gold_unlocked
-  f.store_string(JSON.stringify(out))
- else: set_storage_warning()
+ var out = options.duplicate()
+ out.gold_unlocked = gold_unlocked
+ if not save_file_text("user://options.json",JSON.stringify(out)): set_storage_warning()
+
+func save_file_text(path:String,text:String)->bool:
+ # Browser backup and virtual-filesystem behavior remain unchanged.
+ if OS.has_feature("web"):
+  var file=FileAccess.open(path,FileAccess.WRITE)
+  if not file:return false
+  file.store_string(text)
+  return true
+ return preload("res://scripts/verified_save.gd").replace_file(path,text)
 
 func load_options():
  load_browser_options()

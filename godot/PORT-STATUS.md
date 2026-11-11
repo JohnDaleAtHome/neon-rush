@@ -2,6 +2,8 @@
 
 Latest November 12 runtime/test checkpoint `7a1c4ca9cea45f97f66eb5b730b7606cb8841128` prevents canceled touches from becoming taps, including the Godot 4.7.2 Web template cancellation gap. An untouched archive passed documented asset restoration/import, all 70 isolated native suites in two bounded runs, exact-source listener tests and release export. Fresh ordinary cancellation/next-tap and earned Shadow checkpoint discard/reload pixels were inspected. Saves, assets and Story progression are unchanged. Single-main-scene scope; no physical-device, other-browser, full-natural-campaign or deployment clearance. See TOUCH-CANCEL-VALIDATION.md. Earlier checkpoints below remain historical evidence.
 
+Prior November 11 runtime/test checkpoint adf4c3512dd21de57b335c7761c04d9031605a6d adds native-only verified save replacement. Pending writes must match exact UTF-8 readback before replacing the prior file; failures use the existing caution. Web virtual writes/backups, schemas and gameplay are unchanged. Untouched runtime archive restoration/import/all 69 isolated suites/separate Linux truncation regression/release export pass. Candidate ordinary earned Shadow/Bridge4 discard/reload and native caution pixels inspected. No fsync/crash-proof atomicity, Windows/concurrency, browser durability, physical-device or full-natural-campaign claim. No public deployment. See NATIVE-SAVE-VALIDATION.md; earlier checkpoints below remain historical evidence.
+
 This is a native Godot 4 project, not a completed rewrite. This document describes development source, separately from the public hosted checkpoint. No Three.js code is included.
 
 ## Run

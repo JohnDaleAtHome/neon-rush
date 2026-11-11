@@ -147,6 +147,7 @@ func box(size: Vector3, pos: Vector3, color: Color) -> MeshInstance3D:
  return m
 
 func _ready():
+ preload("res://scripts/web_touch_cancel.gd").install()
  rng.randomize()
  var env = WorldEnvironment.new()
  env_world = env
@@ -1338,7 +1339,17 @@ func stop_audio():
   p.queue_free()
  audio_players.clear()
 
+func _exit_tree():
+ preload("res://scripts/web_touch_cancel.gd").dispose()
+
 func _input(event):
+ # Consume releases even in menus/pause so canceled IDs cannot leak into a later tap.
+ var web_canceled = event is InputEventScreenTouch and not event.pressed and preload("res://scripts/web_touch_cancel.gd").consume(event.index)
+ if event is InputEventScreenTouch and (event.canceled or web_canceled):
+  touch_active = false
+  touch_moved = false
+  touch_origin = Vector2.ZERO
+  return
  if not running or paused: return
  if event is InputEventScreenTouch:
   if event.pressed:

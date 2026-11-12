@@ -109,6 +109,8 @@ var guard = 0.0
 var shadow_gap = 20.0
 var boss_hp = 4
 var boss_clock = 0.0
+var guardian_aim=preload("res://scripts/guardian_aim.gd").new()
+var guardian_aim_event="none"
 var boss_lane = 1
 var boss: MeshInstance3D
 var boss_hits = 0
@@ -588,6 +590,8 @@ func start_level():
  shadow_gap = 20
  boss_hp = guardian_max_hp()
  boss_clock = 0
+ guardian_aim.reset()
+ guardian_aim_event="none"
  boss_hits = 0
  guardian_feedback = ""
  guardian_feedback_time = 0
@@ -615,13 +619,14 @@ func spawn_wave():
  if mode == "chase" or (mode == "story" and level == 4): kind = ["low", "tall", "beam"][rng.randi_range(0, 2)]
  var size = Vector3(1.4, 0.8, 1.2) if kind == "low" else Vector3(1.4, 2.5, 1.2)
  if kind == "beam": size.y = 0.4
- var hazard = box(size, Vector3(LANES[l], 1.65 if kind == "beam" else size.y / 2, -44), Color("9eccec") if kind == "beam" else Color("e4a35b") if kind == "low" else Color("b84569"))
- decorate_hazard(hazard, kind)
- hazard.set_meta("kind", kind)
- hazard.set_meta("lane", l)
- if mode == "story" and level in [0,1,3,4] and kind == "tall": hazard.set_meta("sway", true)
- add_cue(hazard, kind)
- entities.append(hazard)
+ if not (mode=="story" and level==5):
+  var hazard = box(size, Vector3(LANES[l], 1.65 if kind == "beam" else size.y / 2, -44), Color("9eccec") if kind == "beam" else Color("e4a35b") if kind == "low" else Color("b84569"))
+  decorate_hazard(hazard, kind)
+  hazard.set_meta("kind", kind)
+  hazard.set_meta("lane", l)
+  if mode == "story" and level in [0,1,3,4] and kind == "tall": hazard.set_meta("sway", true)
+  add_cue(hazard, kind)
+  entities.append(hazard)
  for z in [-34, -39]:
   var orb = MeshInstance3D.new()
   var shape = SphereMesh.new()
@@ -756,6 +761,7 @@ func _process(dt):
   update_guardian_art(opened)
   spawn_time -= dt
   if spawn_time <= 0 and not opened: spawn_wave(); spawn_time = 2.3
+  if mode=="story" and level==5:update_guardian_aim(dt)
  for item in entities.duplicate():
   if not running: break
   var kind: String = item.get_meta("kind")
@@ -836,6 +842,25 @@ func _process(dt):
  if playable_sea_exit() and running: update_unlock(dt)
  update_hud()
 
+func update_guardian_aim(dt:float):
+ var event=guardian_aim.step(dt,not last_open,int(boss_clock/4.8),lane)
+ if event.event=="warn":guardian_aim_event="warning"
+ if event.event=="launch":
+  guardian_aim_event="released"
+  var hazard=box(Vector3(1.4,0.8,1.2),Vector3(LANES[event.lane],0.4,-18),Color("e4a35b"))
+  decorate_hazard(hazard,"low")
+  hazard.set_meta("kind","low")
+  hazard.set_meta("lane",event.lane)
+  hazard.set_meta("guardian_aim",true)
+  add_cue(hazard,"low")
+  entities.append(hazard)
+ if last_open:guardian_aim_event="none"
+
+func guardian_bolt_approaching() -> bool:
+ for item in entities:
+  if item.get_meta("guardian_aim",false) and item.position.z <= 1.1:return true
+ return false
+
 func guardian_max_hp() -> int:
  return 3 if mode == "story" and level == 5 else 4
 
@@ -865,6 +890,15 @@ func update_hud():
   progress_label.text = "GOAL COMPLETE" if run_goal else "EARN GOLD: %d / 250m + %d / 10 TREATS" % [mini(250,int(distance)),mini(10,collected)]
  elif unlock: progress_label.text = ("TIDE PEARL FOUND - CROSSING %d%%" if playable_sea_exit() else "BRIDGE CROSSING %d%%") % mini(100,int(unlock_time/5*100))
  else: progress_label.text = ""
+ if mode=="story" and level==5 and running and not paused:
+  if guardian_aim_event=="warning":
+   message.text="SHIELD CLOSED - DODGE THE AIM"
+   progress_label.text="BOLT AIM: %s - MOVE OR JUMP" % ["LEFT","CENTER","RIGHT"][guardian_aim.target_lane]
+  elif guardian_aim_event=="released":
+   message.text="SHIELD CLOSED - AVOID THE BOLT"
+   progress_label.text="BOLT RELEASED: %s" % ["LEFT","CENTER","RIGHT"][guardian_aim.target_lane]
+  elif last_open:
+   message.text="SHIELD OPEN - BOLT STILL IN FLIGHT" if guardian_bolt_approaching() else ""
  status_label.text = guardian_feedback if guardian_feedback_time > 0 and ((mode == "story" and level == 5) or (mode == "mission" and mission_phase == 2)) else pickup_feedback if pickup_feedback_time > 0 else "SHIELD READY" if shield else "MAGNET %.1fs" % magnet_time if magnet_time > 0 else "CHAIN %d / 3" % chain if chain > 0 else ""
 
 func save_checkpoint():

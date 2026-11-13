@@ -18,7 +18,7 @@ godot --path godot
 
 Replace `godot` with your executable path if needed. Or open `godot/project.godot` in the editor after asset recovery.
 
-Recovery verifies assets before writing them. Baseline files still need the staging URLs recorded in the manifest: this is not a fully offline, self-contained asset archive. See [Asset recovery](godot/ASSET-RECOVERY.md). Do not continue after a failed or partial restore.
+Recovery verifies assets before writing them. Baseline and newer visual assets now restore from tracked offline sourcepacks; the normal bootstrap no longer needs staging downloads. Python, Godot and export templates must be installed separately. See [Asset recovery](godot/ASSET-RECOVERY.md). Do not continue after a failed or partial restore.
 
 ## Test and build for the browser
 

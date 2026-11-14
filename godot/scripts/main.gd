@@ -1,5 +1,7 @@
 extends Node3D
 
+const MoonDewLight = preload("res://scripts/visuals/moon_dew_light.gd")
+
 const MEADOW_BALE_MESH = preload("res://assets/models/meadow_bale/hay_bale.obj")
 const MEADOW_BALE_TEXTURE = preload("res://assets/models/meadow_bale/textures/hay.jpg")
 var meadow_bale_material: StandardMaterial3D
@@ -1083,6 +1085,9 @@ func begin_unlock():
  entities.clear()
  if gate: gate.queue_free()
  gate = build_crossing_bridge()
+ if level == 0:
+  MoonDewLight.attach(gate)
+  MoonDewLight.update(gate,0.0,reduced_motion())
  message.text = ["MOON DEW lights the launch pad. Hop toward the Silver Moon.", "SILVER LANTERN reveals Chang'e's footprints.", "CINNAMON BLOSSOM opens Wu Gang's gate.", "TIDE PEARL found. The storm slows. Cross the calm water.", "ECLIPSE KEY opens the palace and weakens the Guardian."][level]
  speed = 7 if level == 3 else 12
  if level == 3:
@@ -1119,6 +1124,7 @@ func build_crossing_bridge() -> Node3D:
 func update_unlock(dt: float):
  if not unlock or not running or paused: return
  unlock_time += dt
+ if level == 0: MoonDewLight.update(gate,unlock_time,reduced_motion())
  if level == 0 and unlock_time > 1.4 and unlock_time - dt <= 1.4: velocity = 13
  if not playable_sea_exit():
   velocity -= 19 * dt

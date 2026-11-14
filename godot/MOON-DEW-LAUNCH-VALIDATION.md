@@ -26,3 +26,9 @@ No movement, input, hitbox, lane, spawn, RNG, score, five-second duration, hop v
 ## Limits
 
 No new natural Meadow completion, full natural campaign, human fun, audio/listening, physical-device, frame-rate or public-deployment claim. The earlier independent reviewer kit remains a separate older build. Fresh committed-source recovery/build verification is recorded separately after the source is tracked.
+
+## Fresh committed-source check
+
+An untouched archive of complete source checkpoint `8ee294dfea25f811c06c44ee2006fa76b29ac27c` restored all assets using only the documented bootstrap while sockets were denied, with zero network attempts. Clean import, all 75 isolated native suites and release-Web export passed. The five changed remote source paths match the tested candidate byte for byte.
+
+The fresh pack has 216 resources and 7,805,393 resource bytes. All entry MD5 checks pass, with the same exclusions and small-manifest caveat above. Reimported scene/cache bytes differ from the candidate by 18 aggregate resource bytes; compiled scripts, shaders and textures match. This is not a bit-identical pack claim. Fresh committed native phone/landscape launch pixels and ordinary release startup were also inspected. Startup again preserved all three exact earned backup strings, with no page/console errors and no exposed QA state. These checks do not convert the controlled light previews into natural-play or actual-device evidence.

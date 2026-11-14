@@ -1,6 +1,6 @@
 # Godot rewrite work in progress
 
-November 13 source-recovery checkpoint `d3fc22e8f453274588128c425181f1540f784847` adds exact offline recovery of the 28 original baseline assets, without runtime, asset-content or save changes. An untouched committed archive completed the full asset bootstrap with sockets disabled and zero network attempts, clean import, all 73 isolated native suites and Web release export. The baseline sourcepack is excluded from release resources. Godot/export templates remain separate prerequisites; no public deployment or new gameplay/device clearance. See BASELINE-OFFLINE-VALIDATION.md.
+November 14 opening-art source checkpoint adds an original static Chinese-fantasy menu illustration, separate from gameplay. Candidate passes 74 isolated suites and Web export; actual four-size native/Web pixels and exact earned-profile startup backup strings checked. It does not fill unfinished Story hazards or natural late-campaign/human-fun/device gaps. No public deployment. See OPENING-ART-VALIDATION.md.
 
 Latest November 13 runtime/test checkpoint `a6246dfacc83eb1b3f5bf46419c7bf01a6606de8` adds Story Palace lane-snapshot warning and a delayed aimed low hazard, replacing the old random Palace hazard while preserving pickup RNG and Mission behavior. The existing low body remains placeholder art, not finished shadow-bolt visuals. Candidate, fresh reconstruction and untouched committed archive pass asset recovery/import, all 73 isolated native suites and release export. Four-size controlled Web and native Full/Light pixels inspected; the open-window in-flight warning preserves the fire instruction. Ordinary earned Shadow checkpoint copy survives discard/reload exactly. No new natural late-campaign, human balance, device/performance, listening or deployment clearance. See GUARDIAN-AIM-VALIDATION.md. Earlier checkpoints below remain historical evidence.
 
@@ -76,7 +76,7 @@ Old localStorage stays untouched. First engine use maps valid legacy control/vis
 - The ending shows an original generated static illustration of Chang'e, Mochi and Wu Gang sharing mooncake/tea beneath a flowering branch. Grove's stopped firefly beat separately shows an original illustrated Wu Gang witness with axe at rest, matching the ending design. Neither is an animated/live3D NPC. Guardian has an original eclipse-mask treatment; the turtle uses a licensed3D model. See GROVE-WITNESS-VALIDATION.md, REUNION-CARD-VALIDATION.md, HAN-STREET-VALIDATION.md and SEA-CAUSEWAY-VALIDATION.md. These scoped improvements are not final campaign-art acceptance.
 - Browser audio listening, physical-device performance/gesture review and human fun acceptance remain open. Automated and emulated-touch checks do not replace them.
 - Totals import legacy runs/distance/treats, then track new attempts; active seconds start with this engine update. Missing older engine attempts are not fabricated from rolling history. Historical field names can differ from newer attempt labels.
-- Source binaries are recovered through checksum-verified tracked offline sourcepacks. The original staging URLs remain recorded for provenance, but the normal asset bootstrap no longer needs them. Godot and matching export templates remain separate prerequisites.
+- Source binaries are recovered through the checksum manifest/bootstrap, with an explicit network dependency on preserved staging source-assets URLs. The source tree is not a self-contained binary asset archive.
 
 Source integration does not update the hosted game. Do not call this WIP a completed rewrite. Story canon remains STORYLINE.md. Requirements remain GAME-REQUIREMENTS.md and TECHNICAL-REQUIREMENTS.md. Asset credits remain in assets/ASSET-LICENSES.txt; no paid assets.
 
@@ -89,7 +89,7 @@ VISUAL-CHECKPOINT.md for remaining character/treeline and acceptance gaps.
 The source tracks exact new visual bytes in an ASCII sourcepack, not native
 PNG/GLB Git blobs. Run `python3 godot/fetch-assets.py` before import: the12new
 visual assets restore offline from trackedchunks with SHA256checks; original28
-baseline assets now also restore from their own tracked checksum-verified offline pack. Official and immutable review builds
+baseline assets still use the preserved checksum network recovery workflow. Official and immutable review builds
 are unchanged by source integration.
 
 ## Earlier November 6 source follow-through (historical)

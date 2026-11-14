@@ -91,6 +91,7 @@ var level = 0
 var pieces: Array = []
 var entities: Array[Node3D] = []
 var reunion_card:Control
+var opening_card:TextureRect
 var player: Node3D
 var runner_variant: MeshInstance3D
 var bunny: Node3D
@@ -239,6 +240,8 @@ func _ready():
  dimmer.color = Color(0.025,0.03,0.06,0.78)
  dimmer.mouse_filter = Control.MOUSE_FILTER_IGNORE
  root.add_child(dimmer)
+ opening_card=preload("res://scripts/visuals/opening_card.gd").new()
+ root.add_child(opening_card)
  hud = Label.new()
  hud.position = Vector2(16, 16)
  hud.add_theme_font_size_override("font_size", 17)
@@ -350,7 +353,7 @@ func _ready():
  load_checkpoint()
  apply_options()
  apply_world(level if mode == "story" else -1)
- show_beat("Mochi and the Moon Bridge", NeonHudTheme.INTRO_WORDS, "BEGIN / RESUME JOURNEY" if mode == "story" else "START " + display_mode(mode))
+ show_beat("Mochi and the Moon Bridge", NeonHudTheme.INTRO_WORDS, "BEGIN / RESUME JOURNEY" if mode == "story" else "START " + display_mode(mode), true)
  print("GODOT_READY ", Engine.get_version_info().string, " animations=", animation_names)
 
 func hide_carrot(node: Node):
@@ -484,12 +487,13 @@ func return_menu():
  for foot in footprints: foot.queue_free()
  footprints.clear()
  stop_audio()
- show_beat("Mochi and the Moon Bridge", "Choose a journey. STORY saves each level checkpoint; endless modes save separate local bests.", "START " + display_mode(mode))
+ show_beat("Mochi and the Moon Bridge", "Choose a journey. STORY saves each level checkpoint; endless modes save separate local bests.", "START " + display_mode(mode), true)
  mode_select.show()
  menu_button.hide()
  pause_button.hide()
 
-func show_beat(title: String, words: String, label: String):
+func show_beat(title: String, words: String, label: String, illustrated_menu: bool = false):
+ if is_instance_valid(opening_card): opening_card.visible = illustrated_menu
  if is_instance_valid(reunion_card): reunion_card.hide()
  message.show()
  dimmer.show()
@@ -524,6 +528,7 @@ func on_action():
  start_level()
 
 func start_level():
+ if is_instance_valid(opening_card): opening_card.hide()
  if gate: gate.queue_free(); gate = null
  if is_instance_valid(reunion_card): reunion_card.hide()
  message.show()
@@ -2158,6 +2163,7 @@ func adapt_layout():
  message.add_theme_font_size_override("font_size",15 if compact else 16)
  progress_label.position.y = 155 if compact else 200
  message.position.x = (size.x-354)/2
+ if is_instance_valid(opening_card): opening_card.arrange(self)
  pause_button.position.x = size.x-104
  status_label.position.x = (size.x-350)/2
  progress_label.position.x = (size.x-350)/2

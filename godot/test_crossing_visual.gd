@@ -10,7 +10,7 @@ func run():
   g.level=world;g.pieces=g.PIECES.slice(0,world);g.start_level();g.begin_unlock()
   var bridge=g.gate
   check(bridge.name=="MoonBridgeCrossing" and bridge.get_meta("scenic_bridge",false),"decorative crossing owns bridge")
-  check(bridge.get_child_count()==1,"one batched bridge mesh")
+  check(bridge.get_child_count()==(2 if world==0 else 1),"batched bridge with Meadow-only ground light")
   var mesh=bridge.get_child(0).mesh
   for v in mesh.surface_get_arrays(0)[Mesh.ARRAY_VERTEX]:check(v.is_finite() and absf(v.x)>3.65,"finite geometry outside playable lanes")
   var original=bridge.position
